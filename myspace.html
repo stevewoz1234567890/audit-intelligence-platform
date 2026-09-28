@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Space — Audit Intelligence Platform</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sb"></aside>
+  <div class="main">
+    <header class="hdr"></header>
+    <div class="wrap">
+      <div class="crumb">
+        <a href="index.html">Home</a><span class="sep">/</span><b>My Space</b>
+      </div>
+
+      <div class="ptitle">
+        <div class="pmark" style="background:linear-gradient(145deg,var(--green-3),var(--green))">NA</div>
+        <div class="pt">
+          <h1>My Space</h1>
+          <p>Bookmarked standards, recent activity and personal settings — the auditor's own
+             working area within the library.</p>
+          <div class="pmeta">
+            <span class="mtag"><b>Signed in as</b> Dr. Noora AlZaraa</span>
+            <span class="mtag"><b>Role</b> Administrator</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pcols">
+        <aside class="pside">
+          <div class="ph">My Space</div>
+          <a href="#bookmarks" class="on">
+            <svg class="ic" viewBox="0 0 20 20"><path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z" fill="none"/></svg>
+            Bookmarks</a>
+          <a href="#recent">
+            <svg class="ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none"/><path d="M10 6v4.2l2.8 1.6" fill="none"/></svg>
+            Recent Activity</a>
+          <a href="#settings">
+            <svg class="ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.6" fill="none"/><path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2" fill="none"/></svg>
+            Settings</a>
+        </aside>
+        <div id="main"></div>
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function(){
+  /* demo state — Week 2 moves this to the user account */
+  const BOOKMARKED = ['fatf-r10','coso-p8','iia-13-3'];
+  const RECENT = [
+    ['fatf-r10','Viewed','2 hours ago'],
+    ['coso-p10','Viewed','Yesterday'],
+    ['erm-appetite','Bookmarked','Yesterday'],
+    ['iia-11-2','Viewed','3 days ago'],
+    ['coso-p8','Searched “management override”','4 days ago']
+  ];
+
+  let h = '';
+
+  /* bookmarks */
+  h += '<div class="rsec" id="bookmarks"><h2>' + icon('i-star') + 'Bookmarks' +
+       '<span class="cnt">' + BOOKMARKED.length + '</span></h2><div class="rb">' +
+       '<div class="rlist">';
+  BOOKMARKED.forEach(id => {
+    const r = rec(id); if (!r) return;
+    const f = fw(r.fw);
+    h += '<a class="rcard" href="record.html?id=' + encodeURIComponent(id) + '">' +
+      '<div class="rh"><span class="rref" style="background:' + f.colour + '">' + esc(f.abbr) + '</span>' +
+      '<span class="rref">' + esc(r.ref) + '</span><h3>' + esc(r.title) + '</h3></div>' +
+      '<p class="rsum">' + esc(r.summary) + '</p></a>';
+  });
+  h += '</div></div></div>';
+
+  /* recent */
+  h += '<div class="rsec" id="recent"><h2>' + icon('i-clock') + 'Recent Activity</h2>' +
+       '<div class="rb" style="padding:0"><div class="upd">';
+  RECENT.forEach(a => {
+    const r = rec(a[0]); if (!r) return;
+    const f = fw(r.fw);
+    h += '<a href="record.html?id=' + encodeURIComponent(a[0]) + '">' +
+      '<div class="dt" style="width:44px"><b style="font-size:9px;letter-spacing:.04em">' +
+      esc(f.abbr) + '</b></div>' +
+      '<div class="tx"><b>' + esc(r.ref) + ' — ' + esc(r.title) + '</b>' +
+      '<span>' + esc(a[1]) + ' · ' + esc(a[2]) + '</span></div></a>';
+  });
+  h += '</div></div></div>';
+
+  /* settings */
+  h += '<div class="rsec" id="settings"><h2>' + icon('i-gear') + 'Settings</h2><div class="rb">' +
+    '<div class="fgrid">' +
+      '<div class="fld"><label>Display name</label>' +
+        '<input type="text" value="Dr. Noora AlZaraa"></div>' +
+      '<div class="fld"><label>Role</label>' +
+        '<select><option>Administrator</option><option>Editor</option>' +
+        '<option>Auditor (read only)</option></select></div>' +
+      '<div class="fld"><label>Primary certification</label>' +
+        '<select><option>CIA — Certified Internal Auditor</option>' +
+        '<option>CFE — Certified Fraud Examiner</option>' +
+        '<option>CISA — Certified Information Systems Auditor</option>' +
+        '<option>CAMS — Anti-Money Laundering Specialist</option></select></div>' +
+      '<div class="fld"><label>Default framework</label>' +
+        '<select>' + FRAMEWORKS.map(f =>
+          '<option' + (f.id==='iia'?' selected':'') + '>' + esc(f.abbr) + ' — ' + esc(f.name) +
+          '</option>').join('') + '</select></div>' +
+      '<div class="fld full"><label>Alert preferences</label>' +
+        '<div class="tchips" style="padding-top:0;border-top:0">' +
+        '<span>Standard updates</span><span>Regulatory alerts</span>' +
+        '<span>New content in my frameworks</span><span>CPE reminders</span></div>' +
+        '<span class="hint">Week 2: preferences persist to the user account and drive ' +
+        'the notification feed.</span></div>' +
+    '</div>' +
+    '<div class="abar" style="margin-top:15px">' +
+      '<button class="btn p">' + icon('i-check') + 'Save changes</button>' +
+      '<button class="btn">Cancel</button></div>' +
+    '</div></div>';
+
+  document.getElementById('main').innerHTML = h;
+  mount({});
+
+  const links = [...document.querySelectorAll('.pside a')];
+  const secs  = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  if (secs.length){
+    const spy = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting)
+        links.forEach(l => l.classList.toggle('on', l.getAttribute('href') === '#' + e.target.id));
+    }), { rootMargin:'-80px 0px -70% 0px' });
+    secs.forEach(s => spy.observe(s));
+  }
+})();
+</script>
+</body>
+</html>

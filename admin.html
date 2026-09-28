@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin / CMS — Audit Intelligence Platform</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sb"></aside>
+  <div class="main">
+    <header class="hdr"></header>
+    <div class="wrap">
+      <div class="crumb">
+        <a href="index.html">Home</a><span class="sep">/</span><b>Admin / CMS</b>
+      </div>
+
+      <div class="ptitle">
+        <div class="pmark" style="background:var(--green)">
+          <svg class="ic" viewBox="0 0 20 20" style="width:22px;height:22px;stroke:var(--gold);opacity:1">
+            <circle cx="10" cy="10" r="2.6" fill="none"/>
+            <path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4M15.3 15.3l-1.4-1.4M6.1 6.1L4.7 4.7" fill="none"/>
+          </svg>
+        </div>
+        <div class="pt">
+          <h1>Admin / Content Management</h1>
+          <p>Add, edit and remove standards and audit content without developer assistance.
+             Every record carries its own source, version, effective date and official
+             reference so provenance is never lost.</p>
+          <div class="pmeta">
+            <span class="mtag"><b>Signed in</b> Dr. Noora AlZaraa</span>
+            <span class="mtag"><b>Role</b> Administrator</span>
+            <span class="pip g">Full edit rights</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="astat" id="stats"></div>
+
+      <div class="card">
+        <div class="card-h">
+          <h3 id="formTitle">Add New Record</h3>
+          <span class="badge" id="formMode">New</span>
+        </div>
+        <div class="card-b">
+          <form id="form">
+            <div class="fgrid">
+              <div class="fld">
+                <label for="f-fw">Framework</label>
+                <select id="f-fw" required></select>
+              </div>
+              <div class="fld">
+                <label for="f-ref">Standard / Reference</label>
+                <input id="f-ref" type="text" placeholder="e.g. Standard 13.3" required>
+              </div>
+              <div class="fld full">
+                <label for="f-title">Title</label>
+                <input id="f-title" type="text" placeholder="e.g. Risk Assessment in Engagement Planning" required>
+              </div>
+              <div class="fld full">
+                <label for="f-domain">Domain / Section</label>
+                <input id="f-domain" type="text" placeholder="e.g. Domain V — Performing Internal Audit Services">
+              </div>
+              <div class="fld full">
+                <label for="f-summary">Summary</label>
+                <textarea id="f-summary" placeholder="One or two sentences stating what the standard requires."></textarea>
+              </div>
+              <div class="fld">
+                <label for="f-version">Version</label>
+                <input id="f-version" type="text" placeholder="2024">
+              </div>
+              <div class="fld">
+                <label for="f-effective">Effective date</label>
+                <input id="f-effective" type="date">
+              </div>
+              <div class="fld">
+                <label for="f-source">Source / issuing body</label>
+                <input id="f-source" type="text" placeholder="The Institute of Internal Auditors">
+              </div>
+              <div class="fld">
+                <label for="f-tier">Content tier</label>
+                <select id="f-tier">
+                  <option value="ref">Reference + original guidance (copyrighted source)</option>
+                  <option value="open">Open licence — full text may be held</option>
+                </select>
+              </div>
+              <div class="fld full">
+                <label for="f-url">Official reference URL</label>
+                <input id="f-url" type="url" placeholder="https://www.theiia.org/standards">
+                <span class="hint">Stored with every record so auditors can always reach the
+                  authoritative source.</span>
+              </div>
+              <div class="fld full">
+                <label for="f-tags">Tags</label>
+                <input id="f-tags" type="text" placeholder="risk assessment, planning, scope">
+                <span class="hint">Comma separated. Tags feed the global search index.</span>
+              </div>
+            </div>
+
+            <div class="abar" style="margin-top:16px">
+              <button class="btn p" type="submit" id="save">
+                <svg class="ic" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none"/></svg>
+                <span id="saveLabel">Create record</span>
+              </button>
+              <button class="btn" type="button" id="reset">Clear form</button>
+              <span class="hint" style="margin-left:auto" id="formNote">
+                Demo: changes apply to this session only.
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">
+          <h3>Content Records</h3>
+          <span class="badge" id="count"></span>
+        </div>
+        <div class="tbl-wrap">
+          <table id="tbl">
+            <thead><tr>
+              <th>Framework</th><th>Reference</th><th>Title</th>
+              <th>Version</th><th>Effective</th><th>Updated</th>
+              <th>Tier</th><th>Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="disc">
+        <b>Demo CMS.</b> Create, edit and delete operate on in-session data so you can try the
+        workflow end to end — add a record, watch it appear in the table and in global search,
+        then edit or remove it. In Week 2 these operations write to the database and persist,
+        with authentication, role permissions and an audit trail of content changes.
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function(){
+  const form  = document.getElementById('form');
+  const tbody = document.querySelector('#tbl tbody');
+  let editing = null;
+
+  /* framework dropdown */
+  document.getElementById('f-fw').innerHTML =
+    FRAMEWORKS.map(f => '<option value="' + esc(f.id) + '">' + esc(f.abbr) + ' — ' +
+      esc(f.name) + '</option>').join('');
+
+  const today = () => new Date().toISOString().slice(0,10);
+
+  function stats(){
+    const open = RECORDS.filter(r => r.tier === 'open').length;
+    document.getElementById('stats').innerHTML =
+      '<div class="ast"><b>' + RECORDS.length + '</b><span>Content records</span></div>' +
+      '<div class="ast"><b>' + FRAMEWORKS.length + '</b><span>Frameworks</span></div>' +
+      '<div class="ast"><b>' + open + '</b><span>Open licence</span></div>' +
+      '<div class="ast"><b>' + (RECORDS.length - open) + '</b><span>Reference tier</span></div>';
+    document.getElementById('count').textContent = RECORDS.length + ' records';
+  }
+
+  function table(){
+    tbody.innerHTML = RECORDS.map(r => {
+      const f = fw(r.fw);
+      return '<tr data-id="' + esc(r.id) + '">' +
+        '<td><span class="rref" style="background:' + f.colour + ';font-family:ui-monospace,monospace;' +
+          'font-size:9.5px;font-weight:700;color:#fff;padding:3px 8px;border-radius:4px">' +
+          esc(f.abbr) + '</span></td>' +
+        '<td class="m">' + esc(r.ref) + '</td>' +
+        '<td><b>' + esc(r.title) + '</b><div class="sd">' + esc(r.domain || '') + '</div></td>' +
+        '<td class="m">' + esc(r.version) + '</td>' +
+        '<td class="m">' + fmtDate(r.effective) + '</td>' +
+        '<td class="m">' + fmtDate(r.updated) + '</td>' +
+        '<td><span class="lic ' + (r.tier === 'open' ? 'open">Open' : 'ref">Reference') + '</span></td>' +
+        '<td><div style="display:flex;gap:6px">' +
+          '<a class="btn s" href="record.html?id=' + encodeURIComponent(r.id) + '">View</a>' +
+          '<button class="btn s" data-edit="' + esc(r.id) + '">Edit</button>' +
+          '<button class="btn s d" data-del="' + esc(r.id) + '">Delete</button>' +
+        '</div></td></tr>';
+    }).join('');
+  }
+
+  function refresh(){ stats(); table(); }
+
+  function setMode(rec_){
+    editing = rec_ ? rec_.id : null;
+    document.getElementById('formTitle').textContent = rec_ ? 'Edit Record' : 'Add New Record';
+    document.getElementById('formMode').textContent  = rec_ ? 'Editing' : 'New';
+    document.getElementById('saveLabel').textContent = rec_ ? 'Save changes' : 'Create record';
+    if (rec_){
+      document.getElementById('f-fw').value        = rec_.fw;
+      document.getElementById('f-ref').value       = rec_.ref;
+      document.getElementById('f-title').value     = rec_.title;
+      document.getElementById('f-domain').value    = rec_.domain || '';
+      document.getElementById('f-summary').value   = rec_.summary || '';
+      document.getElementById('f-version').value   = rec_.version || '';
+      document.getElementById('f-effective').value = rec_.effective || '';
+      document.getElementById('f-source').value    = rec_.source || '';
+      document.getElementById('f-tier').value      = rec_.tier || 'ref';
+      document.getElementById('f-url').value       = rec_.url || '';
+      document.getElementById('f-tags').value      = (rec_.tags || []).join(', ');
+    } else {
+      form.reset();
+    }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const fwId = document.getElementById('f-fw').value;
+    const data = {
+      fw:        fwId,
+      ref:       document.getElementById('f-ref').value.trim(),
+      title:     document.getElementById('f-title').value.trim(),
+      domain:    document.getElementById('f-domain').value.trim(),
+      summary:   document.getElementById('f-summary').value.trim(),
+      version:   document.getElementById('f-version').value.trim() || '—',
+      effective: document.getElementById('f-effective').value,
+      source:    document.getElementById('f-source').value.trim() || fw(fwId).body,
+      tier:      document.getElementById('f-tier').value,
+      url:       document.getElementById('f-url').value.trim() || fw(fwId).url,
+      tags:      document.getElementById('f-tags').value.split(',')
+                   .map(s => s.trim()).filter(Boolean),
+      updated:   today()
+    };
+
+    if (editing){
+      const r = rec(editing);
+      Object.assign(r, data);
+      note('Saved — "' + r.title + '" updated.');
+    } else {
+      // empty audit arrays so the record renders without errors
+      RECORDS.push(Object.assign({
+        id: fwId + '-' + Date.now().toString(36),
+        requirement: data.summary, focus:[], risks:[], controls:[], procedures:[],
+        testing:'', evidence:[], redFlags:[], findings:[], causes:[], impacts:'',
+        recommendations:[], references:[]
+      }, data));
+      note('Created — "' + data.title + '" added and now searchable.');
+    }
+    setMode(null);
+    refresh();
+  });
+
+  function note(msg){
+    const n = document.getElementById('formNote');
+    n.textContent = msg;
+    n.style.color = 'var(--good)';
+    n.style.fontWeight = '600';
+    setTimeout(() => {
+      n.textContent = 'Demo: changes apply to this session only.';
+      n.style.color = ''; n.style.fontWeight = '';
+    }, 4200);
+  }
+
+  document.getElementById('reset').addEventListener('click', () => setMode(null));
+
+  document.addEventListener('click', e => {
+    const ed = e.target.closest('[data-edit]');
+    const dl = e.target.closest('[data-del]');
+    if (ed){
+      setMode(rec(ed.dataset.edit));
+      form.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+    if (dl){
+      const r = rec(dl.dataset.del);
+      if (!r) return;
+      if (confirm('Delete "' + r.title + '"?\n\nThis removes it from the library and from search.')){
+        RECORDS.splice(RECORDS.indexOf(r), 1);
+        if (editing === r.id) setMode(null);
+        note('Deleted — "' + r.title + '" removed.');
+        refresh();
+      }
+    }
+  });
+
+  refresh();
+  mount({});
+})();
+</script>
+</body>
+</html>

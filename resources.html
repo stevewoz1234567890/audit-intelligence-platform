@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning &amp; Resources — Audit Intelligence Platform</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sb"></aside>
+  <div class="main">
+    <header class="hdr"></header>
+    <div class="wrap">
+      <div class="crumb">
+        <a href="index.html">Home</a><span class="sep">/</span><b>Learning &amp; Resources</b>
+      </div>
+
+      <div class="ptitle">
+        <div class="pmark" style="background:var(--green)">
+          <svg class="ic" viewBox="0 0 20 20" style="width:22px;height:22px;stroke:var(--gold);opacity:1">
+            <path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z" fill="none"/>
+          </svg>
+        </div>
+        <div class="pt">
+          <h1>Learning &amp; Resources</h1>
+          <p>Training and CPE tracking, professional articles, and alerts when standards
+             change — so the library stays a current reference rather than a static archive.</p>
+          <div class="pmeta">
+            <span class="mtag"><b>Sections</b> 3</span>
+            <span class="pip w">Structure complete · content in Week 2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pcols">
+        <aside class="pside">
+          <div class="ph">Sections</div>
+          <a href="#news" class="on">
+            <svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l7.5 13h-15z" fill="none"/><path d="M10 8v3.5M10 13.5v.01" fill="none"/></svg>
+            News &amp; Alerts</a>
+          <a href="#articles">
+            <svg class="ic" viewBox="0 0 20 20"><path d="M3 4h5a2 2 0 012 2v10a2 2 0 00-2-2H3z" fill="none"/><path d="M17 4h-5a2 2 0 00-2 2v10a2 2 0 012-2h5z" fill="none"/></svg>
+            Articles &amp; Updates</a>
+          <a href="#cpe">
+            <svg class="ic" viewBox="0 0 20 20"><path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z" fill="none"/></svg>
+            Training &amp; CPE</a>
+        </aside>
+
+        <div id="main"></div>
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function(){
+  let h = '';
+
+  /* --- news & alerts --- */
+  h += '<div class="rsec" id="news"><h2>' + icon('i-alert') + 'News &amp; Alerts' +
+       '<span class="cnt">' + UPDATES.length + ' recent</span></h2>' +
+       '<div class="rb" style="padding:0"><div class="upd">';
+  UPDATES.forEach(u => {
+    const f = fw(u.fw);
+    const href = f && RECORDS.some(r => r.fw === u.fw)
+      ? 'framework.html?fw=' + u.fw : 'frameworks.html';
+    const sevLabel = { n:'New', r:'Revised', a:'Alert' }[u.sev];
+    h += '<a href="' + href + '"><div class="dt"><b>' + u.d + '</b><span>' + u.m + '</span></div>' +
+      '<div class="tx"><b>' + esc(u.t) + '<span class="sev ' + u.sev + '">' + sevLabel + '</span></b>' +
+      '<span>' + esc(u.s) + '</span></div></a>';
+  });
+  h += '</div></div></div>';
+
+  /* --- articles --- */
+  const ARTICLES = [
+    ['Writing findings that survive management challenge',
+     'Why criteria and root cause carry the weight, and how to evidence both.','iia-11-2'],
+    ['Testing beneficial ownership through layered structures',
+     'A practical approach when the corporate chain runs three or more deep.','fatf-r10'],
+    ['Management override: the risk most fraud assessments miss',
+     'Journal entry analytics that surface override without a data science team.','coso-p8'],
+    ['From risk appetite statement to operating limit',
+     'Making appetite measurable enough that a breach is actually detectable.','erm-appetite']
+  ];
+  h += '<div class="rsec" id="articles"><h2>' + icon('i-book') + 'Articles &amp; Updates' +
+       '<span class="cnt">' + ARTICLES.length + ' sample</span></h2><div class="rb">' +
+       '<div class="rlist">';
+  ARTICLES.forEach(a => {
+    const r = rec(a[2]);
+    h += '<a class="rcard" href="record.html?id=' + encodeURIComponent(a[2]) + '">' +
+      '<div class="rh"><span class="rref">' + esc(fw(r.fw).abbr) + '</span>' +
+      '<h3>' + esc(a[0]) + '</h3></div>' +
+      '<p class="rsum">' + esc(a[1]) + '</p>' +
+      '<div class="rfoot"><span class="pip">Linked to ' + esc(r.ref) + '</span>' +
+      '<span class="pip" style="margin-left:auto">Article</span></div></a>';
+  });
+  h += '</div></div></div>';
+
+  /* --- CPE --- */
+  h += '<div class="rsec" id="cpe"><h2>' + icon('i-star') + 'Training &amp; CPE</h2>' +
+    '<div class="rb">' +
+    '<p style="margin-bottom:14px">Continuing professional education tracking against the ' +
+    'requirements of each certifying body, with credits earned from material in the library.</p>' +
+    '<div class="astat">' +
+      '<div class="ast"><b>40</b><span>CIA hours required</span></div>' +
+      '<div class="ast"><b>20</b><span>CFE hours required</span></div>' +
+      '<div class="ast"><b>20</b><span>CISA hours required</span></div>' +
+      '<div class="ast"><b>60</b><span>PMP PDUs / 3 yrs</span></div>' +
+    '</div>' +
+    '<div class="disc" style="margin-top:14px"><b>Week 2.</b> CPE logging, certificate ' +
+    'generation and per-user credit tracking are built alongside user accounts.</div>' +
+    '</div></div>';
+
+  document.getElementById('main').innerHTML = h;
+  mount({});
+
+  /* sidebar spy */
+  const links = [...document.querySelectorAll('.pside a')];
+  const secs  = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  if (secs.length){
+    const spy = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting)
+        links.forEach(l => l.classList.toggle('on', l.getAttribute('href') === '#' + e.target.id));
+    }), { rootMargin:'-80px 0px -70% 0px' });
+    secs.forEach(s => spy.observe(s));
+  }
+})();
+</script>
+</body>
+</html>
