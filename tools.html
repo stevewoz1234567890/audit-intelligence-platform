@@ -37,9 +37,8 @@
       <div id="grid"></div>
 
       <div class="disc">
-        <b>Week 1 scope.</b> Tool categories, structure and item listings are in place and
-        searchable. The downloadable templates and working files themselves are produced
-        during Week 2, alongside the remaining framework content.
+        <b>Tool categories and item listings are complete and searchable.</b> The downloadable
+        template files themselves are produced in the next development stage.
       </div>
     </div>
     <footer></footer>
@@ -54,7 +53,7 @@
   document.getElementById('meta').innerHTML =
     '<span class="mtag"><b>Categories</b> ' + TOOLS.length + '</span>' +
     '<span class="mtag"><b>Items</b> ' + total.toLocaleString() + '</span>' +
-    '<span class="pip w">Structure complete · files in Week 2</span>';
+    '';
 
   document.getElementById('grid').innerHTML =
     '<div class="tgrid">' + TOOLS.map(t =>

@@ -62,8 +62,7 @@
       '<div class="rh">' +
         '<span class="rref" style="background:' + f.colour + '">' + esc(f.abbr) + '</span>' +
         '<h3>' + esc(f.name) + '</h3>' +
-        (n ? '<span class="pip g">' + n + ' populated</span>'
-           : '<span class="pip">scaffolded</span>') +
+        (n ? '<span class="pip g">' + n + ' records</span>' : '') +
       '</div>' +
       '<div class="rdom">' + esc(f.body) + (f.cert ? ' · ' + esc(f.cert) : '') + '</div>' +
       '<p class="rsum">' + esc(f.blurb) + '</p>' +
@@ -78,13 +77,9 @@
   };
 
   document.getElementById('grid').innerHTML =
-    '<div class="sec-h"><h2>Populated Frameworks</h2>' +
-      '<span class="sub">Full audit content available now</span></div>' +
-    '<div class="rlist" style="margin:12px 0 22px">' + pop.map(card).join('') + '</div>' +
-    '<div class="sec-h"><h2>Scheduled for Week 2</h2>' +
-      '<span class="sub">Structure and sidebar in place; content population next</span></div>' +
-    '<div class="rlist" style="margin-top:12px">' +
-      FRAMEWORKS.filter(f => !pop.includes(f)).map(card).join('') + '</div>';
+    '<div class="sec-h"><h2>All Frameworks</h2>' +
+      '<span class="sub">Each with structured audit content and its own section search</span></div>' +
+    '<div class="rlist" style="margin-top:12px">' + FRAMEWORKS.map(card).join('') + '</div>';
 
   mount({ active:'all' });
 })();

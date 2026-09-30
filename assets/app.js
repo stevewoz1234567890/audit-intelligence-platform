@@ -4,7 +4,7 @@
    Renders shared chrome (icon sprite, sidebar, header, footer)
    and provides the global search engine used by every page.
 
-   Week 2: search moves server-side; chrome becomes server
+   Next stage: search moves server-side; chrome becomes server
    templates or components. Markup contract stays the same.
    ============================================================ */
 
@@ -180,7 +180,7 @@ function tierPip(tier){
 /* ============================================================
    GLOBAL SEARCH
    Weighted field matching across every record, framework and
-   tool. Week 2: replaced by a server-side index; the result
+   tool. Next stage: replaced by a server-side index; the result
    shape returned here is the contract the UI depends on.
    ============================================================ */
 

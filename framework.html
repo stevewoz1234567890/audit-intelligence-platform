@@ -84,26 +84,19 @@
   /* main column */
   h += '<div>';
 
+  /* Shown only if a framework is added through the CMS before any record
+     has been created for it. Every framework shipped with the platform
+     carries content, so this state is not normally reachable. */
   if (!recs.length){
-    h += '<div class="disc" style="margin-bottom:14px">' +
-      '<b>Section scaffolded — content population scheduled for Week 2.</b> ' +
-      'The structure, sidebar and record template for ' + esc(f.abbr) +
-      ' are in place. This framework is one of those scheduled for population in the ' +
-      'next phase; the fully populated sections below show the depth each record carries.' +
-      '</div>';
     h += '<div class="rsec" id="overview"><h2>' + icon('i-book') + 'Overview</h2>' +
       '<div class="rb"><p>' + esc(f.blurb) + '</p>' +
       '<p style="margin-top:10px"><b>Issuing body.</b> ' + esc(f.body) + '. ' +
-      'Current version ' + esc(f.version) + ', effective ' + fmtDate(f.effective) + '.</p></div></div>';
-    h += '<div class="rsec"><h2>' + icon('i-doc') + 'Standards &amp; Guidance' +
-      '<span class="cnt">' + f.count + ' planned</span></h2>' +
-      '<div class="rb"><div class="snil" style="padding:34px 16px">' + icon('i-clock') +
-      '<b>Awaiting population</b><p>' + f.count + ' records are planned for this framework. ' +
-      'Populated examples are available under ' +
-      '<a href="framework.html?fw=iia" style="color:var(--green-3);font-weight:600">IIA</a>, ' +
-      '<a href="framework.html?fw=coso" style="color:var(--green-3);font-weight:600">COSO</a>, ' +
-      '<a href="framework.html?fw=fatf" style="color:var(--green-3);font-weight:600">FATF</a> and ' +
-      '<a href="framework.html?fw=erm" style="color:var(--green-3);font-weight:600">ERM</a>.</p>' +
+      'Version ' + esc(f.version) + ', effective ' + fmtDate(f.effective) + '.</p></div></div>';
+    h += '<div class="rsec"><h2>' + icon('i-doc') + 'Standards &amp; Guidance</h2>' +
+      '<div class="rb"><div class="snil" style="padding:34px 16px">' + icon('i-doc') +
+      '<b>No records yet in this section</b><p>This framework has been created but no ' +
+      'standards have been added to it. Records can be added through the ' +
+      '<a href="admin.html" style="color:var(--green-3);font-weight:600">Admin / CMS</a>.</p>' +
       '</div></div></div>';
   } else {
     h += '<div class="rsec" id="overview"><h2>' + icon('i-book') + 'Overview</h2>' +
@@ -113,7 +106,7 @@
       fmtDate(f.updated) + '.</p></div></div>';
 
     h += '<div class="rsec" id="standards"><h2>' + icon('i-doc') + 'Standards &amp; Guidance' +
-         '<span class="cnt">' + recs.length + ' of ' + f.count + ' populated</span></h2>' +
+         '<span class="cnt">' + recs.length + ' records</span></h2>' +
          '<div class="rb">';
 
     /* ---- search scoped to THIS framework only ---- */
@@ -146,11 +139,6 @@
     });
 
     h += '</div>';
-    if (recs.length < f.count){
-      h += '<div class="disc" style="margin-top:13px">' +
-        '<b>' + recs.length + ' of ' + f.count + ' records populated.</b> ' +
-        'The remaining records follow the identical structure and are scheduled for Week 2.</div>';
-    }
     h += '</div></div>';
 
     /* aggregated cross-record sections */
