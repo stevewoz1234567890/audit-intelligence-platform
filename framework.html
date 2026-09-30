@@ -54,6 +54,7 @@
         '<span class="mtag"><b>Effective</b> ' + fmtDate(f.effective) + '</span>' +
         '<span class="mtag"><b>Updated</b> ' + fmtDate(f.updated) + '</span>' +
         (f.cert ? '<span class="mtag"><b>Certification</b> ' + esc(f.cert) + '</span>' : '') +
+        '<span class="stat-b ' + esc(f.status||'Current') + '">' + esc(f.status||'Current') + '</span>' +
         tierPip(f.tier) +
       '</div>' +
     '</div></div>';
@@ -113,7 +114,21 @@
 
     h += '<div class="rsec" id="standards"><h2>' + icon('i-doc') + 'Standards &amp; Guidance' +
          '<span class="cnt">' + recs.length + ' of ' + f.count + ' populated</span></h2>' +
-         '<div class="rb"><div class="rlist">';
+         '<div class="rb">';
+
+    /* ---- search scoped to THIS framework only ---- */
+    h += '<div class="modsearch-box">' +
+      '<label class="sbig sbig-sm">' + icon('i-search','si') +
+        '<input type="search" id="fwq" placeholder="Search within ' + esc(f.abbr) + ' only…" ' +
+        'aria-label="Search within ' + esc(f.abbr) + '">' +
+      '</label>' +
+      '<div class="modscope">' + icon('i-shield') +
+        '<span>Searches <b>' + esc(f.abbr) + '</b> only — not other frameworks, not the internet.</span>' +
+      '</div>' +
+      '<div id="fwresults"></div>' +
+    '</div>';
+
+    h += '<div class="rlist" id="fwlist">';
 
     recs.forEach(r => {
       h += '<a class="rcard" href="record.html?id=' + encodeURIComponent(r.id) + '">' +
@@ -199,6 +214,42 @@
 
   document.getElementById('page').innerHTML = h;
   mount({ active: id });
+
+  /* ---- in-section search: restricted to this framework ---- */
+  const fwq = document.getElementById('fwq');
+  if (fwq){
+    const list = document.getElementById('fwlist');
+    const out  = document.getElementById('fwresults');
+    let t;
+    const run = () => {
+      const q = fwq.value.trim();
+      if (!q){ out.innerHTML = ''; list.style.display = ''; return; }
+      list.style.display = 'none';
+      // opts.fw pins the query to this framework — nothing else is searched
+      const res = search(q, { fw: id }).filter(x => x.type === 'record');
+      if (!res.length){
+        out.innerHTML = '<div class="snil" style="padding:32px 16px">' + icon('i-search') +
+          '<b>No match in ' + esc(f.abbr) + '</b><p>No record in this section matches ' +
+          '&ldquo;' + esc(q) + '&rdquo;. This search covers ' + esc(f.abbr) +
+          ' only, as configured.</p></div>';
+        return;
+      }
+      out.innerHTML = '<div class="scount" style="margin:4px 0 11px"><b>' + res.length +
+        '</b> match' + (res.length === 1 ? '' : 'es') + ' in ' + esc(f.abbr) + '</div>' +
+        '<div class="rlist">' + res.map(x => {
+          const r = x.r;
+          return '<a class="rcard" href="record.html?id=' + encodeURIComponent(r.id) + '">' +
+            '<div class="rh"><span class="rref">' + esc(r.ref) + '</span>' +
+            '<h3>' + highlight(r.title, q) + '</h3></div>' +
+            '<p class="rsum">' + highlight(snippet(r, q), q) + '</p>' +
+            '<div class="rfoot">' + x.hits.slice(0,4).map(fl =>
+              '<span class="pip">in ' + esc(fl.replace(/([A-Z])/g,' $1').toLowerCase()) + '</span>'
+            ).join('') + '</div></a>';
+        }).join('') + '</div>';
+    };
+    fwq.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 140); });
+    fwq.addEventListener('keydown', e => { if (e.key === 'Enter'){ clearTimeout(t); run(); } });
+  }
 
   /* sidebar scroll-spy */
   const links = [...document.querySelectorAll('.pside a')];

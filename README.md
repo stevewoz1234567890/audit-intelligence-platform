@@ -3,7 +3,7 @@
 A professional digital reference library for auditors — standards, frameworks,
 risks, controls, procedures and an AI Audit Assistant, in one searchable platform.
 
-**Developed by Dr. Noora AlZaraa**
+**Developed by Noora AlZaraa**
 
 ---
 

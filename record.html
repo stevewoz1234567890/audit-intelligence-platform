@@ -26,7 +26,7 @@
     document.getElementById('page').innerHTML =
       '<div class="snil">' + icon('i-alert') + '<b>Record not found</b>' +
       '<p>No standard matches that identifier. Try the ' +
-      '<a href="search.html" style="color:var(--green-3);font-weight:600">global search</a>.</p></div>';
+      '<a href="frameworks.html" style="color:var(--green-3);font-weight:600">frameworks index</a>.</p></div>';
     mount({});
     return;
   }
@@ -145,7 +145,7 @@
   /* tags */
   h += '<div class="rsec"><h2>' + icon('i-filter') + 'Tags</h2><div class="rb">' +
     '<div class="tchips" style="padding-top:0;border-top:0">' +
-    r.tags.map(t => '<a href="search.html?q=' + encodeURIComponent(t) + '">' +
+    r.tags.map(t => '<a href="framework.html?fw=' + encodeURIComponent(r.fw) + '" title="Search ' + esc(fw(r.fw).abbr) + ' for this tag">' +
       '<span style="cursor:pointer">' + esc(t) + '</span></a>').join('') +
     '</div></div></div>';
 

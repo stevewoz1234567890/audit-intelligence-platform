@@ -19,62 +19,62 @@
 const FRAMEWORKS = [
   { id:'iia',    abbr:'IIA',    name:'Global Internal Audit Standards', body:'The Institute of Internal Auditors',
     cert:'CIA', colour:'#1A5442', tier:'ref',  url:'https://www.theiia.org', version:'2024', effective:'2025-01-09',
-    updated:'2026-09-25', count:58, populated:true,
+    updated:'2026-09-25', count:58, populated:true, status:'Current',
     blurb:'The global professional standards for the practice of internal auditing, restructured in 2024 into five domains and fifteen principles.' },
 
   { id:'coso',   abbr:'COSO',   name:'Internal Control — Integrated Framework', body:'Committee of Sponsoring Organizations',
     cert:'', colour:'#2E7350', tier:'ref',  url:'https://www.coso.org', version:'2013', effective:'2013-05-15',
-    updated:'2026-09-12', count:22, populated:true,
+    updated:'2026-09-12', count:22, populated:true, status:'Current',
     blurb:'Five components and seventeen principles defining effective internal control over operations, reporting and compliance.' },
 
   { id:'fatf',   abbr:'FATF',   name:'FATF 40 Recommendations', body:'Financial Action Task Force',
     cert:'', colour:'#A8761C', tier:'open', url:'https://www.fatf-gafi.org', version:'2025', effective:'2025-02-01',
-    updated:'2026-09-18', count:40, populated:true,
+    updated:'2026-09-18', count:40, populated:true, status:'Current',
     blurb:'The international standard for combating money laundering, terrorist financing and proliferation financing.' },
 
   { id:'isaca',  abbr:'ISACA',  name:'IS Audit and Assurance Standards', body:'ISACA',
     cert:'CISA', colour:'#1B5E8C', tier:'ref',  url:'https://www.isaca.org', version:'2023', effective:'2023-01-01',
-    updated:'2026-08-30', count:41, populated:false,
+    updated:'2026-08-30', count:41, populated:false, status:'Current',
     blurb:'Mandatory standards and guidelines for information systems audit and assurance engagements.' },
 
   { id:'acfe',   abbr:'ACFE',   name:'Fraud Examiners Manual & Fraud Tree', body:'Association of Certified Fraud Examiners',
     cert:'CFE', colour:'#9A3B2E', tier:'ref',  url:'https://www.acfe.com', version:'2024', effective:'2024-01-01',
-    updated:'2026-09-05', count:34, populated:false,
+    updated:'2026-09-05', count:34, populated:false, status:'Current',
     blurb:'Occupational fraud classification, detection methods and investigation procedures.' },
 
   { id:'acams',  abbr:'ACAMS',  name:'AML / Financial Crime Standards', body:'ACAMS',
     cert:'CAMS', colour:'#B08D1E', tier:'ref',  url:'https://www.acams.org', version:'2024', effective:'2024-06-01',
-    updated:'2026-09-14', count:39, populated:false,
+    updated:'2026-09-14', count:39, populated:false, status:'Current',
     blurb:'Anti-money-laundering programme design, customer due diligence and sanctions compliance.' },
 
   { id:'ifrs',   abbr:'IFRS',   name:'IFRS Accounting Standards', body:'IFRS Foundation / IASB',
     cert:'', colour:'#6B3F94', tier:'ref',  url:'https://www.ifrs.org', version:'2026', effective:'2026-01-01',
-    updated:'2026-08-28', count:46, populated:false,
+    updated:'2026-08-28', count:46, populated:false, status:'Current',
     blurb:'International financial reporting standards governing recognition, measurement, presentation and disclosure.' },
 
   { id:'pmi',    abbr:'PMI',    name:'PMBOK Guide & Project Standards', body:'Project Management Institute',
     cert:'PMP', colour:'#0E6E8C', tier:'ref',  url:'https://www.pmi.org', version:'7th Ed', effective:'2021-08-01',
-    updated:'2026-07-19', count:27, populated:false,
+    updated:'2026-07-19', count:27, populated:false, status:'Current',
     blurb:'Project management principles, performance domains and delivery practices relevant to project assurance.' },
 
   { id:'iso',    abbr:'ISO',    name:'ISO Management System Standards', body:'International Organization for Standardization',
     cert:'', colour:'#0E8C7A', tier:'ref',  url:'https://www.iso.org', version:'various', effective:'2018-02-01',
-    updated:'2026-09-01', count:31, populated:false,
+    updated:'2026-09-01', count:31, populated:false, status:'Current',
     blurb:'ISO 31000 risk management, ISO 27001 information security and related management system standards.' },
 
   { id:'intosai',abbr:'INTOSAI',name:'ISSAI — Public Sector Auditing', body:'INTOSAI',
     cert:'', colour:'#8C5A1B', tier:'open', url:'https://www.issai.org', version:'2019', effective:'2019-01-01',
-    updated:'2026-09-02', count:18, populated:false,
+    updated:'2026-09-02', count:18, populated:false, status:'Current',
     blurb:'International standards for supreme audit institutions covering financial, compliance and performance auditing.' },
 
   { id:'basel',  abbr:'BIS',    name:'Basel Committee Standards', body:'Bank for International Settlements',
     cert:'', colour:'#4A5A8C', tier:'open', url:'https://www.bis.org', version:'2021', effective:'2021-03-31',
-    updated:'2026-09-11', count:15, populated:false,
+    updated:'2026-09-11', count:15, populated:false, status:'Current',
     blurb:'Banking supervision principles including operational resilience, risk data aggregation and internal audit expectations.' },
 
   { id:'erm',    abbr:'ERM',    name:'Enterprise Risk Management', body:'COSO ERM / ISO 31000',
     cert:'', colour:'#7A3E8C', tier:'ref',  url:'https://www.coso.org', version:'2017', effective:'2017-09-06',
-    updated:'2026-09-20', count:29, populated:true,
+    updated:'2026-09-20', count:29, populated:true, status:'Current',
     blurb:'Integrating risk with strategy and performance — governance, risk appetite, portfolio view and risk response.' }
 ];
 

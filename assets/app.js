@@ -48,9 +48,7 @@ function icon(name, cls){
 /* ---------- navigation model ---------- */
 const NAV = [
   { group:'Platform', items:[
-    { id:'home',      label:'Home',               icon:'i-home',   href:'index.html' },
-    { id:'assistant', label:'AI Audit Assistant', icon:'i-spark',  href:'assistant.html' },
-    { id:'searchp',   label:'Global Search',      icon:'i-search', href:'search.html' }
+    { id:'home', label:'Home', icon:'i-home', href:'index.html' }
   ]},
   { group:'Standards & Frameworks', items:[
     { id:'all',     label:'All Standards',    icon:'i-globe',  href:'frameworks.html' },
@@ -118,20 +116,20 @@ function renderSidebar(active){
 
 function renderHeader(q){
   return '<div class="hdr-in">' +
-    '<form class="search" role="search" action="search.html" method="get">' +
+    '<div class="search modsearch" role="search">' +
       icon('i-search','si') +
       '<input type="search" name="q" value="' + (q ? esc(q) : '') + '" ' +
-      'placeholder="Search standards, frameworks, risks, controls, procedures, templates…" ' +
+      'placeholder="Search within this section…" ' +
       'aria-label="Global search">' +
-      '<button class="go" type="submit">Search</button>' +
-    '</form>' +
+      '<button class="go" type="button">Search</button>' +
+    '</div>' +
     '<div class="hdr-r">' +
       '<a class="ibtn" href="resources.html#news" aria-label="News and alerts">' +
         icon('i-bell') + '<span class="dot"></span></a>' +
       '<a class="ibtn" href="myspace.html#bookmarks" aria-label="Bookmarks">' + icon('i-star') + '</a>' +
       '<a class="ibtn" href="admin.html" aria-label="Admin panel">' + icon('i-gear') + '</a>' +
       '<div class="who"><div class="av">NA</div>' +
-        '<div class="wt"><b>Dr. Noora AlZaraa</b><span>Administrator</span></div></div>' +
+        '<div class="wt"><b>Noora AlZaraa</b><span>Administrator</span></div></div>' +
     '</div></div>';
 }
 
@@ -139,7 +137,7 @@ function renderFooter(){
   return '<div class="ft-in">' +
     '<div class="fl"><b>Audit Intelligence Platform</b>' +
       '<span>Standards · Risk · Compliance · Governance</span></div>' +
-    '<div class="dev"><span>Developed by</span><b>Dr. Noora AlZaraa</b></div></div>';
+    '<div class="dev"><span>Developed by</span><b>Noora AlZaraa</b></div></div>';
 }
 
 /* Build the page shell. Every page calls this once. */

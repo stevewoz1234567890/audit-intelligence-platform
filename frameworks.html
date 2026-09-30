@@ -72,6 +72,7 @@
         '<span class="pip">Eff. ' + fmtDate(f.effective) + '</span>' +
         '<span class="pip">Upd. ' + fmtDate(f.updated) + '</span>' +
         tierPip(f.tier) +
+        '<span class="stat-b ' + esc(f.status||'Current') + '">' + esc(f.status||'Current') + '</span>' +
         '<span class="pip" style="margin-left:auto">' + f.count + ' records</span>' +
       '</div></a>';
   };
