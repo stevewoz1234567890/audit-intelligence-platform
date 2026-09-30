@@ -47,8 +47,13 @@ function icon(name, cls){
 
 /* ---------- navigation model ---------- */
 const NAV = [
+  { group:'Platform', items:[
+    { id:'home',      label:'Home',               icon:'i-home',   href:'index.html' },
+    { id:'assistant', label:'AI Audit Assistant', icon:'i-spark',  href:'assistant.html' },
+    { id:'searchp',   label:'Global Search',      icon:'i-search', href:'search.html' }
+  ]},
   { group:'Standards & Frameworks', items:[
-    { id:'all',     label:'Global Standards', icon:'i-globe',  href:'search.html' },
+    { id:'all',     label:'All Standards',    icon:'i-globe',  href:'frameworks.html' },
     { id:'iia',     label:'CIA — IIA',        icon:'i-shield', href:'framework.html?fw=iia' },
     { id:'acfe',    label:'CFE — ACFE',       icon:'i-flag',   href:'framework.html?fw=acfe' },
     { id:'isaca',   label:'CISA — ISACA',     icon:'i-layer',  href:'framework.html?fw=isaca' },
@@ -57,8 +62,7 @@ const NAV = [
     { id:'coso',    label:'COSO',             icon:'i-grid',   href:'framework.html?fw=coso' },
     { id:'acams',   label:'CAMS — AML',       icon:'i-scale',  href:'framework.html?fw=acams' },
     { id:'iso',     label:'ISO',              icon:'i-check',  href:'framework.html?fw=iso' },
-    { id:'erm',     label:'ERM / Risk',       icon:'i-alert',  href:'framework.html?fw=erm' },
-    { id:'other',   label:'Other Frameworks', icon:'i-book',   href:'frameworks.html' }
+    { id:'erm',     label:'ERM / Risk',       icon:'i-alert',  href:'framework.html?fw=erm' }
   ]},
   { group:'Practical Tools', items:[
     { id:'templates', label:'Templates',        icon:'i-doc',    href:'tools.html#templates' },

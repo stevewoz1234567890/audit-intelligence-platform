@@ -169,7 +169,7 @@
   const seed = qs('q');
   if (seed){ input.value = seed; run(); } else idle();
 
-  mount({ active:'all', q: seed });
+  mount({ active:'searchp', q: seed });
 
   /* Ctrl/Cmd-K focuses search from anywhere on the page */
   document.addEventListener('keydown', e => {
