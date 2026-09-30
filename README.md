@@ -82,6 +82,34 @@ Provenance fields on every record: `source`, `version`, `effective`, `updated`,
 
 ---
 
+## Search and AI scope — platform content only
+
+Both the global search and the AI Audit Assistant operate **exclusively on content
+held within this platform**. Neither queries the internet.
+
+**Global search** iterates only the internal collections — `RECORDS`, `FRAMEWORKS`
+and `TOOLS` in `data/library.js`. There is no web search API, no external index,
+and no outbound request of any kind. In Week 2 the index moves server-side against
+the platform's own database; the boundary is unchanged.
+
+**AI Audit Assistant** answers only from retrieved platform records. Where retrieval
+returns nothing relevant, the assistant declines to answer rather than falling back
+on the language model's general knowledge. Every answer cites the platform records
+it drew on, and each citation links to that record inside the platform.
+
+In Week 2, when the assistant is wired to a language model, this is enforced by
+retrieval-augmented generation: the model receives only the retrieved platform
+records as context and is instructed to answer solely from them, returning a
+"not in the library" response when context is insufficient.
+
+The application makes **no outbound network requests**. The only external URLs
+anywhere in the platform are official-source citation links (`theiia.org`,
+`fatf-gafi.org`, and similar) shown on records, which an auditor may choose to
+click to reach the authoritative published text. These are ordinary links, not
+data sources.
+
+---
+
 ## Content licensing — two tiers
 
 The `tier` field on every framework and record records how content may be held.

@@ -16,6 +16,18 @@
         <a href="index.html">Home</a><span class="sep">/</span><b>Global Search</b>
       </div>
 
+      <div class="scope">
+        <svg class="ic" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z" fill="none"/>
+          <path d="M7.5 10l1.8 1.8 3.4-3.6" fill="none"/>
+        </svg>
+        <div>
+          <b>Searches this platform only</b>
+          <span>Results come exclusively from the standards, frameworks, audit tools and
+                guidance held in this library. This search does not query the internet.</span>
+        </div>
+      </div>
+
       <div>
         <label class="sbig">
           <svg class="si" viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" fill="none"/><path d="M17 17l-4-4" fill="none"/></svg>
@@ -68,8 +80,8 @@
       SUGGEST.map(s => '<button class="fb" data-go="' + esc(s) + '">' + esc(s) + '</button>').join('') +
       '</div>' +
       '<div class="snil" style="padding-top:38px">' + icon('i-search') +
-      '<b>Search the whole library at once</b>' +
-      '<p>One query searches every framework — across standards, requirements, focus areas, ' +
+      '<b>Search this entire platform at once</b>' +
+      '<p>One query searches every framework held in this library — across standards, ' +
       'risks, controls, procedures, testing, evidence, red flags, findings, root causes ' +
       'and recommendations.</p></div>';
 
@@ -152,10 +164,11 @@
 
     h += '</div>';
 
-    h += '<div class="disc" style="margin-top:15px"><b>Demo search scope.</b> ' +
-      'Search currently covers the populated frameworks — IIA, COSO, FATF and ERM — ' +
-      'plus all framework and tool listings. Remaining frameworks are scheduled for ' +
-      'population in Week 2, at which point they enter the same index.</div>';
+    h += '<div class="disc" style="margin-top:15px"><b>Content populated so far.</b> ' +
+      'These results are drawn from this platform only. Content is currently populated for ' +
+      'IIA, COSO, FATF and ERM, plus all framework and tool listings. The remaining ' +
+      'frameworks are scheduled for population in Week 2, at which point they enter the ' +
+      'same internal index.</div>';
 
     out.innerHTML = h;
   }

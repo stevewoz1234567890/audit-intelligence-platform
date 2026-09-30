@@ -25,9 +25,25 @@
              carries citations back to the source record.</p>
           <div class="pmeta">
             <span class="mtag"><b>Mode</b> Retrieval-grounded</span>
-            <span class="mtag"><b>Library</b> <span id="libn"></span> records</span>
+            <span class="mtag"><b>Knowledge base</b> <span id="libn"></span> records</span>
+            <span class="pip g">Internal library only</span>
             <span class="pip g">Citations mandatory</span>
           </div>
+        </div>
+      </div>
+
+      <div class="scope">
+        <svg class="ic" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z" fill="none"/>
+          <path d="M7.5 10l1.8 1.8 3.4-3.6" fill="none"/>
+        </svg>
+        <div>
+          <b>Answers come from this platform's knowledge base only</b>
+          <span>The assistant retrieves from the standards, frameworks, audit tools, guidance
+                and other materials held in this library — never from the open internet or from
+                the language model's general knowledge. Every answer cites the platform records
+                it drew on, and where the library holds nothing relevant the assistant says so
+                rather than answering.</span>
         </div>
       </div>
 
@@ -53,10 +69,12 @@
 
           <div class="disc" style="margin-top:14px">
             <b>Demo behaviour.</b> This demo retrieves from the populated records in the library
-            and shows the citation mechanism exactly as it will work in the final build. In Week 2
-            the retrieval layer is replaced by the full vector search over every record, and answer
-            generation is wired to the language model — with the same rule enforced: if the library
-            holds nothing relevant, the assistant says so rather than generating an unsupported answer.
+            and shows the citation mechanism exactly as it will work in the final build. In Week 2 the retrieval layer is
+            replaced by full vector search across every record, and answer generation is wired to
+            the language model — with the same boundary enforced in both: retrieval runs against
+            this platform's content only, the model is never permitted to answer from its own
+            general knowledge or from the internet, and if the library holds nothing relevant the
+            assistant says so rather than generating an unsupported answer.
           </div>
         </div>
 
@@ -113,12 +131,13 @@
     let body;
     if (!ans){
       body =
-        '<p><b>Nothing in the library covers this yet.</b> I can only answer from the verified ' +
-        'records in your library, and none of them address this question closely enough to ' +
-        'give you a reliable answer.</p>' +
-        '<p>The populated frameworks are IIA, COSO, FATF and ERM. Try ' +
+        '<p><b>Nothing in this platform’s knowledge base covers this.</b> I answer only from ' +
+        'the content held in this library, and no record addresses this question closely enough ' +
+        'to give you a reliable answer. I will not answer from general knowledge or from the ' +
+        'internet.</p>' +
+        '<p>Content is currently populated for IIA, COSO, FATF and ERM. Try ' +
         '<a href="search.html?q=' + encodeURIComponent(q) + '" style="color:var(--green-3);font-weight:600">' +
-        'searching the library</a> directly, or ask about a topic those frameworks cover.</p>';
+        'searching the platform</a> directly, or ask about a topic those frameworks cover.</p>';
     } else {
       body = ans.a.map(p => '<p><b>' + esc(p[0]) + '</b> ' + esc(p[1]) + '</p>').join('');
       if (ans.cites && ans.cites.length){
