@@ -206,7 +206,11 @@
       document.getElementById('f-url').value       = rec_.url || '';
       document.getElementById('f-tags').value      = (rec_.tags || []).join(', ');
     } else {
-      form.reset();
+      ['f-ref','f-title','f-domain','f-summary','f-version',
+       'f-effective','f-source','f-url','f-tags'].forEach(id =>
+        document.getElementById(id).value = '');
+      document.getElementById('f-fw').selectedIndex   = 0;
+      document.getElementById('f-tier').selectedIndex = 0;
     }
   }
 
