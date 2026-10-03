@@ -72,8 +72,40 @@
     '<ul class="alist ' + (cls||'') + '">' +
     arr.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
 
+  /* two-column reference table: procedure/evidence, bias/description, situation/requirement */
+  const twoCol = (rows, a, b, ka, kb) =>
+    '<div class="tbl-wrap"><table><thead><tr><th>' + a + '</th><th>' + b +
+    '</th></tr></thead><tbody>' +
+    rows.map(x => '<tr><td><b>' + esc(x[ka]) + '</b></td><td>' + esc(x[kb]) +
+      '</td></tr>').join('') + '</tbody></table></div>';
+
+  /* principle overview, where the standard belongs to a principle group */
+  if (r.principleOverview)
+    h += sec('overview','Principle Overview','i-book','<p>' + esc(r.principleOverview) + '</p>');
+
   /* requirement */
   h += sec('requirement','Requirement','i-doc','<p>' + esc(r.requirement) + '</p>');
+
+  /* engagement assignment matrix (Standard 2.2) */
+  if (r.assignmentTable && r.assignmentTable.length)
+    h += sec('assignment','Previous Responsibilities &amp; Engagement Assignments','i-scale',
+      twoCol(r.assignmentTable,'Situation','Requirement','s','r'),
+      r.assignmentTable.length);
+
+  /* bias reference (Standard 2.1) */
+  if (r.biasTable && r.biasTable.length)
+    h += sec('bias','Examples of Bias','i-alert',
+      twoCol(r.biasTable,'Bias','Description','b','d'), r.biasTable.length);
+
+  /* implementation considerations */
+  if (r.implementation && r.implementation.length)
+    h += sec('implementation','Considerations for Implementation','i-check',
+      list(r.implementation,'dot'), r.implementation.length);
+
+  /* evidence of conformance */
+  if (r.conformance && r.conformance.length)
+    h += sec('conformance','Examples of Evidence of Conformance','i-doc',
+      list(r.conformance,'tick'), r.conformance.length);
 
   /* focus areas */
   h += sec('focus','Audit Focus Areas','i-target', list(r.focus,'dot'), r.focus.length);
@@ -81,7 +113,8 @@
   /* risks */
   h += sec('risks','Risks','i-alert',
     r.risks.map(x =>
-      '<div class="rrow"><div class="rt"><b>' + esc(x.r) + '</b><span>' + esc(x.d) + '</span></div>' +
+      '<div class="rrow"><div class="rt"><b>' + esc(x.r) + '</b>' +
+      (x.d ? '<span>' + esc(x.d) + '</span>' : '') + '</div>' +
       '<span class="imp ' + esc(x.i) + '">' + esc(x.i) + '</span></div>').join(''),
     r.risks.length);
 
@@ -93,7 +126,12 @@
     r.controls.length);
 
   /* procedures */
-  h += sec('procedures','Audit Procedures','i-check', list(r.procedures), r.procedures.length);
+  /* where the source pairs each procedure with its required evidence, show both */
+  h += sec('procedures','Audit Procedures','i-check',
+    (r.procedureTable && r.procedureTable.length)
+      ? twoCol(r.procedureTable,'Procedure','Required Evidence','p','e')
+      : list(r.procedures),
+    (r.procedureTable && r.procedureTable.length) ? r.procedureTable.length : r.procedures.length);
 
   /* testing */
   h += sec('testing','Testing Approach','i-grid','<p>' + esc(r.testing) + '</p>');
@@ -152,13 +190,22 @@
   h += '</div>';
 
   /* on-page nav */
+  const navItems = [];
+  if (r.principleOverview) navItems.push(['overview','Principle Overview']);
+  navItems.push(['requirement','Requirement']);
+  if (r.assignmentTable && r.assignmentTable.length) navItems.push(['assignment','Assignments']);
+  if (r.biasTable && r.biasTable.length) navItems.push(['bias','Examples of Bias']);
+  if (r.implementation && r.implementation.length) navItems.push(['implementation','Implementation']);
+  if (r.conformance && r.conformance.length) navItems.push(['conformance','Conformance Evidence']);
+
   h += '<aside class="rnav"><div class="ph">On This Page</div>' +
-    [['requirement','Requirement'],['focus','Focus Areas'],['risks','Risks'],
-     ['controls','Controls'],['procedures','Procedures'],['testing','Testing'],
-     ['evidence','Evidence'],['redflags','Red Flags'],['findings','Findings'],
-     ['causes','Root Causes'],['impacts','Risk &amp; Impact'],
-     ['recommendations','Recommendations'],['source','Source']]
-      .map(x => '<a href="#' + x[0] + '">' + x[1] + '</a>').join('') +
+    navItems.concat([
+      ['focus','Focus Areas'],['risks','Risks'],
+      ['controls','Controls'],['procedures','Procedures'],['testing','Testing'],
+      ['evidence','Evidence'],['redflags','Red Flags'],['findings','Findings'],
+      ['causes','Root Causes'],['impacts','Risk &amp; Impact'],
+      ['recommendations','Recommendations'],['source','Source']
+    ]).map(x => '<a href="#' + x[0] + '">' + x[1] + '</a>').join('') +
     '</aside>';
 
   h += '</div>';
