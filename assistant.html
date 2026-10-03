@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Audit Assistant — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css">
+<style>
+.as-h{padding:26px 28px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.as-h h1{font-size:27px}
+.as-h>p{margin:9px 0 0;font-size:13.8px;color:var(--ink-2);max-width:70ch;line-height:1.7}
+.as-body{padding:22px 28px 40px;max-width:1000px}
+.conv{display:flex;flex-direction:column;gap:16px;margin-bottom:20px}
+.msg{display:flex;gap:12px;align-items:flex-start}
+.msg .av{width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;
+  font-size:11px;font-weight:700}
+.msg.u .av{background:var(--navy);color:var(--gold-3)}
+.msg.a .av{background:var(--gold-soft);border:1px solid var(--gold-line)}
+.msg.a .av .ic{width:17px;height:17px;stroke:var(--gold-2);fill:none;stroke-width:1.8}
+.msg .mb{flex:1;min-width:0}
+.msg.u .mb{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-s);
+  padding:12px 15px;font-size:13.8px;color:var(--ink)}
+.msg.a .mb{background:var(--panel);border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:var(--r-s);padding:16px 18px;
+  box-shadow:var(--sh-1)}
+.msg.a .mb p{margin:0 0 11px;font-size:13.6px;line-height:1.72;color:var(--ink-2)}
+.msg.a .mb p:last-of-type{margin-bottom:0}
+.msg.a .mb p b{color:var(--ink);font-weight:700}
+.cites{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);
+  display:flex;flex-wrap:wrap;gap:7px}
+.cites .lb{width:100%;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:700;margin-bottom:3px}
+.cite{font-size:11.5px;background:var(--panel-2);border:1px solid var(--line-2);
+  border-radius:14px;padding:5px 12px;color:var(--navy-3);font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;transition:.14s}
+.cite:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cite::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.cite:hover::before{background:var(--gold-3)}
+.ask{display:flex;gap:9px;margin-bottom:14px}
+.ask input{flex:1;padding:13px 16px;border:1px solid var(--line-2);border-radius:var(--r);
+  background:var(--panel);font:inherit;font-size:14px;color:var(--ink);box-shadow:var(--sh-1)}
+.ask input:focus{outline:none;border-color:var(--navy-3);box-shadow:0 0 0 3px rgba(30,76,119,.12)}
+.sugg{display:flex;gap:7px;flex-wrap:wrap}
+.sugg button{border:1px solid var(--line-2);background:var(--panel);border-radius:16px;
+  padding:7px 14px;font-size:12px;color:var(--ink-2);font-weight:500;transition:.15s;
+  display:inline-flex;align-items:center;gap:7px}
+.sugg button:hover{border-color:var(--navy-3);color:var(--navy-3)}
+.sugg .ic{width:13px;height:13px;stroke:var(--gold-2);fill:none;stroke-width:2}
+@media(max-width:1000px){.as-h,.as-body{padding-left:18px;padding-right:18px}}
+@media(max-width:680px){.as-h,.as-body{padding-left:14px;padding-right:14px}}
+</style>
+</head>
+<body>
+
+<header class="top"></header>
+
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span><b>AI Audit Assistant</b>
+    </div>
+
+    <div class="as-h">
+      <h1>AI Audit Assistant</h1>
+      <p>Ask about the standards held in this platform. Every answer cites the standard
+         it came from and links to the exact section.</p>
+    </div>
+
+    <div class="as-body">
+      <div class="scope" style="margin-bottom:18px">
+        <svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z" fill="none"/><path d="M7.5 10l1.8 1.8 3.4-3.6" fill="none"/></svg>
+        <div><b>Answers come from this platform only</b>
+        <span>The assistant retrieves from the standards held here — never from the open
+        internet. Where the platform holds nothing relevant, it says so rather than
+        answering from general knowledge.</span></div>
+      </div>
+
+      <div class="conv" id="conv"></div>
+
+      <div class="ask">
+        <input type="text" id="q" placeholder="Ask about a standard, requirement, risk or control…"
+               aria-label="Ask the assistant">
+        <button class="btn-gold" id="ask">Ask</button>
+      </div>
+      <div class="sugg" id="sugg"></div>
+    </div>
+
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
+<script>
+(function(){
+  const conv = document.getElementById('conv');
+  const input = document.getElementById('q');
+
+  const SUGG = [
+    'What does Standard 2.2 require?',
+    'How is objectivity safeguarded?',
+    'Red flags for professional courage',
+    'Evidence of conformance for ethics',
+    'Controls over confidentiality'
+  ];
+  document.getElementById('sugg').innerHTML = SUGG.map(s =>
+    '<button data-q="' + esc(s) + '">' + icon('spark') + esc(s) + '</button>').join('');
+
+  function addUser(t){
+    conv.insertAdjacentHTML('beforeend',
+      '<div class="msg u"><div class="av">NA</div><div class="mb">' + esc(t) + '</div></div>');
+  }
+
+  /* The assistant answers strictly from retrieved platform content.
+     It composes from the standards themselves rather than generating
+     prose, so nothing can enter an answer that is not in the library. */
+  function answer(q){
+    const res = searchPlatform(q).filter(r => r.rec).slice(0, 3);
+
+    if (!res.length){
+      return '<p><b>Nothing in this platform covers that yet.</b> I answer only from the ' +
+        'standards held here, and none of them address this closely enough to give you a ' +
+        'reliable answer. I will not answer from general knowledge or from the internet.</p>' +
+        '<p>Try the <a href="standards.html?q=' + encodeURIComponent(q) +
+        '" style="color:var(--navy-3);font-weight:600">standards library</a>, ' +
+        'or ask about a standard that has content.</p>';
+    }
+
+    const top = res[0], r = top.rec, s = top.s;
+    let h = '<p><b>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + '.</b> ' +
+      esc(r.summary) + '</p>';
+
+    const sec = top.hits[0];
+    if (sec && sec.anchor === 'requirements')
+      h += '<p><b>Requirement.</b> ' + esc(r.requirement) + '</p>';
+    else if (sec && sec.anchor === 'risks' && r.risks && r.risks.length)
+      h += '<p><b>Risks.</b> ' + r.risks.map(x =>
+        esc(x.r) + ' (' + esc(x.i) + ')').join(' ') + '</p>';
+    else if (sec && sec.anchor === 'controls' && r.controls && r.controls.length)
+      h += '<p><b>Controls.</b> ' + r.controls.map(x =>
+        esc(x.c) + ' (' + esc(x.t) + ')').join(' ') + '</p>';
+    else if (sec && sec.anchor === 'redflags' && r.redFlags && r.redFlags.length)
+      h += '<p><b>Red flags.</b> ' + r.redFlags.map(esc).join(' · ') + '</p>';
+    else if (sec && sec.anchor === 'focus' && r.focus && r.focus.length)
+      h += '<p><b>Audit focus areas.</b> ' + r.focus.map(esc).join(' · ') + '</p>';
+    else
+      h += '<p><b>Requirement.</b> ' + esc(r.requirement) + '</p>';
+
+    if (res.length > 1)
+      h += '<p><b>Also relevant.</b> ' + res.slice(1).map(x =>
+        'Standard ' + esc(x.s.ref) + ' — ' + esc(x.s.title)).join('; ') + '.</p>';
+
+    h += '<div class="cites"><span class="lb">Sources — from this platform</span>' +
+      res.map(x => {
+        const a = x.hits[0] ? '#' + x.hits[0].anchor : '';
+        return '<a class="cite" href="standard.html?ref=' +
+          encodeURIComponent(x.s.ref) + a + '">Standard ' + esc(x.s.ref) +
+          (x.hits[0] ? ' · ' + esc(x.hits[0].label) : '') + '</a>';
+      }).join('') + '</div>';
+    return h;
+  }
+
+  function addAnswer(q){
+    conv.insertAdjacentHTML('beforeend',
+      '<div class="msg a"><div class="av">' + icon('spark') + '</div>' +
+      '<div class="mb">' + answer(q) + '</div></div>');
+  }
+
+  function ask(text){
+    const q = (text || input.value).trim();
+    if (!q) return;
+    addUser(q);
+    input.value = '';
+    setTimeout(() => {
+      addAnswer(q);
+      conv.lastElementChild.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }, 220);
+  }
+
+  document.getElementById('ask').addEventListener('click', () => ask());
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+  document.getElementById('sugg').addEventListener('click', e => {
+    const b = e.target.closest('[data-q]');
+    if (b) ask(b.dataset.q);
+  });
+
+  const seed = qs('q');
+  if (seed) ask(seed);
+  else { addUser(SUGG[0]); addAnswer(SUGG[0]); }
+
+  mount({ active:'assistant' });
+})();
+</script>
+</body>
+</html>

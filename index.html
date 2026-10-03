@@ -3,455 +3,206 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Audit Intelligence Platform — professional digital reference library for auditors. Standards, frameworks, risks, controls, procedures and an AI Audit Assistant.">
-<title>Audit Intelligence Platform — Auditor's Digital Library</title>
-<link rel="stylesheet" href="assets/app.css">
+<meta name="description" content="Audit Intelligence — IIA Global Internal Audit Standards. Requirements, audit focus areas, risks, controls, procedures and evidence for practising internal auditors.">
+<title>Audit Intelligence — IIA Global Internal Audit Standards</title>
+<link rel="stylesheet" href="assets/iia.css">
+<style>
+/* homepage-only */
+.hero{position:relative;background:var(--navy);color:#fff;overflow:hidden;
+  padding:64px 28px 60px;isolation:isolate}
+.hero .bg{position:absolute;inset:0;z-index:0;opacity:.3}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(100deg,var(--navy) 0%,rgba(15,40,71,.95) 42%,rgba(15,40,71,.55) 100%)}
+.hero-in{position:relative;z-index:2;max-width:1180px;margin:0 auto}
+.hero .eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold-3);font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero .eyebrow::before{content:"";width:26px;height:1.5px;background:var(--gold)}
+.hero h1{font-size:46px;line-height:1.1;color:#fff;max-width:17ch;letter-spacing:-.8px}
+.hero h1 em{font-style:normal;display:block;color:var(--gold-3)}
+.hero p{margin:18px 0 0;font-size:15.5px;color:rgba(255,255,255,.78);max-width:58ch;line-height:1.7}
+.hero-cta{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+.hero-stats{margin-top:34px;display:flex;gap:26px;flex-wrap:wrap;
+  padding-top:22px;border-top:1px solid rgba(255,255,255,.16)}
+.hero-stats div{display:flex;align-items:baseline;gap:8px}
+.hero-stats b{font-family:Georgia,serif;font-size:22px;color:var(--gold-3);
+  font-variant-numeric:tabular-nums}
+.hero-stats span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.6);font-weight:600}
+
+.start{padding:52px 28px;max-width:1180px;margin:0 auto}
+.start>h2{font-size:24px;text-align:center;margin-bottom:8px}
+.start>p{text-align:center;color:var(--ink-3);font-size:14px;margin:0 auto 32px;max-width:56ch}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.bigcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:28px;box-shadow:var(--sh-1);transition:.18s;display:flex;flex-direction:column}
+.bigcard:hover{box-shadow:var(--sh-2);border-color:var(--line-2);transform:translateY(-3px)}
+.bigcard .bi{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;
+  background:var(--gold-soft);border:1px solid var(--gold-line);margin-bottom:16px}
+.bigcard .bi .ic{width:22px;height:22px;stroke:var(--gold-2);fill:none;stroke-width:1.7}
+.bigcard h3{font-size:19px;margin-bottom:8px}
+.bigcard p{margin:0 0 20px;font-size:13.5px;color:var(--ink-3);line-height:1.7;flex:1}
+.bigcard .go{font-size:13px;font-weight:700;color:var(--navy);display:inline-flex;
+  align-items:center;gap:8px}
+.bigcard .go .ic{width:15px;height:15px;stroke:var(--gold-2);fill:none;stroke-width:2.2;
+  transition:transform .16s}
+.bigcard:hover .go .ic{transform:translateX(4px)}
+
+.domains{background:var(--panel);border-top:1px solid var(--line);padding:46px 28px}
+.domains-in{max-width:1180px;margin:0 auto}
+.domains h2{font-size:21px;margin-bottom:6px}
+.domains>.domains-in>p{color:var(--ink-3);font-size:13.5px;margin:0 0 26px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.dcard{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:var(--panel-2);
+  transition:.16s}
+.dcard:hover{border-color:var(--navy-3);background:var(--panel);box-shadow:var(--sh-1)}
+.dcard .dn{font-family:Georgia,serif;font-size:13px;color:var(--gold-2);font-weight:700;
+  letter-spacing:.06em;margin-bottom:6px}
+.dcard b{display:block;font-family:Georgia,serif;font-size:15px;margin-bottom:7px;line-height:1.35}
+.dcard p{margin:0 0 11px;font-size:12.3px;color:var(--ink-3);line-height:1.6}
+.dcard .dm{font-size:10px;font-family:ui-monospace,monospace;color:var(--ink-3);
+  padding-top:10px;border-top:1px solid var(--line)}
+
+@media(max-width:860px){.cards{grid-template-columns:1fr}.hero h1{font-size:33px}
+  .hero{padding:44px 18px 40px}.start,.domains{padding:36px 18px}}
+</style>
 </head>
 <body>
-<div class="shell">
-  <aside class="sb"></aside>
-  <div class="main">
-    <header class="hdr"></header>
 
-    <div class="wrap">
+<header class="top"></header>
 
-      <!-- ============ HERO ============ -->
-      <section class="hero">
-        <svg class="sky" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="nsky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stop-color="#071634"/>
-              <stop offset="55%"  stop-color="#0B2247"/>
-              <stop offset="100%" stop-color="#123059"/>
-            </linearGradient>
-            <linearGradient id="ntow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#16345E" stop-opacity=".55"/>
-              <stop offset="100%" stop-color="#0C2144" stop-opacity=".55"/>
-            </linearGradient>
-            <linearGradient id="ntow2" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#1B3D6B" stop-opacity=".38"/>
-              <stop offset="100%" stop-color="#0E2649" stop-opacity=".38"/>
-            </linearGradient>
-            <linearGradient id="ndoc" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#E8EDF6"/>
-              <stop offset="100%" stop-color="#C3CEDF"/>
-            </linearGradient>
-            <linearGradient id="ndoc2" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#D4DCEA"/>
-              <stop offset="100%" stop-color="#AEBCD2"/>
-            </linearGradient>
-            <linearGradient id="ngold" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#E3C87A"/>
-              <stop offset="50%" stop-color="#C8A951"/>
-              <stop offset="100%" stop-color="#9C7F34"/>
-            </linearGradient>
-            <linearGradient id="nbar" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stop-color="#2F6DB0" stop-opacity=".25"/>
-              <stop offset="100%" stop-color="#4A8ACF" stop-opacity=".75"/>
-            </linearGradient>
-            <radialGradient id="nglow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#4A8ACF" stop-opacity=".30"/>
-              <stop offset="100%" stop-color="#4A8ACF" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+<div class="hero">
+  <svg class="bg" viewBox="0 0 1400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#E8EEF7"/><stop offset="100%" stop-color="#B9C8DC"/>
+      </linearGradient>
+      <linearGradient id="pn" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#D5DEEB"/><stop offset="100%" stop-color="#9FB2CC"/>
+      </linearGradient>
+      <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#E3C468"/><stop offset="55%" stop-color="#C9A227"/>
+        <stop offset="100%" stop-color="#8F7322"/>
+      </linearGradient>
+    </defs>
+    <!-- open standards volume -->
+    <g transform="translate(700,120) rotate(-4)">
+      <rect x="0" y="0" width="300" height="360" rx="5" fill="url(#pn)" opacity=".5"/>
+      <rect x="14" y="-12" width="300" height="360" rx="5" fill="url(#pg)"/>
+      <g fill="#6E829E" opacity=".45">
+        <rect x="42" y="26" width="150" height="8" rx="3"/>
+        <rect x="42" y="50" width="96"  height="5" rx="2"/>
+        <rect x="42" y="88" width="244" height="4" rx="2"/>
+        <rect x="42" y="106" width="228" height="4" rx="2"/>
+        <rect x="42" y="124" width="250" height="4" rx="2"/>
+        <rect x="42" y="142" width="196" height="4" rx="2"/>
+        <rect x="42" y="176" width="130" height="6" rx="2"/>
+        <rect x="42" y="200" width="244" height="4" rx="2"/>
+        <rect x="42" y="218" width="236" height="4" rx="2"/>
+        <rect x="42" y="236" width="210" height="4" rx="2"/>
+        <rect x="42" y="270" width="118" height="6" rx="2"/>
+        <rect x="42" y="294" width="248" height="4" rx="2"/>
+        <rect x="42" y="312" width="222" height="4" rx="2"/>
+      </g>
+      <rect x="42" y="66" width="250" height="1.5" fill="#8296B4" opacity=".5"/>
+    </g>
+    <!-- pen -->
+    <g transform="translate(1010,392) rotate(-32)">
+      <rect x="0" y="0" width="150" height="11" rx="5.5" fill="url(#gm)"/>
+      <path d="M150 0 L176 5.5 L150 11 Z" fill="#8F7322"/>
+      <rect x="0" y="0" width="150" height="4" rx="2" fill="#F0DFA8" opacity=".5"/>
+    </g>
+    <!-- faint data grid, left -->
+    <g stroke="#7FA8D8" stroke-width=".8" opacity=".2" fill="none">
+      <path d="M90 150 L170 110 L250 140 L330 88 L410 120"/>
+      <path d="M90 230 L170 206 L250 232 L330 190 L410 214"/>
+    </g>
+    <g fill="#7FA8D8" opacity=".3">
+      <circle cx="170" cy="110" r="3.5"/><circle cx="330" cy="88" r="3.5"/>
+      <circle cx="250" cy="232" r="3"/><circle cx="410" cy="214" r="3"/>
+    </g>
+    <g fill="#7FA8D8" opacity=".16">
+      <rect x="110" y="320" width="18" height="70"/>
+      <rect x="138" y="296" width="18" height="94"/>
+      <rect x="166" y="340" width="18" height="50"/>
+      <rect x="194" y="272" width="18" height="118"/>
+      <rect x="222" y="312" width="18" height="78"/>
+    </g>
+  </svg>
 
-          <!-- ground -->
-          <rect width="1200" height="420" fill="url(#nsky)"/>
-          <ellipse cx="880" cy="150" rx="300" ry="190" fill="url(#nglow)"/>
-
-          <!-- faint world-map dot grid, upper left -->
-          <g fill="#3E7CBE" opacity=".18">
-            <circle cx="70"  cy="52" r="1.6"/><circle cx="84" cy="52" r="1.6"/>
-            <circle cx="98"  cy="52" r="1.6"/><circle cx="70" cy="66" r="1.6"/>
-            <circle cx="112" cy="66" r="1.6"/><circle cx="126" cy="66" r="1.6"/>
-            <circle cx="84"  cy="80" r="1.6"/><circle cx="98" cy="80" r="1.6"/>
-            <circle cx="140" cy="80" r="1.6"/><circle cx="154" cy="94" r="1.6"/>
-            <circle cx="112" cy="94" r="1.6"/><circle cx="168" cy="94" r="1.6"/>
-            <circle cx="126" cy="108" r="1.6"/><circle cx="182" cy="108" r="1.6"/>
-            <circle cx="196" cy="122" r="1.6"/><circle cx="140" cy="122" r="1.6"/>
-            <circle cx="210" cy="66" r="1.6"/><circle cx="224" cy="80" r="1.6"/>
-            <circle cx="238" cy="66" r="1.6"/><circle cx="252" cy="94" r="1.6"/>
-          </g>
-
-          <!-- distant skyline -->
-          <g fill="url(#ntow2)">
-            <rect x="40"  y="252" width="46" height="168"/>
-            <rect x="96"  y="228" width="38" height="192"/>
-            <rect x="144" y="266" width="52" height="154"/>
-            <rect x="742" y="258" width="46" height="162"/>
-            <rect x="798" y="236" width="40" height="184"/>
-            <rect x="1012" y="250" width="52" height="170"/>
-            <rect x="1074" y="272" width="42" height="148"/>
-          </g>
-
-          <!-- mid skyline -->
-          <g fill="url(#ntow)">
-            <rect x="0"   y="216" width="56" height="204"/>
-            <path d="M296 420V198l28-24 28 24v222z"/>
-            <rect x="374" y="234" width="48" height="186"/>
-            <path d="M442 420V180l24-18 24 18v240z"/>
-            <rect x="614" y="210" width="52" height="210"/>
-            <path d="M684 420V192l26-20 26 20v228z"/>
-            <rect x="852" y="226" width="46" height="194"/>
-            <rect x="920" y="250" width="40" height="170"/>
-            <rect x="1140" y="222" width="60" height="198"/>
-            <path d="M510 420V126l20-66 20 66v294z"/>
-            <rect x="496" y="266" width="24" height="154"/>
-            <rect x="564" y="252" width="28" height="168"/>
-            <path d="M196 420V172c0-13 9-22 20-22s20 9 20 22v248z"/>
-            <rect x="956" y="216" width="24" height="204"/>
-          </g>
-
-          <!-- lit windows -->
-          <g fill="#7FB4E8" opacity=".22">
-            <rect x="518" y="172" width="5" height="8"/><rect x="530" y="172" width="5" height="8"/>
-            <rect x="518" y="192" width="5" height="8"/><rect x="540" y="192" width="5" height="8"/>
-            <rect x="518" y="212" width="5" height="8"/><rect x="530" y="212" width="5" height="8"/>
-            <rect x="204" y="204" width="5" height="8"/><rect x="216" y="204" width="5" height="8"/>
-            <rect x="204" y="226" width="5" height="8"/><rect x="226" y="226" width="5" height="8"/>
-            <rect x="694" y="224" width="5" height="8"/><rect x="716" y="224" width="5" height="8"/>
-            <rect x="694" y="248" width="5" height="8"/><rect x="726" y="248" width="5" height="8"/>
-            <rect x="304" y="232" width="5" height="8"/><rect x="326" y="232" width="5" height="8"/>
-            <rect x="864" y="244" width="5" height="8"/><rect x="884" y="244" width="5" height="8"/>
-          </g>
-
-          <!-- floating analytics: pie -->
-          <g transform="translate(676,96)" opacity=".5">
-            <circle r="30" fill="none" stroke="#4A8ACF" stroke-width="1.4" opacity=".5"/>
-            <path d="M0 0 L0 -30 A30 30 0 0 1 26 15 Z" fill="#2F6DB0" opacity=".55"/>
-            <path d="M0 0 L26 15 A30 30 0 0 1 -26 15 Z" fill="#4A8ACF" opacity=".38"/>
-            <path d="M0 0 L-26 15 A30 30 0 0 1 0 -30 Z" fill="#C8A951" opacity=".45"/>
-          </g>
-
-          <!-- floating analytics: bar chart -->
-          <g transform="translate(958,74)" opacity=".55">
-            <rect x="0"  y="34" width="11" height="30" fill="url(#nbar)"/>
-            <rect x="17" y="22" width="11" height="42" fill="url(#nbar)"/>
-            <rect x="34" y="10" width="11" height="54" fill="url(#nbar)"/>
-            <rect x="51" y="26" width="11" height="38" fill="url(#nbar)"/>
-            <rect x="68" y="2"  width="11" height="62" fill="#C8A951" opacity=".6"/>
-            <path d="M0 68h84" stroke="#4A8ACF" stroke-width="1.2" opacity=".5"/>
-          </g>
-
-          <!-- trend line with nodes -->
-          <g opacity=".6">
-            <path d="M300 148 L360 128 L420 138 L480 104 L540 116 L600 82"
-                  fill="none" stroke="#4A8ACF" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="360" cy="128" r="3" fill="#4A8ACF"/>
-            <circle cx="480" cy="104" r="3" fill="#4A8ACF"/>
-            <circle cx="600" cy="82"  r="4" fill="#C8A951"/>
-          </g>
-
-          <!-- connection nodes -->
-          <g stroke="#4A8ACF" stroke-width=".9" opacity=".3" fill="none">
-            <path d="M212 96 L268 62 L332 84 L392 58"/>
-            <path d="M268 62 L262 124"/>
-            <path d="M332 84 L348 132"/>
-          </g>
-          <g fill="#6BA3DC" opacity=".5">
-            <circle cx="212" cy="96" r="2.4"/><circle cx="268" cy="62" r="2.4"/>
-            <circle cx="332" cy="84" r="2.4"/><circle cx="392" cy="58" r="2.4"/>
-            <circle cx="262" cy="124" r="2"/><circle cx="348" cy="132" r="2"/>
-          </g>
-
-          <!-- ==== foreground desk: financial statements ==== -->
-          <!-- back sheet -->
-          <g transform="translate(96,300) rotate(-3)">
-            <rect x="0" y="0" width="300" height="150" rx="3" fill="url(#ndoc2)" opacity=".5"/>
-          </g>
-          <!-- main statement -->
-          <g transform="translate(120,288) rotate(1.5)">
-            <rect x="0" y="0" width="316" height="152" rx="3" fill="url(#ndoc)"/>
-            <!-- header rule -->
-            <rect x="18" y="16" width="120" height="7" rx="2" fill="#4A628A" opacity=".8"/>
-            <rect x="18" y="31" width="74"  height="4" rx="2" fill="#8FA2BD" opacity=".7"/>
-            <!-- column headers -->
-            <rect x="182" y="16" width="52" height="4" rx="2" fill="#8FA2BD" opacity=".65"/>
-            <rect x="246" y="16" width="52" height="4" rx="2" fill="#8FA2BD" opacity=".65"/>
-            <path d="M18 44h280" stroke="#9BAAC2" stroke-width="1"/>
-            <!-- line items -->
-            <g fill="#6E829E" opacity=".72">
-              <rect x="18" y="54" width="108" height="4" rx="2"/>
-              <rect x="192" y="54" width="42" height="4" rx="2"/>
-              <rect x="256" y="54" width="42" height="4" rx="2"/>
-              <rect x="18" y="70" width="128" height="4" rx="2"/>
-              <rect x="192" y="70" width="42" height="4" rx="2"/>
-              <rect x="256" y="70" width="42" height="4" rx="2"/>
-              <rect x="18" y="86" width="96"  height="4" rx="2"/>
-              <rect x="192" y="86" width="42" height="4" rx="2"/>
-              <rect x="256" y="86" width="42" height="4" rx="2"/>
-              <rect x="18" y="102" width="118" height="4" rx="2"/>
-              <rect x="192" y="102" width="42" height="4" rx="2"/>
-              <rect x="256" y="102" width="42" height="4" rx="2"/>
-            </g>
-            <!-- total rule -->
-            <path d="M182 118h116" stroke="#7C8EA8" stroke-width="1"/>
-            <g fill="#3E5273" opacity=".85">
-              <rect x="18" y="126" width="72" height="5" rx="2"/>
-              <rect x="192" y="126" width="42" height="5" rx="2"/>
-              <rect x="256" y="126" width="42" height="5" rx="2"/>
-            </g>
-            <path d="M182 137h116" stroke="#7C8EA8" stroke-width=".8"/>
-            <path d="M182 140h116" stroke="#7C8EA8" stroke-width=".8"/>
-          </g>
-
-          <!-- small chart card on the desk -->
-          <g transform="translate(404,338) rotate(-2)">
-            <rect x="0" y="0" width="118" height="86" rx="3" fill="url(#ndoc2)"/>
-            <rect x="12" y="12" width="46" height="4" rx="2" fill="#7386A3" opacity=".8"/>
-            <g fill="#2F6DB0" opacity=".65">
-              <rect x="12" y="52" width="12" height="20"/>
-              <rect x="30" y="42" width="12" height="30"/>
-              <rect x="48" y="34" width="12" height="38"/>
-              <rect x="66" y="46" width="12" height="26"/>
-              <rect x="84" y="28" width="12" height="44"/>
-            </g>
-            <path d="M12 72h94" stroke="#8496B0" stroke-width="1"/>
-          </g>
-
-          <!-- ==== magnifier over the statement ==== -->
-          <g transform="translate(352,318) rotate(-18)">
-            <!-- handle -->
-            <rect x="52" y="6" width="80" height="13" rx="6.5" fill="url(#ngold)"/>
-            <rect x="52" y="6" width="80" height="5" rx="2.5" fill="#EBD9A0" opacity=".55"/>
-            <!-- rim -->
-            <circle cx="0" cy="12" r="56" fill="none" stroke="url(#ngold)" stroke-width="9"/>
-            <circle cx="0" cy="12" r="50" fill="#BBD2EC" opacity=".16"/>
-            <circle cx="0" cy="12" r="50" fill="none" stroke="#EBD9A0" stroke-width="1" opacity=".4"/>
-            <!-- lens glint -->
-            <path d="M-34 -14 A48 48 0 0 1 4 -36" fill="none" stroke="#FFFFFF"
-                  stroke-width="5" stroke-linecap="round" opacity=".3"/>
-          </g>
-
-          <!-- desk edge -->
-          <rect x="0" y="404" width="1200" height="16" fill="#061229" opacity=".65"/>
-        </svg>
-
-        <div class="hero-l">
-          <div class="eyebrow">One Platform · All Audit Standards</div>
-          <h1>Audit Standards<em>Intelligence Platform</em></h1>
-          <p>All standards. Practical guidance. Real impact. Your trusted daily reference
-             for auditing, risk, compliance and governance.</p>
-          <div class="hero-cta">
-            <a href="frameworks.html" class="pill solid">Access</a>
-            <a href="tools.html" class="pill">Apply</a>
-            <a href="frameworks.html" class="pill">Verify</a>
-            <a href="resources.html#news" class="pill">Stay Updated</a>
-          </div>
-        </div>
-
-        <div class="hero-r">
-          <div class="qcard">
-            <span class="qm">&ldquo;</span>
-            <q>Standards alone inform.<br>Standards applied transform.</q>
-            <div class="qa">Built for practising auditors</div>
-          </div>
-          <div class="hstats" id="hstats"></div>
-        </div>
-      </section>
-
-      <!-- ============ FRAMEWORKS ============ -->
-      <section>
-        <div class="sec-h">
-          <h2>Explore Standards &amp; Frameworks</h2>
-          <span class="sub">Each with its own sidebar, focus areas, risks, controls and procedures</span>
-          <a href="frameworks.html" class="more" id="allFw"></a>
-        </div>
-        <div class="fw" style="margin-top:12px" id="fwGrid"></div>
-      </section>
-
-      <!-- ============ MODULES + UPDATES ============ -->
-      <section class="split">
-        <div class="card">
-          <div class="card-h">
-            <h3>Where Auditors Start</h3>
-            <span class="badge">Section-scoped</span>
-          </div>
-          <div class="card-b">
-            <p style="margin:0 0 14px;font-size:12.5px;color:var(--ink-2);line-height:1.65">
-              Each module carries its own search and its own contextual assistance, restricted
-              to that module's content. There is no platform-wide search and no standalone
-              assistant — an auditor working in Payroll sees Payroll content only.
-            </p>
-            <div class="ql" id="modGrid"></div>
-            <div class="note" style="margin-top:14px">
-              <b>Search and AI stay inside the module.</b> Opening IIA searches IIA only;
-              opening an Audit Program searches that program only. Nothing queries the
-              internet, and contextual assistance draws solely on the content of the
-              section the auditor is working in.
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:18px">
-          <div class="card">
-            <div class="card-h">
-              <h3>Latest Updates</h3>
-              <a href="resources.html#news" class="more">All &rarr;</a>
-            </div>
-            <div class="upd" id="updates"></div>
-          </div>
-
-          <div class="card">
-            <div class="card-h"><h3>Quick Links</h3></div>
-            <div class="card-b">
-              <div class="ql" id="quickLinks"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ PROVENANCE ============ -->
-      <section>
-        <div class="sec-h">
-          <h2>Every Record Carries Its Provenance</h2>
-          <span class="sub">Source · issuing body · version · effective date · last updated · official link</span>
-          <a href="admin.html" class="more">Manage in CMS &rarr;</a>
-        </div>
-        <div class="card" style="margin-top:12px">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr>
-                <th>Standard / Guidance</th><th>Issuing Body</th><th>Version</th>
-                <th>Effective</th><th>Last Updated</th><th>Content Held</th><th>Official Source</th>
-              </tr></thead>
-              <tbody id="provRows"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="note" style="margin-top:11px">
-          <b>Two content tiers, by design.</b> Openly licensed sources — FATF, Basel/BIS, INTOSAI
-          and public regulator material — are held in full text. Copyrighted frameworks — IIA, COSO,
-          ISACA, ACFE, IFRS, PMI, ISO — are held as complete structured references plus original
-          practical audit guidance written for this platform: risks, controls, procedures, testing,
-          evidence, red flags, findings, root causes and recommendations. Verbatim copyrighted text
-          is never reproduced, and every record links to the official source.
-        </div>
-      </section>
-
-      <!-- ============ TOOLS ============ -->
-      <section>
-        <div class="sec-h">
-          <h2>Practical Tools</h2>
-          <span class="sub">The working layer auditors reach for daily</span>
-          <a href="tools.html" class="more">Browse All &rarr;</a>
-        </div>
-        <div class="tools" style="margin-top:12px" id="toolGrid"></div>
-      </section>
-
-      <!-- ============ VALUE BAND ============ -->
-      <section class="band">
-        <div><b>All Audit Standards</b><span>Eleven frameworks in one reference</span></div>
-        <div><b>Centralized Knowledge</b><span>Risks, controls, procedures, evidence</span></div>
-        <div><b>Practical Tools</b><span>Programmes, checklists, working papers</span></div>
-        <div><b>Better Outcomes</b><span>Faster, defensible audit conclusions</span></div>
-      </section>
-
-      <div class="disc">
-        <b>Content scope.</b> Every framework carries structured audit content with full
-        provenance — source, issuing body, version, effective date, last updated and status.
-        Search operates within each section only. Content is reviewed against the official
-        sources shown on each record.
-      </div>
-
+  <div class="hero-in">
+    <div class="eyebrow">IIA · Global Internal Audit Standards</div>
+    <h1>Your gateway to<em>internal audit excellence.</em></h1>
+    <p>Explore the standards. Understand the requirements. Apply them in practice.</p>
+    <div class="hero-cta">
+      <a class="btn-gold" href="standards.html">Explore All Standards <svg class="ic" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4" fill="none"/></svg></a>
+      <a class="btn-o" href="assistant.html" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.28)">Ask the AI Assistant</a>
     </div>
-    <footer></footer>
+    <div class="hero-stats" id="heroStats"></div>
   </div>
 </div>
 
+<div class="start">
+  <h2>Where would you like to start?</h2>
+  <p>The standards library holds every principle and standard. The assistant answers
+     from the platform's own content.</p>
+  <div class="cards">
+    <a class="bigcard" href="standards.html">
+      <div class="bi"><svg class="ic" viewBox="0 0 20 20"><path d="M3 4h5a2 2 0 012 2v10a2 2 0 00-2-2H3z" fill="none"/><path d="M17 4h-5a2 2 0 00-2 2v10a2 2 0 012-2h5z" fill="none"/></svg></div>
+      <h3>Standards Library</h3>
+      <p>Browse all principles and their related standards, with requirements, audit focus
+         areas, risks, controls, procedures, required evidence, red flags and common findings.</p>
+      <span class="go">Open Library <svg class="ic" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4" fill="none"/></svg></span>
+    </a>
+    <a class="bigcard" href="assistant.html">
+      <div class="bi"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z" fill="none"/></svg></div>
+      <h3>AI Audit Assistant</h3>
+      <p>Ask questions and find answers within the platform's content. Every answer cites the
+         standard it came from, and links to the exact section.</p>
+      <span class="go">Start a conversation <svg class="ic" viewBox="0 0 20 20"><path d="M4 10h11M11 6l4 4-4 4" fill="none"/></svg></span>
+    </a>
+  </div>
+</div>
+
+<div class="domains">
+  <div class="domains-in">
+    <h2>The Five Domains</h2>
+    <p>The standards are organised into five domains and fifteen principles.</p>
+    <div class="dgrid" id="dgrid"></div>
+  </div>
+</div>
+
+<footer></footer>
+
 <script src="data/library.js"></script>
-<script src="assets/app.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
 <script>
 (function(){
-  /* hero stats derived from the library, not hard-coded */
-  const totalRecs = FRAMEWORKS.reduce((n,f) => n + f.count, 0);
-  const rcm = TOOLS.find(t => t.id === 'rcm');
-  document.getElementById('hstats').innerHTML =
-    '<div class="hstat"><b>' + totalRecs + '</b><span>Standards</span></div>' +
-    '<div class="hstat"><b>' + FRAMEWORKS.length + '</b><span>Frameworks</span></div>' +
-    '<div class="hstat"><b>' + rcm.count.toLocaleString() + '</b><span>Risks &amp; Controls</span></div>';
+  const st = contentStats();
+  document.getElementById('heroStats').innerHTML =
+    '<div><b>' + st.domains + '</b><span>Domains</span></div>' +
+    '<div><b>' + st.principles + '</b><span>Principles</span></div>' +
+    '<div><b>' + st.standards + '</b><span>Standards</span></div>';
 
-  document.getElementById('allFw').innerHTML =
-    'View All ' + FRAMEWORKS.length + ' ' + icon('i-arrow');
+  document.getElementById('dgrid').innerHTML = DOMAINS.map(d => {
+    const n = d.principles.reduce((a,p) => a + p.standards.length, 0);
+    const first = d.principles.find(p => p.standards.length);
+    const href = first ? 'standard.html?ref=' + encodeURIComponent(first.standards[0].ref)
+                       : 'standards.html';
+    return '<a class="dcard" href="' + href + '">' +
+      '<div class="dn">Domain ' + esc(d.num) + '</div>' +
+      '<b>' + esc(d.name) + '</b>' +
+      '<p>' + esc(d.blurb) + '</p>' +
+      '<div class="dm">' + d.principles.length + ' principle' +
+        (d.principles.length === 1 ? '' : 's') +
+        (n ? ' · ' + n + ' standards' : '') + '</div></a>';
+  }).join('');
 
-  /* framework tiles */
-  document.getElementById('fwGrid').innerHTML =
-    FRAMEWORKS.slice(0,8).map(f => {
-      const n = RECORDS.filter(r => r.fw === f.id).length;
-      return '<a class="fwc" href="framework.html?fw=' + esc(f.id) + '" style="--bc:' + f.colour + '">' +
-        '<div class="lg"><span class="abbr">' + esc(f.abbr) + '</span></div>' +
-        '<span class="nm">' + esc(f.name.replace(/ — .*/,'').replace(/^(\S+\s\S+)\s/,'$1<br>')) + '</span>' +
-        '<span class="n">' + (n ? n + ' populated' : f.count + ' planned') + '</span></a>';
-    }).join('');
-
-  /* latest updates */
-  document.getElementById('updates').innerHTML =
-    UPDATES.slice(0,5).map(u => {
-      const href = RECORDS.some(r => r.fw === u.fw)
-        ? 'framework.html?fw=' + u.fw : 'resources.html#news';
-      const lbl = { n:'New', r:'Revised', a:'Alert' }[u.sev];
-      return '<a href="' + href + '"><div class="dt"><b>' + u.d + '</b><span>' + u.m + '</span></div>' +
-        '<div class="tx"><b>' + esc(u.t) + '<span class="sev ' + u.sev + '">' + lbl + '</span></b>' +
-        '<span>' + esc(u.s) + '</span></div></a>';
-    }).join('');
-
-  /* provenance table — first five records */
-  document.getElementById('provRows').innerHTML =
-    RECORDS.slice(0,5).map(r => {
-      const f = fw(r.fw);
-      return '<tr>' +
-        '<td><b>' + esc(r.title) + '</b><div class="sd">' + esc(r.domain) + '</div></td>' +
-        '<td>' + esc(f.abbr) + '</td>' +
-        '<td class="m">' + esc(r.version) + '</td>' +
-        '<td class="m">' + fmtDate(r.effective) + '</td>' +
-        '<td class="m">' + fmtDate(r.updated) + '</td>' +
-        '<td><span class="lic ' + (r.tier === 'open' ? 'open">Open — full text' :
-             'ref">Reference + original guidance') + '</span></td>' +
-        '<td><a href="' + esc(r.url) + '" target="_blank" rel="noopener noreferrer" class="src">' +
-          esc(r.url.replace(/^https?:\/\//,'').split('/')[0]) + ' &#8599;</a></td></tr>';
-    }).join('');
-
-  /* tools */
-  document.getElementById('toolGrid').innerHTML =
-    TOOLS.slice(0,4).map(t =>
-      '<a class="tool" href="tools.html#' + esc(t.id) + '">' +
-        '<div class="ti">' + icon(t.icon) + '</div>' +
-        '<b>' + esc(t.name) + '</b><p>' + esc(t.desc) + '</p>' +
-        '<span class="c">' + t.count.toLocaleString() + ' items</span></a>').join('');
-
-  /* every figure below is derived from the data, never hard-coded */
-  const tcount = id => {
-    const t = TOOLS.find(x => x.id === id);
-    return t ? t.count.toLocaleString() : '0';
-  };
-
-  /* Quick Links — rendered from TOOLS */
-  document.getElementById('quickLinks').innerHTML =
-    ['programs','rcm','controls','redflags'].map(id => {
-      const t = TOOLS.find(x => x.id === id);
-      if (!t) return '';
-      return '<a class="qlc" href="tools.html#' + esc(t.id) + '">' +
-        '<div class="qli">' + icon(t.icon) + '</div>' +
-        '<div><b>' + esc(t.name) + '</b><span>' +
-        t.count.toLocaleString() + ' items</span></div></a>';
-    }).join('');
-
-  /* ---- module entry points (replaces the global AI panel) ---- */
-  const MODULES = [
-    ['i-shield','Standards & Frameworks',FRAMEWORKS.length + ' frameworks','frameworks.html'],
-    ['i-grid',  'Audit Programs',        tcount('programs') + ' programmes','tools.html#programs'],
-    ['i-layer', 'Risk & Control Library',tcount('rcm') + ' entries','tools.html#rcm'],
-    ['i-flag',  'Fraud & Financial Crime',tcount('redflags') + ' indicators','tools.html#redflags'],
-    ['i-alert', 'ERM & Risk Register',   RECORDS.filter(r=>r.fw==='erm').length + ' populated','framework.html?fw=erm'],
-    ['i-doc',   'Working Papers',        tcount('workpapers') + ' templates','tools.html#workpapers']
-  ];
-  document.getElementById('modGrid').innerHTML = MODULES.map(m =>
-    '<a class="qlc" href="' + m[3] + '">' +
-      '<div class="qli">' + icon(m[0]) + '</div>' +
-      '<div><b>' + esc(m[1]) + '</b><span>' + esc(m[2]) + '</span></div></a>').join('');
-
-
-  mount({ active:'home' });
+  const top = document.querySelector('.top');
+  top.innerHTML = renderTop('home');
+  document.querySelector('footer').innerHTML = renderFooter();
+  const tg = document.getElementById('navToggle');
+  if (tg) tg.style.display = 'none';
 })();
 </script>
 </body>

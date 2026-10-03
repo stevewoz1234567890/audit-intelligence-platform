@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standard — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css">
+</head>
+<body>
+
+<header class="top"></header>
+
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+    <div id="page"></div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
+<script>
+(function(){
+  const ref = qs('ref') || '1.1';
+  const all = allStandards();
+  const s   = all.find(x => x.ref === ref);
+  const page = document.getElementById('page');
+
+  if (!s){
+    page.innerHTML = '<div class="empty">' + icon('alert') +
+      '<b>Standard not found</b><p>No standard matches that reference. ' +
+      'Open the <a href="standards.html" style="color:var(--navy-3);font-weight:600">' +
+      'standards library</a> to browse all standards.</p></div>';
+    mount({ active:'library' });
+    return;
+  }
+
+  const rec = standardRecord(s.ref);
+  document.title = 'Standard ' + s.ref + ' — ' + s.title + ' — Audit Intelligence';
+
+  /* ---------- breadcrumb ---------- */
+  let h = '<div class="crumb">' +
+    '<a href="index.html">Home</a><span class="sep">/</span>' +
+    '<a href="standards.html">Standards Library</a><span class="sep">/</span>' +
+    '<span>Domain ' + esc(s.domainId) + '</span><span class="sep">/</span>' +
+    '<span>Principle ' + s.principleNum + '</span><span class="sep">/</span>' +
+    '<b>' + esc(s.ref) + '</b>' +
+    '<span class="sp"><a class="btn-o" style="padding:5px 12px;font-size:11.5px" ' +
+      'href="assistant.html?q=' + encodeURIComponent('Standard ' + s.ref) + '">' +
+      icon('spark') + 'Ask about this</a></span>' +
+    '</div>';
+
+  /* ---------- header ---------- */
+  h += '<div class="std-h">' +
+    '<div class="std-eyebrow">Standard ' + esc(s.ref) + ' · Principle ' + s.principleNum +
+      ' — ' + esc(s.principleTitle) + '</div>' +
+    '<h1>' + esc(s.title) + '</h1>' +
+    (rec ? '<p class="lede">' + esc(rec.summary) + '</p>' : '') +
+    '<div class="std-meta">' +
+      '<span class="mtag"><b>Domain</b> ' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</span>' +
+      (rec ? '<span class="mtag"><b>Version</b> ' + esc(rec.version) + '</span>' +
+             '<span class="mtag"><b>Effective</b> ' + fmtDate(rec.effective) + '</span>' +
+             '<span class="mtag"><b>Updated</b> ' + fmtDate(rec.updated) + '</span>'
+           : '') +
+    '</div>';
+
+  /* ---------- tabs ---------- */
+  const TABS = [];
+  const add = (anchor, label, ico, n) => TABS.push({ anchor, label, ico, n });
+  if (rec){
+    add('requirements','Standards & Guidance','doc');
+    if (rec.focus && rec.focus.length) add('focus','Audit Focus Areas','target', rec.focus.length);
+    if (rec.risks && rec.risks.length) add('risks','Risks','alert', rec.risks.length);
+    if (rec.controls && rec.controls.length) add('controls','Controls','shield', rec.controls.length);
+    const np = (rec.procedureTable && rec.procedureTable.length) ||
+               (rec.procedures && rec.procedures.length);
+    if (np) add('procedures','Audit Procedures','check', np);
+    if (rec.evidence && rec.evidence.length) add('evidence','Required Evidence','doc', rec.evidence.length);
+    if (rec.redFlags && rec.redFlags.length) add('redflags','Red Flags','flag', rec.redFlags.length);
+    if (rec.findings && rec.findings.length) add('findings','Common Findings','grid', rec.findings.length);
+    if (rec.recommendations && rec.recommendations.length)
+      add('recommendations','Recommendations','star', rec.recommendations.length);
+    add('source','References','link');
+  }
+  if (TABS.length){
+    h += '<div class="tabs">' + TABS.map((t,i) =>
+      '<button class="tab' + (i===0?' on':'') + '" data-go="' + t.anchor + '">' +
+        icon(t.ico) + t.label +
+        (t.n ? '<span class="n">' + t.n + '</span>' : '') +
+      '</button>').join('') + '</div>';
+  }
+  h += '</div>';
+
+  /* ---------- body ---------- */
+  h += '<div class="body">';
+
+  if (!rec){
+    h += '<div class="empty">' + icon('doc') +
+      '<b>Content not yet added for this standard</b>' +
+      '<p>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + ' is part of Principle ' +
+      s.principleNum + '. Its detailed content has not been added to the platform yet. ' +
+      'Standards with content are shown in full in the navigator on the left.</p></div>';
+  } else {
+
+    const sect = (id, title, ico, inner, n) =>
+      '<section class="sect" id="' + id + '">' +
+        '<div class="sect-h">' + icon(ico) + '<h2>' + title + '</h2>' +
+        (n !== undefined ? '<span class="n">' + n + '</span>' : '') + '</div>' +
+        inner + '</section>';
+
+    const ul = (arr, cls) => '<div class="card"><ul class="rq ' + (cls||'') + '">' +
+      arr.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul></div>';
+
+    const tbl = (rows, a, b, ka, kb) =>
+      '<div class="tbl-wrap"><table><thead><tr><th>' + a + '</th><th>' + b +
+      '</th></tr></thead><tbody>' + rows.map(r =>
+        '<tr><td><b>' + esc(r[ka]) + '</b></td><td class="ev">' + esc(r[kb]) +
+        '</td></tr>').join('') + '</tbody></table></div>';
+
+    /* --- requirements and guidance --- */
+    let g = '<div class="card"><p>' + esc(rec.requirement) + '</p></div>';
+    if (rec.assignmentTable && rec.assignmentTable.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('scale') +
+           '<h2 style="font-size:15px">Previous Responsibilities &amp; Engagement Assignments</h2></div>' +
+           tbl(rec.assignmentTable,'Situation','Requirement','s','r');
+    if (rec.biasTable && rec.biasTable.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('alert') +
+           '<h2 style="font-size:15px">Examples of Bias</h2></div>' +
+           tbl(rec.biasTable,'Bias','Description','b','d');
+    if (rec.implementation && rec.implementation.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('check') +
+           '<h2 style="font-size:15px">Considerations for Implementation</h2>' +
+           '<span class="n">' + rec.implementation.length + '</span></div>' +
+           ul(rec.implementation,'dot');
+    if (rec.conformance && rec.conformance.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('doc') +
+           '<h2 style="font-size:15px">Examples of Evidence of Conformance</h2>' +
+           '<span class="n">' + rec.conformance.length + '</span></div>' +
+           ul(rec.conformance,'tick');
+    h += sect('requirements','Standards &amp; Guidance','doc', g);
+
+    if (rec.focus && rec.focus.length)
+      h += sect('focus','Audit Focus Areas','target', ul(rec.focus,'dot'), rec.focus.length);
+
+    if (rec.risks && rec.risks.length)
+      h += sect('risks','Risks','alert','<div class="card">' + rec.risks.map(x =>
+        '<div class="row"><div class="tx"><b>' + esc(x.r) + '</b>' +
+        (x.d ? '<span>' + esc(x.d) + '</span>' : '') + '</div>' +
+        '<span class="bdg ' + esc(x.i) + '">' + esc(x.i) + '</span></div>').join('') +
+        '</div>', rec.risks.length);
+
+    if (rec.controls && rec.controls.length)
+      h += sect('controls','Controls','shield','<div class="card">' + rec.controls.map(x =>
+        '<div class="row"><div class="tx"><b>' + esc(x.c) + '</b></div>' +
+        '<span class="bdg ' + esc(x.t) + '">' + esc(x.t) + '</span></div>').join('') +
+        '</div>', rec.controls.length);
+
+    if (rec.procedureTable && rec.procedureTable.length)
+      h += sect('procedures','Audit Procedures','check',
+        tbl(rec.procedureTable,'Procedure','Required Evidence','p','e') +
+        (rec.testing ? '<div class="card" style="margin-top:14px"><p><b>Testing approach.</b> ' +
+          esc(rec.testing) + '</p></div>' : ''),
+        rec.procedureTable.length);
+    else if (rec.procedures && rec.procedures.length)
+      h += sect('procedures','Audit Procedures','check', ul(rec.procedures) +
+        (rec.testing ? '<div class="card" style="margin-top:14px"><p><b>Testing approach.</b> ' +
+          esc(rec.testing) + '</p></div>' : ''),
+        rec.procedures.length);
+
+    if (rec.evidence && rec.evidence.length)
+      h += sect('evidence','Required Evidence','doc', ul(rec.evidence,'tick'), rec.evidence.length);
+
+    if (rec.redFlags && rec.redFlags.length)
+      h += sect('redflags','Red Flags','flag', ul(rec.redFlags,'flag') +
+        '<div class="scope" style="margin-top:12px;background:var(--warn-bg);' +
+        'border-color:var(--gold-line)">' + icon('alert') +
+        '<div><b style="color:var(--warn)">Red flags indicate matters for further examination.</b>' +
+        '<span>They do not, by themselves, establish fraud or misconduct.</span></div></div>',
+        rec.redFlags.length);
+
+    if (rec.findings && rec.findings.length){
+      let f = ul(rec.findings,'dot');
+      if (rec.causes && rec.causes.length)
+        f += '<div class="sect-h" style="margin-top:18px">' + icon('layer') +
+             '<h2 style="font-size:15px">Root Causes</h2></div>' + ul(rec.causes,'dot');
+      if (rec.impacts)
+        f += '<div class="sect-h" style="margin-top:18px">' + icon('alert') +
+             '<h2 style="font-size:15px">Risk &amp; Impact</h2></div>' +
+             '<div class="card"><p>' + esc(rec.impacts) + '</p></div>';
+      h += sect('findings','Common Findings','grid', f, rec.findings.length);
+    }
+
+    if (rec.recommendations && rec.recommendations.length)
+      h += sect('recommendations','Recommendations','star', ul(rec.recommendations),
+        rec.recommendations.length);
+
+    /* references and provenance */
+    h += sect('source','Professional References','link',
+      '<div class="srcbox"><dl>' +
+        '<dt>Source</dt><dd>' + esc(rec.source) + '</dd>' +
+        '<dt>Standard</dt><dd>' + esc(rec.ref) + ' — ' + esc(s.title) + '</dd>' +
+        '<dt>Domain</dt><dd>' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</dd>' +
+        '<dt>Principle</dt><dd>' + s.principleNum + ' — ' + esc(s.principleTitle) + '</dd>' +
+        '<dt>Version</dt><dd>' + esc(rec.version) + '</dd>' +
+        '<dt>Effective</dt><dd>' + fmtDate(rec.effective) + '</dd>' +
+        '<dt>Last updated</dt><dd>' + fmtDate(rec.updated) + '</dd>' +
+        '<dt>Official</dt><dd><a href="' + esc(rec.url) + '" target="_blank" ' +
+          'rel="noopener noreferrer">' + esc(rec.url.replace(/^https?:\/\//,'')) + ' &#8599;</a></dd>' +
+      '</dl></div>' +
+      (rec.references && rec.references.length
+        ? '<div class="card" style="margin-top:13px"><ul class="rq dot">' +
+          rec.references.map(x => '<li><span>' + esc(x.t) +
+            (x.u ? ' — <a href="' + esc(x.u) + '" target="_blank" rel="noopener noreferrer" ' +
+              'style="color:var(--navy-3);font-weight:600">official source &#8599;</a>' : '') +
+            '</span></li>').join('') + '</ul></div>'
+        : ''));
+
+    /* assistant prompt */
+    h += '<div class="aibox" style="margin-top:24px">' +
+      '<div class="ai-i">' + icon('spark') + '</div>' +
+      '<div class="ai-t"><b>Ask the AI Assistant</b>' +
+      '<span>Find answers within the platform’s content for Standard ' + esc(s.ref) + '.</span></div>' +
+      '<a class="btn-gold" href="assistant.html?q=' +
+        encodeURIComponent('Standard ' + s.ref + ' ' + s.title) + '">' +
+        'Ask about Standard ' + esc(s.ref) + '</a></div>';
+  }
+
+  h += '</div>';
+
+  /* ---------- prev / next ---------- */
+  const i = all.findIndex(x => x.ref === s.ref);
+  const prev = i > 0 ? all[i-1] : null;
+  const next = i < all.length - 1 ? all[i+1] : null;
+  if (prev || next){
+    h += '<div class="pager">';
+    if (prev) h += '<a href="standard.html?ref=' + encodeURIComponent(prev.ref) + '">' +
+      icon('back') + '<span><span class="lb">Previous</span>' +
+      '<span class="tt">' + esc(prev.ref) + ' — ' + esc(prev.title) + '</span></span></a>';
+    if (next) h += '<a class="nx" href="standard.html?ref=' + encodeURIComponent(next.ref) + '">' +
+      '<span><span class="lb">Next</span>' +
+      '<span class="tt">' + esc(next.ref) + ' — ' + esc(next.title) + '</span></span>' +
+      icon('arrow') + '</a>';
+    h += '</div>';
+  }
+
+  page.innerHTML = h;
+  mount({ active:'library', ref:s.ref });
+
+  /* tab click scrolls to its section */
+  const tabs = [...document.querySelectorAll('.tab')];
+  const OFFSET = 108; /* sticky top bar + breadcrumb */
+  tabs.forEach(t => t.addEventListener('click', () => {
+    const el = document.getElementById(t.dataset.go);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - OFFSET;
+    window.scrollTo({ top:y, behavior:'smooth' });
+  }));
+
+  /* tab follows scroll position */
+  const sects = tabs.map(t => document.getElementById(t.dataset.go)).filter(Boolean);
+  if (sects.length){
+    const spy = new IntersectionObserver(es => {
+      es.forEach(e => {
+        if (e.isIntersecting)
+          tabs.forEach(t => t.classList.toggle('on', t.dataset.go === e.target.id));
+      });
+    }, { rootMargin:'-130px 0px -65% 0px' });
+    sects.forEach(x => spy.observe(x));
+  }
+
+  /* deep link to a section: standard.html?ref=1.1#risks */
+  if (location.hash){
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) setTimeout(() => window.scrollTo({
+      top: el.getBoundingClientRect().top + window.scrollY - OFFSET
+    }), 80);
+  }
+})();
+</script>
+</body>
+</html>

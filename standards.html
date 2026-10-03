@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standards Library — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css">
+<style>
+.lib-h{padding:26px 28px 0;background:var(--panel);border-bottom:1px solid var(--line)}
+.lib-h h1{font-size:27px}
+.lib-h>p{margin:9px 0 0;font-size:13.8px;color:var(--ink-2);max-width:70ch;line-height:1.7}
+.sbar{margin:18px 0 0;position:relative;display:flex;align-items:center;max-width:760px}
+.sbar .ic{position:absolute;left:16px;width:19px;height:19px;stroke:var(--ink-3);
+  fill:none;stroke-width:2;pointer-events:none}
+.sbar input{width:100%;padding:14px 112px 14px 46px;border:1px solid var(--line-2);
+  border-radius:var(--r);background:var(--panel);font:inherit;font-size:14.5px;color:var(--ink);
+  box-shadow:var(--sh-1);transition:.15s}
+.sbar input:focus{outline:none;border-color:var(--navy-3);box-shadow:0 0 0 3px rgba(30,76,119,.12)}
+.sbar .go{position:absolute;right:5px;background:var(--gold);color:#1A1403;border:0;
+  border-radius:var(--r-s);padding:9px 18px;font-size:13px;font-weight:700}
+.sbar .go:hover{background:var(--gold-3)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;padding-bottom:18px}
+.chip{border:1px solid var(--line-2);background:var(--panel-2);border-radius:16px;
+  padding:5px 13px;font-size:11.8px;color:var(--ink-2);font-weight:500;transition:.15s}
+.chip:hover{border-color:var(--navy-3);color:var(--navy-3);background:var(--panel)}
+
+.lib-body{padding:22px 28px 40px;max-width:1180px}
+.cnt{font-size:13px;color:var(--ink-3);margin-bottom:14px;display:flex;
+  align-items:center;gap:9px;flex-wrap:wrap}
+.cnt b{color:var(--ink);font-weight:700}
+
+.res{display:flex;flex-direction:column;gap:11px}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px 18px;box-shadow:var(--sh-1);transition:.16s;display:block}
+.rcard:hover{border-color:var(--navy-3);box-shadow:var(--sh-2);transform:translateY(-2px)}
+.rcard .rh{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:6px}
+.rcard .sref{font-family:ui-monospace,monospace;font-size:11.5px;font-weight:700;
+  background:var(--navy);color:var(--gold-3);padding:3px 10px;border-radius:5px}
+.rcard h3{font-size:16px;flex:1;min-width:180px;line-height:1.35}
+.rcard .pz{font-size:10.5px;color:var(--ink-3);font-style:italic;margin-bottom:9px}
+.rcard .pv{font-size:13px;color:var(--ink-2);line-height:1.68;margin:0 0 11px}
+.rcard mark{background:var(--gold-soft);color:var(--ink);padding:0 2px;
+  border-radius:2px;font-weight:600}
+.secs{display:flex;gap:6px;flex-wrap:wrap;padding-top:11px;border-top:1px solid var(--line)}
+.secs .lb{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:700;width:100%;margin-bottom:3px}
+.secl{font-size:11.5px;background:var(--panel-2);border:1px solid var(--line-2);
+  border-radius:14px;padding:4px 11px;color:var(--navy-3);font-weight:600;transition:.14s;
+  display:inline-flex;align-items:center;gap:5px}
+.secl:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.secl::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.secl:hover::before{background:var(--gold-3)}
+.pend{font-size:10.5px;color:var(--ink-3);background:var(--panel-2);
+  border:1px dashed var(--line-2);border-radius:14px;padding:4px 11px}
+
+.pgrid{display:flex;flex-direction:column;gap:20px}
+.pblock{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh-1)}
+.pblock>h3{padding:14px 18px;background:var(--panel-2);border-bottom:1px solid var(--line);
+  font-size:15px;display:flex;align-items:center;gap:11px}
+.pblock>h3 .pn{width:24px;height:24px;border-radius:5px;background:var(--navy);
+  color:var(--gold-3);display:grid;place-items:center;font-size:11.5px;font-weight:700;
+  font-family:ui-monospace,monospace;flex:none}
+.pblock>h3 .dm{margin-left:auto;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:700}
+.slist a{display:flex;align-items:center;gap:12px;padding:12px 18px;
+  border-bottom:1px solid var(--line);transition:.14s}
+.slist a:last-child{border-bottom:0}
+.slist a:hover{background:var(--panel-2);padding-left:22px}
+.slist .sn{font-family:ui-monospace,monospace;font-size:12px;font-weight:700;
+  color:var(--gold-2);min-width:34px;flex:none}
+.slist .st{flex:1;min-width:0;font-size:13.5px;color:var(--ink);font-weight:500}
+.slist .sm{font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+.slist a.empty .st{color:var(--ink-3)}
+.slist .ic{width:15px;height:15px;stroke:var(--line-2);fill:none;stroke-width:2;flex:none}
+.slist a:hover .ic{stroke:var(--navy-3)}
+@media(max-width:1000px){.lib-h,.lib-body{padding-left:18px;padding-right:18px}}
+@media(max-width:680px){.lib-h,.lib-body{padding-left:14px;padding-right:14px}
+  .sbar input{padding-right:14px}.sbar .go{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top"></header>
+
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span><b>Standards Library</b>
+    </div>
+
+    <div class="lib-h">
+      <h1>Standards Library</h1>
+      <p>Every principle and standard in the IIA Global Internal Audit Standards.
+         Search by keyword, topic or standard number.</p>
+      <div class="sbar">
+        <svg class="ic" viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" fill="none"/><path d="M17 17l-4-4" fill="none"/></svg>
+        <input type="search" id="q" autofocus
+               placeholder="Search standards, requirements, risks, controls, procedures…"
+               aria-label="Search the platform">
+        <button class="go" id="go" type="button">Search</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="lib-body" id="out"></div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
+<script>
+(function(){
+  const input = document.getElementById('q');
+  const out   = document.getElementById('out');
+
+  const SUGGEST = ['objectivity','professional courage','conflict of interest',
+                   'confidentiality','2.2','independence','board','ethics'];
+  document.getElementById('chips').innerHTML =
+    SUGGEST.map(s => '<button class="chip" data-s="' + esc(s) + '">' + esc(s) + '</button>').join('');
+
+  /* ---------- browse view: principles with their standards ---------- */
+  function browse(){
+    const st = contentStats();
+    let h = '<div class="cnt"><b>' + st.standards + '</b> standards across <b>' +
+      st.principles + '</b> principles and <b>' + st.domains + '</b> domains' +
+      (st.populated ? '<span class="sep">·</span>' + st.populated + ' with full content' : '') +
+      '</div>';
+
+    h += '<div class="scope" style="margin-bottom:18px">' + icon('shield') +
+      '<div><b>Searches this platform only</b>' +
+      '<span>Results come from the standards held in this platform. ' +
+      'This search does not query the internet.</span></div></div>';
+
+    h += '<div class="pgrid">';
+    DOMAINS.forEach(d => d.principles.forEach(p => {
+      if (!p.standards.length) return;
+      h += '<div class="pblock"><h3><span class="pn">' + p.num + '</span>' +
+        esc(p.title) + '<span class="dm">Domain ' + esc(d.num) + '</span></h3>' +
+        '<div class="slist">';
+      p.standards.forEach(s => {
+        const rec = standardRecord(s.ref);
+        h += '<a href="standard.html?ref=' + encodeURIComponent(s.ref) + '"' +
+          (rec ? '' : ' class="empty"') + '>' +
+          '<span class="sn">' + esc(s.ref) + '</span>' +
+          '<span class="st">' + esc(s.title) + '</span>' +
+          '<span class="sm">' + (rec ? 'Full content' : 'Awaiting content') + '</span>' +
+          icon('chev') + '</a>';
+      });
+      h += '</div></div>';
+    }));
+    h += '</div>';
+    out.innerHTML = h;
+  }
+
+  /* ---------- search results ---------- */
+  function run(){
+    const q = input.value.trim();
+
+    const u = new URL(location.href);
+    if (q) u.searchParams.set('q', q); else u.searchParams.delete('q');
+    history.replaceState(null, '', u);
+
+    if (!q){ browse(); return; }
+
+    const res = searchPlatform(q);
+
+    if (!res.length){
+      out.innerHTML = '<div class="empty">' + icon('search') +
+        '<b>No results for &ldquo;' + esc(q) + '&rdquo;</b>' +
+        '<p>Try a broader term, a different keyword, or a standard number such as ' +
+        '&ldquo;2.2&rdquo;. This search covers the content held in this platform only.</p></div>';
+      return;
+    }
+
+    let h = '<div class="cnt"><b>' + res.length + '</b> standard' +
+      (res.length === 1 ? '' : 's') + ' matching &ldquo;' + esc(q) + '&rdquo;' +
+      '<span class="sep">·</span>searching platform content only</div><div class="res">';
+
+    res.forEach(r => {
+      const s = r.s;
+      const href = 'standard.html?ref=' + encodeURIComponent(s.ref);
+      /* preview from the strongest matching section, else the summary */
+      const src = (r.hits[0] && r.hits[0].text) || (r.rec && r.rec.summary) || '';
+      h += '<a class="rcard" href="' + href + '">' +
+        '<div class="rh"><span class="sref">' + esc(s.ref) + '</span>' +
+        '<h3>' + highlight(s.title, q) + '</h3></div>' +
+        '<div class="pz">Domain ' + esc(s.domainId) + ' · Principle ' + s.principleNum +
+          ' — ' + esc(s.principleTitle) + '</div>' +
+        (src ? '<p class="pv">' + highlight(preview(src, q), q) + '</p>' : '') +
+        '<div class="secs">' +
+          (r.hits.length
+            ? '<span class="lb">Found in</span>' + r.hits.slice(0,6).map(x =>
+                '<span class="secl" data-href="' + href + '#' + x.anchor + '">' +
+                esc(x.label) + '</span>').join('')
+            : (r.rec ? '' : '<span class="pend">Content not yet added</span>')) +
+        '</div></a>';
+    });
+
+    out.innerHTML = h + '</div>';
+
+    /* section chips link straight to that part of the standard */
+    out.querySelectorAll('.secl').forEach(el =>
+      el.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        location.href = el.dataset.href;
+      }));
+  }
+
+  let t;
+  input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 130); });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter'){ clearTimeout(t); run(); } });
+  document.getElementById('go').addEventListener('click', run);
+  document.getElementById('chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-s]');
+    if (!b) return;
+    input.value = b.dataset.s;
+    run();
+    input.focus();
+  });
+
+  const seed = qs('q');
+  if (seed){ input.value = seed; run(); } else browse();
+
+  mount({ active:'library' });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
+      e.preventDefault(); input.focus(); input.select();
+    }
+  });
+})();
+</script>
+</body>
+</html>
