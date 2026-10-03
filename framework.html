@@ -201,7 +201,7 @@
   h += '</div></div>';
 
   document.getElementById('page').innerHTML = h;
-  mount({ active: id });
+  mount({ active: id, searchLabel: f.abbr });
 
   /* ---- in-section search: restricted to this framework ---- */
   const fwq = document.getElementById('fwq');

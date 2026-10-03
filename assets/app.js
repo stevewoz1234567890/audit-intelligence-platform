@@ -114,15 +114,21 @@ function renderSidebar(active){
   return h;
 }
 
-function renderHeader(q){
+/* The header search drives the search box belonging to the current
+   section. On pages with no searchable content it is not rendered at
+   all, rather than shown as a control that does nothing. */
+function renderHeader(q, searchLabel){
+  const hasSearch = !!document.getElementById('fwq');
   return '<div class="hdr-in">' +
-    '<div class="search modsearch" role="search">' +
-      icon('i-search','si') +
-      '<input type="search" name="q" value="' + (q ? esc(q) : '') + '" ' +
-      'placeholder="Search within this section…" ' +
-      'aria-label="Global search">' +
-      '<button class="go" type="button">Search</button>' +
-    '</div>' +
+    (hasSearch
+      ? '<div class="search modsearch" role="search">' +
+          icon('i-search','si') +
+          '<input type="search" id="hdrq" name="q" value="' + (q ? esc(q) : '') + '" ' +
+          'placeholder="Search ' + esc(searchLabel || 'this section') + ' only…" ' +
+          'aria-label="Search ' + esc(searchLabel || 'this section') + '">' +
+          '<button class="go" type="button" id="hdrgo">Search</button>' +
+        '</div>'
+      : '<div class="hdr-spacer"></div>') +
     '<div class="hdr-r">' +
       '<a class="ibtn" href="resources.html#news" aria-label="News and alerts">' +
         icon('i-bell') + '<span class="dot"></span></a>' +
@@ -147,8 +153,28 @@ function mount(opts){
   const hd = document.querySelector('.hdr');
   const ft = document.querySelector('footer');
   if (sb) sb.innerHTML = renderSidebar(opts.active);
-  if (hd) hd.innerHTML = renderHeader(opts.q);
+  if (hd) hd.innerHTML = renderHeader(opts.q, opts.searchLabel);
   if (ft) ft.innerHTML = renderFooter();
+
+  /* Drive the section search box from the header field, so the header
+     control does something rather than sitting inert. */
+  const hq  = document.getElementById('hdrq');
+  const fwq = document.getElementById('fwq');
+  if (hq && fwq){
+    const push = () => {
+      fwq.value = hq.value;
+      fwq.dispatchEvent(new Event('input', { bubbles:true }));
+      const box = document.querySelector('.modsearch-box');
+      if (box && hq.value.trim())
+        box.scrollIntoView({ behavior:'smooth', block:'start' });
+    };
+    hq.addEventListener('input', push);
+    hq.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); push(); } });
+    const go = document.getElementById('hdrgo');
+    if (go) go.addEventListener('click', push);
+    /* keep the two fields in step when the section box is used directly */
+    fwq.addEventListener('input', () => { if (document.activeElement !== hq) hq.value = fwq.value; });
+  }
 }
 
 /* ---------- helpers ---------- */

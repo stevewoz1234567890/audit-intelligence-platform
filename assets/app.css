@@ -647,3 +647,6 @@ footer .dev b{font-family:Georgia,serif;font-size:16px;color:var(--gold);font-we
   border:1px solid rgba(28,74,126,.28)}
 .stat-b.Superseded{background:rgba(163,58,46,.12);color:var(--crit);
   border:1px solid rgba(163,58,46,.28)}
+
+/* header spacer where a page has no searchable content */
+.hdr-spacer{flex:1}
