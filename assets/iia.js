@@ -137,9 +137,9 @@ function renderNav(currentRef){
     const purposeOn = d.id === 'I' && !currentRef && domainQ === 'I';
     h += '<div class="dom' + (open ? ' open' : '') + (purposeOn ? ' purpose-on' : '') + '" data-dom="' + esc(d.id) + '">';
     if (!d.principles.length){
-      h += '<a class="dom-btn' + (purposeOn ? ' on' : '') + '" href="standards.html?domain=' +
-        encodeURIComponent(d.id) + '"><span><span class="dx">' + esc(d.name) +
-        '</span></span>' + icon('chev','ch') + '</a><div class="dom-body">';
+      h += '<button class="dom-btn' + (purposeOn ? ' on' : '') + '" type="button"><span><span class="dn">Domain ' +
+        esc(d.num) + '</span><span class="dx">' + esc(d.name) +
+        '</span></span>' + icon('chev','ch') + '</button><div class="dom-body">';
       (DOMAIN_I.sections || []).forEach(sec => {
         h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' + esc(sec.label) + '</a>';
       });
@@ -198,7 +198,7 @@ function wireNav(){
 
   body.addEventListener('click', e => {
     const dom = e.target.closest('.dom-btn');
-    if (dom && dom.tagName !== 'A'){ dom.closest('.dom').classList.toggle('open'); return; }
+    if (dom){ dom.closest('.dom').classList.toggle('open'); return; }
     const head = e.target.closest('.pr-h');
     if (!head) return;
     head.closest('.pr').classList.toggle('open');
