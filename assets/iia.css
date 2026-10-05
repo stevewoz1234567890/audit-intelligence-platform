@@ -343,6 +343,58 @@ body.domain-i-page .catalog{padding-top:4px}
 .di-note{margin:8px 0 8px;font-size:12.6px;color:var(--ink-3);line-height:1.55}
 .di-source{margin:14px 0 8px;font-size:13px;color:var(--ink-2);line-height:1.6}
 .di-source a{color:var(--navy-3);font-weight:600}
+.ref-grid{align-items:stretch}
+.ref-card{flex-direction:row;align-items:flex-start;gap:12px;min-height:168px}
+.ref-card .ref-ico{width:26px;height:26px;flex:none;margin-top:2px;stroke:var(--gold-2);fill:none;stroke-width:1.6}
+.ref-card .tmain{display:flex;flex-direction:column;flex:1;min-width:0}
+.ref-card .tmain p{flex:1}
+.badge.hist{margin:10px 0 0;background:#F3E4E2;color:var(--crit);border-color:rgba(163,58,46,.25)}
+.alpha{display:flex;flex-wrap:wrap;gap:2px;margin-top:16px;max-width:760px}
+.alpha a{min-width:26px;text-align:center;font-size:12px;font-weight:700;color:var(--navy);padding:4px 2px;border-radius:4px}
+.alpha a.on{background:var(--navy);color:#fff}
+.alpha a.off{color:var(--ink-3);pointer-events:none}
+.side-group{padding:14px 16px 4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.ref-item{align-items:flex-start}
+.ref-num{flex:none;min-width:2.2rem;color:var(--gold);font-weight:700;font-family:ui-monospace,monospace;font-size:11px}
+.side-link.on .ref-num{color:#1A1403}
+.side-back{display:block;margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.82);font-size:12.5px}
+.side-back:hover{color:#fff}
+.ref-detail h2.ref-h{font-size:32px;line-height:1.2;color:var(--navy);margin:4px 0 10px}
+.ref-detail h3{font-family:"Source Sans 3",sans-serif;font-size:15px;font-weight:700;color:var(--navy);margin:16px 0 8px}
+.ref-detail p{margin:0 0 12px;color:var(--ink-2);font-size:14.5px;line-height:1.65}
+.ref-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+.ref-sum{font-size:16px;color:var(--ink);line-height:1.55}
+.ref-intro{color:var(--ink-3);font-size:13px}
+.ref-challenge{background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:8px;padding:10px 12px}
+.ref-tabs{display:flex;gap:18px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:8px 0 16px}
+.ref-tab{border:0;background:none;padding:10px 0;font-size:13.5px;font-weight:600;color:var(--ink-3);border-bottom:2px solid transparent}
+.ref-tab.on{color:var(--navy);border-bottom-color:var(--gold-2)}
+.ref-panel{display:none}
+.ref-panel.on{display:block}
+.ref-points{list-style:none;margin:8px 0 0;padding:0}
+.ref-points li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.ref-points b{flex:none;min-width:1.6rem;color:var(--gold-2);font-family:ui-monospace,monospace}
+.ref-points span{color:var(--ink-2);line-height:1.5}
+.ref-bullets{margin:8px 0 0;padding:0;list-style:none}
+.ref-bullets li{position:relative;padding:6px 0 6px 16px;color:var(--ink-2)}
+.ref-bullets li::before{content:"";position:absolute;left:0;top:13px;width:6px;height:6px;border-radius:50%;background:var(--gold-2)}
+.ref-note{margin-top:16px;font-size:13px;color:var(--ink-3)}
+.ref-note a{color:var(--navy-3);font-weight:600}
+.ref-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ref-split div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+.ref-split b{display:block;margin-bottom:6px;color:var(--navy)}
+.ref-split span{color:var(--ink-2);font-size:13.5px;line-height:1.5}
+.ref-related{display:flex;flex-wrap:wrap;gap:8px}
+.ref-related a{border:1px solid var(--line-2);border-radius:16px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--navy);background:#fff}
+.ref-pager{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.ref-pager a{display:flex;flex-direction:column;gap:2px;min-width:180px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.ref-pager a.nx{margin-left:auto;text-align:right}
+.ref-pager span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.ref-pager b{font-weight:600;color:var(--navy)}
+@media(max-width:680px){
+  .ref-split{grid-template-columns:1fr}
+  .ref-detail h2.ref-h{font-size:26px}
+}
 #domain-i-purpose,#domain-i-value,#domain-i-enhances,#domain-i-conditions,#domain-i-practical,#domain-i-related{scroll-margin-top:84px}
 .domain-i-sheet{background:linear-gradient(180deg,#fff, #fbfaf6);border:1px solid var(--line);
   border-radius:14px;box-shadow:var(--sh-2);padding:22px;position:relative;overflow:hidden}
