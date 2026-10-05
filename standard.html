@@ -250,7 +250,7 @@
 
   /* tab click scrolls to its section */
   const tabs = [...document.querySelectorAll('.tab')];
-  const OFFSET = 108; /* sticky top bar + breadcrumb */
+  const OFFSET = 80; /* sticky top bar */
   tabs.forEach(t => t.addEventListener('click', () => {
     const el = document.getElementById(t.dataset.go);
     if (!el) return;
