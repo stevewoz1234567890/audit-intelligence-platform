@@ -127,12 +127,13 @@ const DOMAINS = [
 const DOMAIN_I = {
   title:'Purpose of Internal Auditing',
   summary:'Understand why internal auditing exists, the value it provides, and what enables it to be effective.',
-  headline:'Create, protect and sustain value.',
+  headline:'Create, Protect and Sustain Value.',
   intro:'The purpose of this domain is to help internal auditors, the board, management, and other stakeholders understand and communicate the contribution of internal auditing.',
   classification:'The purpose statement, what internal auditing enhances, and the conditions for effectiveness follow Domain I of the Global Internal Audit Standards. Practical questions, illustrations, and the payroll example show how to apply that purpose.',
   statement:'Internal auditing strengthens the organization’s ability to create, protect, and sustain value by providing the board and management with independent, risk-based, and objective assurance, advice, insight, and foresight.',
   purposeDetail:'Its contribution extends beyond identifying weaknesses. Internal auditing helps the organization understand its risks, evaluate the effectiveness of its processes, make informed decisions, and identify opportunities for improvement.',
   sections:[
+    { id:'domain-i-intro', label:'Purpose Introduction' },
     { id:'domain-i-purpose', label:'Purpose & Value' },
     { id:'domain-i-value', label:'Forms of Contribution' },
     { id:'domain-i-enhances', label:'What Auditing Enhances' },

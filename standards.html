@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Internal Audit Standards — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=8">
+<link rel="stylesheet" href="assets/iia.css?v=9">
 </head>
 <body>
 
@@ -16,7 +16,7 @@
     <div class="crumb">
       <a href="index.html">Home</a><span class="sep">/</span><b>IIA Standards</b>
     </div>
-    <div class="page-h">
+    <div class="page-h" id="domain-i-intro">
       <div class="eyebrow">Professional framework</div>
       <h1>Global Internal Audit Standards</h1>
       <p id="lede">Explore the framework by Domain, Principle and Standard.</p>
@@ -43,9 +43,9 @@
 </div>
 
 <script src="data/library.js"></script>
-<script src="data/iia.js?v=8"></script>
+<script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
-<script src="assets/iia.js?v=8"></script>
+<script src="assets/iia.js?v=9"></script>
 <script>
 (function(){
   const input = document.getElementById('q');
@@ -112,7 +112,7 @@
           '<a class="di-tab" href="#domain-i-related">Related Principles</a>' +
         '</div></section>' +
       '<section id="domain-i-value">' +
-        '<div class="di-kicker">Forms of contribution</div>' +
+        '<div class="di-kicker">Forms of Contribution</div>' +
         '<h3>How Internal Auditing Provides Value</h3>' +
         '<div class="di-values">' + value + '</div></section>' +
       '<div class="di-split">' +
@@ -125,7 +125,7 @@
         '<h3>Practical Application</h3>' +
         '<p>' + esc(DOMAIN_I.intro) + '</p>' +
         '<p>' + esc(DOMAIN_I.purposeDetail) + '</p>' +
-        '<h4>Create, protect and sustain value</h4>' + valueStates +
+        '<h4>Create, Protect and Sustain Value</h4>' + valueStates +
         '<h4>Essential characteristics</h4>' + characteristics +
         '<h4>Questions to carry into the work</h4>' + questions +
         '<h4>How an engagement contributes</h4>' +
@@ -153,7 +153,7 @@
     const ask = document.getElementById('pageAsk');
     if (domainI){
       crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><a href="standards.html">IIA Standards</a><span class="sep">/</span><b>Domain I</b>';
-      eyebrow.textContent = 'Domain I · Purpose introduction';
+      eyebrow.textContent = 'Domain I · Purpose Introduction';
       h1.textContent = DOMAIN_I.title;
       lede.textContent = DOMAIN_I.summary;
       ask.querySelector('b').textContent = 'Explore the purpose of internal auditing';
@@ -170,7 +170,7 @@
 
   function markDomainI(){
     const onI = qs('domain') === 'I' && !input.value.trim();
-    const current = location.hash || '#domain-i-purpose';
+    const current = location.hash || '#domain-i-intro';
     document.querySelectorAll('.di-tab').forEach(a => {
       a.classList.toggle('on', onI && a.getAttribute('href') === current);
     });
@@ -286,30 +286,35 @@
   document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); run(); });
   const seed = qs('q');
   if (seed){ input.value = seed; run(); } else run();
-  function revealPrinciple(){
-    const jump = (location.hash || '').match(/^#principle-(\d+)$/);
-    if (!jump) return;
-    const target = document.getElementById('principle-' + jump[1]);
-    if (target){
-      const top = target.getBoundingClientRect().top + window.pageYOffset - 84;
-      window.scrollTo({ top: Math.max(0, top), left: 0, behavior: 'auto' });
+  function revealTarget(){
+    const hash = (location.hash || '').replace(/^#/, '');
+    const id = hash || (qs('domain') === 'I' && !input.value.trim() ? 'domain-i-intro' : '');
+    if (id === 'domain-i-intro'){
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    } else if (id){
+      const target = document.getElementById(id);
+      if (target){
+        const top = target.getBoundingClientRect().top + window.pageYOffset - 84;
+        window.scrollTo({ top: Math.max(0, top), left: 0, behavior: 'instant' });
+      }
     }
-    const row = document.querySelector('.nav-body .pr.open');
     const scroller = document.getElementById('navBody');
+    const row = document.querySelector('.nav-body .pr.open') || document.querySelector('.nav-sec.on');
     if (row && scroller){
-      scroller.scrollTop += row.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+      const delta = row.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      if (delta < 8 || delta > scroller.clientHeight - 36) scroller.scrollTop += delta - 12;
     }
   }
   mount({ active:'library' });
   markDomainI();
-  revealPrinciple();
+  revealTarget();
   window.addEventListener('hashchange', () => {
     const domain = qs('domain');
-    if (domain && !input.value.trim()) domainView(domain);
+    if (!(domain === 'I' && document.querySelector('.di')) && domain && !input.value.trim()) domainView(domain);
     markDomainI();
-    revealPrinciple();
+    revealTarget();
   });
-  window.addEventListener('load', revealPrinciple);
+  window.addEventListener('load', revealTarget);
 })();
 </script>
 </body>

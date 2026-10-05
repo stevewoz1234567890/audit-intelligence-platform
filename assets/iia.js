@@ -11,6 +11,9 @@ const ICONS = {
   'search' :'<circle cx="9" cy="9" r="6"/><path d="M17 17l-4-4"/>',
   'book'   :'<path d="M3 4h5a2 2 0 012 2v10a2 2 0 00-2-2H3z"/><path d="M17 4h-5a2 2 0 00-2 2v10a2 2 0 012-2h5z"/>',
   'doc'    :'<path d="M5 2.5h6l4 4V17a.5.5 0 01-.5.5h-9A.5.5 0 015 17z"/><path d="M11 2.5v4h4"/>',
+  'doclines':'<path d="M5.2 2.4h6.2l4.2 4.1V17.2a.6.6 0 01-.6.6H5.2a.6.6 0 01-.6-.6V3a.6.6 0 01.6-.6z"/><path d="M11.2 2.5V6.6h4.2"/><path d="M7 10h6M7 12.4h6M7 14.8h4.2"/>',
+  'board'  :'<circle cx="10" cy="4.5" r="1.9"/><circle cx="4.8" cy="6.4" r="1.55"/><circle cx="15.2" cy="6.4" r="1.55"/><path d="M7.2 8.7a3.1 3.1 0 015.6 0"/><path d="M2.6 10.5a2.3 2.3 0 013.2 1.3"/><path d="M17.4 10.5a2.3 2.3 0 01-3.2 1.3"/><path d="M2.4 15.7h15.2"/><path d="M5.6 15.7c.15-1.6 1.4-2.7 2.9-2.7h3c1.5 0 2.75 1.1 2.9 2.7"/>',
+  'gear'   :'<circle cx="10" cy="10" r="2.35"/><path d="M10 1.7v2.15M10 16.15V18.3M1.7 10h2.15M16.15 10H18.3M4.15 4.15l1.5 1.5M14.35 14.35l1.5 1.5M15.85 4.15l-1.5 1.5M5.65 14.35l-1.5 1.5"/><circle cx="10" cy="10" r="5.15"/>',
   'target' :'<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/>',
   'alert'  :'<path d="M10 2.5l7.5 13h-15z"/><path d="M10 8v3.5M10 13.5v.01"/>',
   'shield' :'<path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z"/><path d="M7.5 10l1.8 1.8 3.4-3.6"/>',
@@ -126,10 +129,10 @@ function renderNav(currentRef){
   let h = '<div class="nav-h">' +
     '<div class="t">IIA Standards</div>' +
     '<label class="nav-find">' + icon('search') +
-      '<input type="search" id="navFind" placeholder="Find a Standard" ' +
+      '<input type="search" id="navFind" placeholder="Find a standard..." ' +
       'aria-label="Filter standards">' +
     '</label></div><div class="nav-body" id="navBody">' +
-    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">All Standards</a>';
+    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">' + icon('grid') + '<span>All Standards</span></a>';
 
   DOMAINS.forEach(d => {
     const hashPrinciple = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
@@ -138,13 +141,18 @@ function renderNav(currentRef){
     const open = currentRef ? contains : (domainQ ? d.id === domainQ : (hashInDomain || d.id === 'II'));
     const here = d.id === 'I' && !currentRef && domainQ === 'I';
     h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
-    h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '"><span><span class="dn">Domain ' +
+    const domainIcon = { I:'book', II:'shield', III:'board', IV:'gear', V:'doclines' }[d.id] || 'book';
+    h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<span class="dom-ico">' + icon(domainIcon) + '</span><span><span class="dn">Domain ' +
       esc(d.num) + '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
       '<div class="dom-body">';
     if (!d.principles.length){
+      h += '<div class="sec-rail">';
       (DOMAIN_I.sections || []).forEach(sec => {
-        h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' + esc(sec.label) + '</a>';
+        h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' +
+          '<span class="dot" aria-hidden="true"></span><span>' + esc(sec.label) + '</span></a>';
       });
+      h += '</div>';
     }
     d.principles.forEach(p => {
       const pOpen = p.standards.some(s => s.ref === currentRef) || String(p.num) === hashPrinciple;
