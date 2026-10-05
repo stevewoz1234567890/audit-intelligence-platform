@@ -56,6 +56,10 @@ function fmtDate(iso){
   return d + ' ' + M[+m - 1] + ' ' + y;
 }
 
+function navAsset(src, alt){
+  return '<img class="nav-img" src="' + esc(src) + '" alt="' + esc(alt) + '">';
+}
+
 function validatePlatformData(){
   const issues = [];
   try {
@@ -132,7 +136,8 @@ function renderNav(currentRef){
       '<input type="search" id="navFind" placeholder="Find a standard..." ' +
       'aria-label="Filter standards">' +
     '</label></div><div class="nav-body" id="navBody">' +
-    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">' + icon('grid') + '<span>All Standards</span></a>';
+    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">' +
+    navAsset('assets/sidebar/all-standards.png', 'All Standards') + '<span>All Standards</span></a>';
 
   DOMAINS.forEach(d => {
     const hashPrinciple = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
@@ -141,9 +146,15 @@ function renderNav(currentRef){
     const open = currentRef ? contains : (domainQ ? d.id === domainQ : (hashInDomain || d.id === 'II'));
     const here = d.id === 'I' && !currentRef && domainQ === 'I';
     h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
-    const domainIcon = { I:'book', II:'shield', III:'board', IV:'gear', V:'doclines' }[d.id] || 'book';
+    const domainIcon = {
+      I:{ src:'assets/sidebar/domain-1-book.png', alt:'Domain I' },
+      II:{ src:'assets/sidebar/domain-2-shield.png', alt:'Domain II' },
+      III:{ src:'assets/sidebar/domain-3-board.png', alt:'Domain III' },
+      IV:{ src:'assets/sidebar/domain-4-gear.png', alt:'Domain IV' },
+      V:{ src:'assets/sidebar/domain-5-document.png', alt:'Domain V' }
+    }[d.id] || { src:'assets/sidebar/domain-1-book.png', alt:'Domain' };
     h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-      '<span class="dom-ico">' + icon(domainIcon) + '</span><span><span class="dn">Domain ' +
+      '<span class="dom-ico">' + navAsset(domainIcon.src, domainIcon.alt) + '</span><span><span class="dn">Domain ' +
       esc(d.num) + '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
       '<div class="dom-body">';
     if (!d.principles.length){
