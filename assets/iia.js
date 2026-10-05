@@ -189,6 +189,8 @@ function renderNav(currentRef){
     });
     h += '</div></div>';
   });
+  h += '<a class="nav-all public-app' + (domainQ === 'public-sector' ? ' on' : '') + '" href="standards.html?domain=public-sector">' +
+    icon('doclines') + '<span>Public Sector Application</span></a>';
   return h + '</div>';
 }
 

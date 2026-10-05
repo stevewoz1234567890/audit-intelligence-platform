@@ -77,6 +77,48 @@
       '<div><b>' + esc(item.title) + '</b><span>' + esc(item.text) + '</span></div></div>';
   }
 
+  function psLinks(rows){
+    return rows.map(item => '<a href="standard.html?ref=' + encodeURIComponent(item.ref) + '"><b>Standard ' + esc(item.ref) + '</b> — ' + esc(item.title) + '</a><span>' + esc(item.connection) + '</span>').join('');
+  }
+
+  function psBlock(title, body, focus, risks, controls, procedures, redFlags, findings, extra){
+    let h = '<section class="di-block"><div class="di-kicker">Public Sector Application</div><h3>' + esc(title) + '</h3>';
+    (body || []).forEach(p => { h += '<p>' + esc(p) + '</p>'; });
+    if (extra) h += extra;
+    if (focus && focus.length) h += '<h4>Audit Focus Areas</h4><ul class="rq dot">' + focus.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+    if (risks && risks.length) h += '<h4>Risks</h4><div class="di-item-list">' + risks.map(x => '<div class="di-item">' + icon('alert') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
+    if (controls && controls.length) h += '<h4>Controls</h4><ul class="rq dot">' + controls.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+    if (procedures && procedures.length) h += '<h4>Audit Procedures and Required Evidence — Suggested</h4><ul class="rq dot">' + procedures.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+    if (redFlags && redFlags.length) h += '<h4>Red Flags</h4><ul class="rq dot">' + redFlags.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+    if (findings && findings.length) h += '<h4>Common Findings — Illustrative Examples</h4><ul class="rq dot">' + findings.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+    return h + '</section>';
+  }
+
+  function publicSectorPanel(){
+    const overviewExtra = '<h4>Public Sector Audit Priorities</h4><ul class="rq dot">' + PUBLIC_SECTOR.overview.priorities.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>' +
+      '<h4>Application Areas</h4><div class="di-item-list">' + PUBLIC_SECTOR.overview.applicationAreas.map(x => '<div class="di-item">' + icon('doc') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
+    const govExtra = '<h4>Examples of Governance Arrangements</h4><div class="di-item-list">' + PUBLIC_SECTOR.governance.arrangements.map(x => '<div class="di-item">' + icon('users') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
+    return '<div class="di public-sector">' +
+      '<section class="di-statement" id="ps-overview">' +
+        '<div class="di-statement-top"><div class="di-ico">' + icon('doclines') + '</div><div>' +
+          '<h2>' + esc(PUBLIC_SECTOR.title) + '</h2>' +
+          '<p>' + esc(PUBLIC_SECTOR.summary) + '</p></div></div>' +
+        '<div class="scope" style="margin-top:16px"><div>' + icon('check') + '</div><div><b>Content classification</b><span>' + esc(PUBLIC_SECTOR.classification) + '</span></div></div>' +
+        '<div class="di-tabs">' +
+          '<a class="di-tab on" href="#ps-overview">Overview</a>' +
+          '<a class="di-tab" href="#ps-laws">Laws & Regulations</a>' +
+          '<a class="di-tab" href="#ps-governance">Governance & Structure</a>' +
+          '<a class="di-tab" href="#ps-funding">Funding</a>' +
+          '<a class="di-tab" href="#ps-references">Professional References</a>' +
+        '</div></section>' +
+      psBlock('Overview and Purpose', [PUBLIC_SECTOR.overview.intro, PUBLIC_SECTOR.overview.detail, PUBLIC_SECTOR.overview.note], null, null, null, null, null, null, overviewExtra).replace('<section class="di-block">','<section class="di-block" id="ps-overview-body">') +
+      psBlock('Laws and Regulations', PUBLIC_SECTOR.laws.text, PUBLIC_SECTOR.laws.focus, PUBLIC_SECTOR.laws.risks, PUBLIC_SECTOR.laws.controls, PUBLIC_SECTOR.laws.procedures, PUBLIC_SECTOR.laws.redFlags, PUBLIC_SECTOR.laws.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.laws.subtopics.map(x => '<div class="di-item">' + icon('scale') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>').replace('<section class="di-block">','<section class="di-block" id="ps-laws">') +
+      psBlock('Governance and Organizational Structure', PUBLIC_SECTOR.governance.text, PUBLIC_SECTOR.governance.focus, PUBLIC_SECTOR.governance.risks, PUBLIC_SECTOR.governance.controls, PUBLIC_SECTOR.governance.procedures, PUBLIC_SECTOR.governance.redFlags, PUBLIC_SECTOR.governance.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.governance.subtopics.map(x => '<div class="di-item">' + icon('board') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>' + govExtra).replace('<section class="di-block">','<section class="di-block" id="ps-governance">') +
+      psBlock('Funding', PUBLIC_SECTOR.funding.text, PUBLIC_SECTOR.funding.focus, PUBLIC_SECTOR.funding.risks, PUBLIC_SECTOR.funding.controls, PUBLIC_SECTOR.funding.procedures, PUBLIC_SECTOR.funding.redFlags, PUBLIC_SECTOR.funding.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.funding.subtopics.map(x => '<div class="di-item">' + icon('gear') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>').replace('<section class="di-block">','<section class="di-block" id="ps-funding">') +
+      '<section class="di-block" id="ps-references"><div class="di-kicker">Public Sector Application</div><h3>Professional References</h3><div class="ps-links">' + psLinks(PUBLIC_SECTOR.references) + '</div></section>' +
+    '</div>';
+  }
+
   function domainIPanel(){
     const value = DOMAIN_I.howValueProvides.map(item =>
       '<article class="di-v">' + icon(item.icon || 'shield') +
@@ -146,12 +188,20 @@
   }
 
   function setChrome(domainI){
+    const publicSector = domainI === 'public-sector';
     document.body.classList.toggle('domain-i-page', !!domainI);
     const crumb = document.querySelector('.crumb');
     const eyebrow = document.querySelector('.page-h .eyebrow');
     const h1 = document.querySelector('.page-h h1');
     const ask = document.getElementById('pageAsk');
-    if (domainI){
+    if (publicSector){
+      crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><a href="standards.html">IIA Standards</a><span class="sep">/</span><b>Public Sector Application</b>';
+      eyebrow.textContent = 'Practice Guide';
+      h1.textContent = PUBLIC_SECTOR.title;
+      lede.textContent = PUBLIC_SECTOR.summary;
+      ask.querySelector('b').textContent = 'Ask about Public Sector Application';
+      ask.querySelector('span').textContent = 'Explore how public sector arrangements affect application of the Standards.';
+    } else if (domainI){
       crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><a href="standards.html">IIA Standards</a><span class="sep">/</span><b>Domain I</b>';
       eyebrow.textContent = 'Domain I · Purpose Introduction';
       h1.textContent = DOMAIN_I.title;
@@ -166,6 +216,14 @@
       ask.querySelector('b').textContent = 'Need help finding guidance?';
       ask.querySelector('span').textContent = 'Ask the AI Assistant. It answers from the standards in this platform.';
     }
+  }
+
+  function markPublicSector(){
+    const onPs = qs('domain') === 'public-sector' && !input.value.trim();
+    const current = location.hash || '#ps-overview';
+    document.querySelectorAll('.di-tab').forEach(a => {
+      a.classList.toggle('on', onPs && a.getAttribute('href') === current);
+    });
   }
 
   function markDomainI(){
@@ -246,6 +304,12 @@
     history.replaceState(null, '', url.pathname + url.search + hash);
     if (!q){
       const domain = qs('domain');
+      if (domain === 'public-sector'){
+        setChrome('public-sector');
+        out.innerHTML = '<div class="catalog">' + publicSectorPanel() + '</div>';
+        markPublicSector();
+        return;
+      }
       if (domain) domainView(domain); else domains();
       return;
     }
