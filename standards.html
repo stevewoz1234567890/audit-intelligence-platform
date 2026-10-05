@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Internal Audit Standards — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=7">
+<link rel="stylesheet" href="assets/iia.css?v=8">
 </head>
 <body>
 
@@ -43,9 +43,9 @@
 </div>
 
 <script src="data/library.js"></script>
-<script src="data/iia.js?v=7"></script>
+<script src="data/iia.js?v=8"></script>
 <script src="data/references.js"></script>
-<script src="assets/iia.js?v=7"></script>
+<script src="assets/iia.js?v=8"></script>
 <script>
 (function(){
   const input = document.getElementById('q');
@@ -199,21 +199,41 @@
       return;
     }
     setChrome(false);
-    lede.textContent = 'Domain ' + d.num + ' — ' + d.name + '. ' + span(d) + '.';
-    let h = '<div class="catalog"><a class="go" href="standards.html" style="font-weight:700;color:var(--navy)">All domains</a>';
-    h += '<div class="group-label">Domain ' + esc(d.num) + '</div>';
-    h += '<div class="tcard" style="margin-bottom:16px"><div class="kicker">' + esc(span(d)) + '</div>' +
-      '<h3>' + esc(d.name) + '</h3><p>' + esc(d.blurb) + '</p></div>';
-    d.principles.forEach(p => {
-      h += '<div class="group-label" id="principle-' + p.num + '">Principle ' + p.num + ' — ' + esc(p.title) + '</div><div class="cgrid">';
+    const wanted = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
+    const focus = wanted && d.principles.find(p => String(p.num) === wanted);
+    const ordered = focus ? [focus].concat(d.principles.filter(p => p !== focus)) : d.principles;
+    if (focus){
+      document.querySelector('.page-h h1').textContent = 'Principle ' + focus.num + ' — ' + focus.title;
+      lede.textContent = 'Domain ' + d.num + ' — ' + d.name + '. The standards for this principle are listed below.';
+      document.title = 'Principle ' + focus.num + ' — ' + focus.title + ' — Audit Intelligence';
+      document.querySelector('.crumb').innerHTML =
+        '<a href="index.html">Home</a><span class="sep">/</span>' +
+        '<a href="standards.html">IIA Standards</a><span class="sep">/</span>' +
+        '<a href="standards.html?domain=' + encodeURIComponent(d.id) + '">Domain ' + esc(d.num) + '</a>' +
+        '<span class="sep">/</span><b>Principle ' + focus.num + '</b>';
+    } else {
+      lede.textContent = 'Domain ' + d.num + ' — ' + d.name + '. ' + span(d) + '.';
+      document.title = 'Global Internal Audit Standards — Audit Intelligence';
+    }
+    function principleBlock(p){
+      let block = '<div class="group-label" id="principle-' + p.num + '">Principle ' + p.num + ' — ' + esc(p.title) + '</div><div class="cgrid">';
       p.standards.forEach(s => {
         const rec = standardRecord(s.ref);
-        h += '<a class="tcard" href="standard.html?ref=' + encodeURIComponent(s.ref) + '">' +
+        block += '<a class="tcard" href="standard.html?ref=' + encodeURIComponent(s.ref) + '">' +
           '<div class="kicker">Standard ' + esc(s.ref) + '</div><h3>' + esc(s.title) + '</h3>' +
           '<p>' + (rec ? esc(rec.summary) : 'Open the standard.') + '</p>' +
           '<span class="go">' + (rec ? 'Open standard' : 'View standard') + '</span></a>';
       });
-      h += '</div>';
+      return block + '</div>';
+    }
+    let h = '<div class="catalog"><a class="go" href="standards.html" style="font-weight:700;color:var(--navy)">All domains</a>';
+    if (focus) h += principleBlock(focus);
+    h += '<div class="group-label">Domain ' + esc(d.num) + '</div>';
+    h += '<div class="tcard" style="margin-bottom:16px"><div class="kicker">' + esc(span(d)) + '</div>' +
+      '<h3>' + esc(d.name) + '</h3><p>' + esc(d.blurb) + '</p></div>';
+    ordered.forEach(p => {
+      if (focus && p === focus) return;
+      h += principleBlock(p);
     });
     out.innerHTML = h + '</div>';
   }
@@ -221,8 +241,9 @@
   function run(){
     const q = input.value.trim();
     const url = new URL(location.href);
+    const hash = url.hash;
     if (q) url.searchParams.set('q', q); else url.searchParams.delete('q');
-    history.replaceState(null, '', url);
+    history.replaceState(null, '', url.pathname + url.search + hash);
     if (!q){
       const domain = qs('domain');
       if (domain) domainView(domain); else domains();
@@ -265,16 +286,30 @@
   document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); run(); });
   const seed = qs('q');
   if (seed){ input.value = seed; run(); } else run();
+  function revealPrinciple(){
+    const jump = (location.hash || '').match(/^#principle-(\d+)$/);
+    if (!jump) return;
+    const target = document.getElementById('principle-' + jump[1]);
+    if (target){
+      const top = target.getBoundingClientRect().top + window.pageYOffset - 84;
+      window.scrollTo({ top: Math.max(0, top), left: 0, behavior: 'auto' });
+    }
+    const row = document.querySelector('.nav-body .pr.open');
+    const scroller = document.getElementById('navBody');
+    if (row && scroller){
+      scroller.scrollTop += row.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+    }
+  }
   mount({ active:'library' });
   markDomainI();
-  const principleJump = (location.hash || '').match(/^#principle-(\d+)$/);
-  if (principleJump){
-    const target = document.getElementById('principle-' + principleJump[1]);
-    if (target) target.scrollIntoView({ block:'start' });
-    const row = document.querySelector('.pr.open');
-    if (row) row.scrollIntoView({ block:'nearest' });
-  }
-  window.addEventListener('hashchange', markDomainI);
+  revealPrinciple();
+  window.addEventListener('hashchange', () => {
+    const domain = qs('domain');
+    if (domain && !input.value.trim()) domainView(domain);
+    markDomainI();
+    revealPrinciple();
+  });
+  window.addEventListener('load', revealPrinciple);
 })();
 </script>
 </body>

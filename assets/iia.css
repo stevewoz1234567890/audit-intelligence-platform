@@ -340,9 +340,10 @@ body.domain-i-page .catalog{padding-top:4px}
 .di-item .ic{width:18px;height:18px;stroke:var(--gold-2);fill:none;stroke-width:1.7;flex:none;margin-top:2px}
 .di-item b{display:block;font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
 .di-item span{display:block;margin-top:2px;font-size:12.8px;color:var(--ink-2);line-height:1.5}
-.principle-links{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-.principle-links a{color:var(--navy-3);font-weight:600;font-size:13.5px}
-.principle-links a:hover{text-decoration:underline}
+.di-item span.principle-links{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:8px}
+.principle-links a{display:block;color:var(--navy);font-weight:700;font-size:14px;line-height:1.35;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 2px}
+.principle-links a:hover{color:var(--navy-2)}
 [id^="principle-"]{scroll-margin-top:84px}
 .di-note{margin:8px 0 8px;font-size:12.6px;color:var(--ink-3);line-height:1.55}
 .di-source{margin:14px 0 8px;font-size:13px;color:var(--ink-2);line-height:1.6}

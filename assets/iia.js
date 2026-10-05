@@ -195,18 +195,24 @@ function wireNav(){
   if (!body) return;
 
   body.addEventListener('click', e => {
-    const dom = e.target.closest('.dom-btn');
-    if (dom){
+    const domBtn = e.target.closest('.dom-btn');
+    if (domBtn){
       e.preventDefault();
-      const box = dom.closest('.dom');
+      const box = domBtn.closest('.dom');
       const willOpen = !box.classList.contains('open');
       box.classList.toggle('open', willOpen);
-      dom.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      domBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
       return;
     }
     const head = e.target.closest('.pr-h');
     if (!head) return;
-    head.closest('.pr').classList.toggle('open');
+    const pr = head.closest('.pr');
+    const dom = head.closest('.dom');
+    pr.classList.toggle('open');
+    if (!/standards\.html$/.test(location.pathname) || !dom || !pr) return;
+    const dest = 'standards.html?domain=' + encodeURIComponent(dom.dataset.dom) + '#principle-' + pr.dataset.pr;
+    if (qs('domain') === dom.dataset.dom && location.hash === '#principle-' + pr.dataset.pr) return;
+    location.href = dest;
   });
 
   const find = document.getElementById('navFind');
