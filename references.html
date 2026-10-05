@@ -90,21 +90,15 @@
       out.innerHTML = '<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
       return;
     }
-    const groups = [];
-    rows.forEach(r => { if (!groups.includes(r.group)) groups.push(r.group); });
-    let h = '<div class="catalog">';
-    groups.forEach(g => {
-      h += '<div class="group-label">' + esc(g) + '</div><div class="cgrid">';
-      rows.filter(r => r.group === g).forEach(r => {
-        h += '<a class="tcard" href="references.html?ref=' + encodeURIComponent(r.id) + '">' +
-          '<div class="kicker">' + esc(r.group) +
-          (r.badge ? '<span class="badge">' + esc(r.badge) + '</span>' : '') + '</div>' +
-          '<h3>' + esc(r.title) + '</h3><p>' + esc(r.blurb) + '</p>' +
-          '<span class="go">Open reference</span></a>';
-      });
-      h += '</div>';
+    let h = '<div class="catalog"><div class="cgrid">';
+    rows.forEach(r => {
+      h += '<a class="tcard" href="references.html?ref=' + encodeURIComponent(r.id) + '">' +
+        '<div class="kicker">' + esc(r.group) +
+        (r.badge ? '<span class="badge">' + esc(r.badge) + '</span>' : '') + '</div>' +
+        '<h3>' + esc(r.title) + '</h3><p>' + esc(r.blurb) + '</p>' +
+        '<span class="go">Open reference</span></a>';
     });
-    out.innerHTML = h + '</div>';
+    out.innerHTML = h + '</div></div>';
   }
 
   function detail(id){

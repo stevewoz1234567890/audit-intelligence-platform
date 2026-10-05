@@ -69,8 +69,10 @@
   /* ---------- tabs ---------- */
   const TABS = [];
   const add = (anchor, label, ico, n) => TABS.push({ anchor, label, ico, n });
+  add('requirements','Standards & Guidance','doc');
+  add('implementation','Considerations for Implementation','check');
+  add('conformance','Examples of Evidence of Conformance','doc');
   if (rec){
-    add('requirements','Standards & Guidance','doc');
     if (rec.focus && rec.focus.length) add('focus','Audit Focus Areas','target', rec.focus.length);
     if (rec.risks && rec.risks.length) add('risks','Risks','alert', rec.risks.length);
     if (rec.controls && rec.controls.length) add('controls','Controls','shield', rec.controls.length);
@@ -96,19 +98,26 @@
   /* ---------- body ---------- */
   h += '<div class="body">';
 
+  const sect = (id, title, ico, inner, n) =>
+    '<section class="sect" id="' + id + '">' +
+      '<div class="sect-h">' + icon(ico) + '<h2>' + title + '</h2>' +
+      (n !== undefined ? '<span class="n">' + n + '</span>' : '') + '</div>' +
+      inner + '</section>';
+  const gap = (label) =>
+    '<div class="card"><p>' + esc(label) + ' has not been added for Standard ' +
+    esc(s.ref) + ' yet.</p></div>';
+
   if (!rec){
-    h += '<div class="empty">' + icon('doc') +
+    h += sect('requirements','Standards &amp; Guidance','doc',
+      '<div class="empty">' + icon('doc') +
       '<b>Content not yet added for this standard</b>' +
       '<p>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + ' is part of Principle ' +
-      s.principleNum + '. Its detailed content has not been added to the platform yet. ' +
-      'Standards with content are shown in full in the navigator on the left.</p></div>';
+      s.principleNum + '. Its detailed content has not been added to the platform yet.</p></div>');
+    h += sect('implementation','Considerations for Implementation','check',
+      gap('Considerations for Implementation'));
+    h += sect('conformance','Examples of Evidence of Conformance','doc',
+      gap('Examples of Evidence of Conformance'));
   } else {
-
-    const sect = (id, title, ico, inner, n) =>
-      '<section class="sect" id="' + id + '">' +
-        '<div class="sect-h">' + icon(ico) + '<h2>' + title + '</h2>' +
-        (n !== undefined ? '<span class="n">' + n + '</span>' : '') + '</div>' +
-        inner + '</section>';
 
     const ul = (arr, cls) => '<div class="card"><ul class="rq ' + (cls||'') + '">' +
       arr.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul></div>';
@@ -129,17 +138,17 @@
       g += '<div class="sect-h" style="margin-top:18px">' + icon('alert') +
            '<h2 style="font-size:15px">Examples of Bias</h2></div>' +
            tbl(rec.biasTable,'Bias','Description','b','d');
-    if (rec.implementation && rec.implementation.length)
-      g += '<div class="sect-h" style="margin-top:18px">' + icon('check') +
-           '<h2 style="font-size:15px">Considerations for Implementation</h2>' +
-           '<span class="n">' + rec.implementation.length + '</span></div>' +
-           ul(rec.implementation,'dot');
-    if (rec.conformance && rec.conformance.length)
-      g += '<div class="sect-h" style="margin-top:18px">' + icon('doc') +
-           '<h2 style="font-size:15px">Examples of Evidence of Conformance</h2>' +
-           '<span class="n">' + rec.conformance.length + '</span></div>' +
-           ul(rec.conformance,'tick');
     h += sect('requirements','Standards &amp; Guidance','doc', g);
+    h += sect('implementation','Considerations for Implementation','check',
+      (rec.implementation && rec.implementation.length)
+        ? ul(rec.implementation,'dot')
+        : gap('Considerations for Implementation'),
+      (rec.implementation && rec.implementation.length) || undefined);
+    h += sect('conformance','Examples of Evidence of Conformance','doc',
+      (rec.conformance && rec.conformance.length)
+        ? ul(rec.conformance,'tick')
+        : gap('Examples of Evidence of Conformance'),
+      (rec.conformance && rec.conformance.length) || undefined);
 
     if (rec.focus && rec.focus.length)
       h += sect('focus','Audit Focus Areas','target', ul(rec.focus,'dot'), rec.focus.length);

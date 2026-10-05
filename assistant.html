@@ -25,6 +25,10 @@
   box-shadow:var(--sh-1)}
 .msg.a .mb p{margin:0 0 11px;font-size:13.6px;line-height:1.72;color:var(--ink-2)}
 .msg.a .mb p:last-of-type{margin-bottom:0}
+.msg.a .mb ul{margin:0 0 11px 18px;padding:0;color:var(--ink-2);font-size:13.6px;line-height:1.65}
+.msg.a .mb li{margin:3px 0}
+.kind{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;color:var(--gold-2);margin:0 0 4px}
 .msg.a .mb p b{color:var(--ink);font-weight:700}
 .cites{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);
   display:flex;flex-wrap:wrap;gap:7px}
@@ -64,17 +68,17 @@
 
     <div class="as-h">
       <h1>AI Audit Assistant</h1>
-      <p>Ask about the standards held in this platform. Every answer cites the standard
-         it came from and links to the exact section.</p>
+      <p>Ask about any standard, supporting reference, or audit tool held in this platform.
+         Answers cite the section they use and link directly to it.</p>
     </div>
 
     <div class="as-body">
       <div class="scope" style="margin-bottom:18px">
         <svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z" fill="none"/><path d="M7.5 10l1.8 1.8 3.4-3.6" fill="none"/></svg>
         <div><b>Answers come from this platform only</b>
-        <span>The assistant retrieves from the standards held here — never from the open
+        <span>The assistant retrieves from the standards, references and tools held here — never from the open
         internet. Where the platform holds nothing relevant, it says so rather than
-        answering from general knowledge.</span></div>
+        answering from general knowledge. A generated checklist is a practical suggestion, not proof of conformance.</span></div>
       </div>
 
       <div class="conv" id="conv"></div>
@@ -101,10 +105,13 @@
 
   const SUGG = [
     'What does Standard 2.2 require?',
-    'How is objectivity safeguarded?',
-    'Red flags for professional courage',
-    'Evidence of conformance for ethics',
-    'Controls over confidentiality'
+    'How can I implement Standard 1.1?',
+    'What evidence demonstrates conformance with Standard 3.2?',
+    'What risks and controls relate to confidentiality?',
+    'Create an audit checklist based on Standard 9.4.',
+    'What is the difference between Requirements and Considerations for Implementation?',
+    'How do I use the Risk & Control Matrix?',
+    'Help me structure an audit finding using the Finding Builder.'
   ];
   document.getElementById('sugg').innerHTML = SUGG.map(s =>
     '<button data-q="' + esc(s) + '">' + icon('spark') + esc(s) + '</button>').join('');
@@ -114,53 +121,259 @@
       '<div class="msg u"><div class="av">NA</div><div class="mb">' + esc(t) + '</div></div>');
   }
 
-  /* The assistant answers strictly from retrieved platform content.
-     It composes from the standards themselves rather than generating
-     prose, so nothing can enter an answer that is not in the library. */
-  function answer(q){
-    const res = searchPlatform(q).filter(r => r.rec).slice(0, 3);
+  /* Answers are assembled only from records, references and tools
+     held in this platform. Generated drafts are labelled as suggestions. */
+  function intentOf(q){
+    const s = q.toLowerCase();
+    if (/difference between requirements and considerations/.test(s)) return 'compare';
+    if (/(checklist|audit program)/.test(s) && /(create|based on|prepare|draft)/.test(s)) return 'checklist';
+    if (/finding builder|structure an audit finding|structure a finding/.test(s)) return 'finding';
+    if (/how (do|can) i use|how to use/.test(s)) return 'howto';
+    if (/evidence of conformance|demonstrates conformance|conformance with/.test(s)) return 'conformance';
+    if (/implement/.test(s)) return 'implementation';
+    if (/red flag/.test(s)) return 'redflags';
+    if (/risk/.test(s) && /control/.test(s)) return 'both';
+    if (/\brisks?\b/.test(s)) return 'risks';
+    if (/\bcontrols?\b/.test(s)) return 'controls';
+    if (/procedure/.test(s)) return 'procedures';
+    if (/focus area/.test(s)) return 'focus';
+    if (/\brequire/.test(s)) return 'requirements';
+    return null;
+  }
 
-    if (!res.length){
-      return '<p><b>Nothing in this platform covers that yet.</b> I answer only from the ' +
-        'standards held here, and none of them address this closely enough to give you a ' +
-        'reliable answer. I will not answer from general knowledge or from the internet.</p>' +
-        '<p>Try the <a href="standards.html?q=' + encodeURIComponent(q) +
-        '" style="color:var(--navy-3);font-weight:600">standards library</a>, ' +
-        'or ask about a standard that has content.</p>';
+  function cite(href, label){
+    return '<a class="cite" href="' + href + '">' + esc(label) + '</a>';
+  }
+  function cites(html){
+    return '<div class="cites"><span class="lb">Sources — from this platform</span>' + html + '</div>';
+  }
+  function ul(arr){
+    return '<ul>' + arr.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+  }
+  function stdLink(s, anchor, label){
+    return cite('standard.html?ref=' + encodeURIComponent(s.ref) + (anchor ? '#' + anchor : ''),
+      'Standard ' + s.ref + (label ? ' · ' + label : ''));
+  }
+  function locate(q){
+    const m = q.match(/\b(\d{1,2}\.\d+)\b/);
+    if (m){
+      const s = allStandards().find(x => x.ref === m[1]);
+      if (s) return { s:s, rec:standardRecord(s.ref) };
+    }
+    const hit = searchPlatform(q)[0];
+    return hit ? { s:hit.s, rec:hit.rec } : null;
+  }
+  function toolHits(q){
+    const low = q.toLowerCase();
+    return TOOLS.map(t => {
+      let score = 0;
+      if (low.includes(t.title.toLowerCase())) score += 40;
+      t.title.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 3).forEach(w => {
+        if (low.includes(w)) score += 6;
+      });
+      return { t, score };
+    }).filter(x => x.score >= 12).sort((a,b) => b.score - a.score);
+  }
+  function refHits(q){
+    const low = q.toLowerCase();
+    return REFS.map(r => {
+      let score = 0;
+      if (low.includes(r.title.toLowerCase())) score += 40;
+      if (r.id === 'coso' && low.includes('coso')) score += 40;
+      if (r.id === 'ippf' && low.includes('ippf')) score += 40;
+      if (r.id === '2017' && (low.includes('2017') || low.includes('historical'))) score += 40;
+      if (r.id === 'ethics' && (low.includes('code of ethics') || low.includes('ethics'))) score += 30;
+      if (r.id.indexOf('glossary') !== -1 && low.includes('glossary')) score += 24;
+      (r.keywords || '').split(/\s+/).forEach(w => {
+        if (w.length > 3 && low.includes(w)) score += 5;
+      });
+      return { r, score };
+    }).filter(x => x.score >= 10).sort((a,b) => b.score - a.score);
+  }
+  function heading(s, rec){
+    let h = '<p><b>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + '.</b>';
+    if (rec && rec.summary) h += ' ' + esc(rec.summary);
+    h += '</p>';
+    if (rec && rec.title && rec.title !== s.title)
+      h += '<p>The navigator lists this standard as ' + esc(s.title) +
+        '. The record held for this number is titled ' + esc(rec.title) +
+        '. The text below is that record.</p>';
+    return h;
+  }
+  function missing(s, what){
+    return '<p><b>Not enough content in this platform.</b> Standard ' + esc(s.ref) +
+      ' — ' + esc(s.title) + ' is listed, but ' + esc(what) +
+      ' has not been added yet. I will not fill that gap from general knowledge.</p>' +
+      cites(stdLink(s, '', s.title));
+  }
+  function sectionAnswer(found, kind){
+    const s = found.s, rec = found.rec;
+    if (!rec) return missing(s, 'its detailed content');
+    const blocks = [];
+    const want = (label, anchor, ok, html) => {
+      if (!ok) return;
+      blocks.push({ label:label, anchor:anchor, body:html });
+    };
+    if (kind === 'requirements' || kind === 'checklist')
+      want('Requirements','requirements', rec.requirement,
+        '<p><span class="kind">Requirements</span>' + esc(rec.requirement) + '</p>');
+    if (kind === 'implementation')
+      want('Considerations for Implementation','implementation',
+        rec.implementation && rec.implementation.length,
+        '<p><span class="kind">Considerations for Implementation</span>' +
+        'These are practical points held for this standard. They are not additional official requirements.</p>' +
+        ul(rec.implementation || []));
+    if (kind === 'conformance')
+      want('Examples of Evidence of Conformance','conformance',
+        rec.conformance && rec.conformance.length,
+        '<p><span class="kind">Examples of Evidence of Conformance</span>' +
+        'These examples are held in the platform. They illustrate evidence; they do not by themselves establish conformance.</p>' +
+        ul(rec.conformance || []));
+    if (kind === 'risks' || kind === 'both')
+      want('Risks','risks', rec.risks && rec.risks.length,
+        '<p><span class="kind">Risks</span></p>' + ul((rec.risks||[]).map(x => x.r + ' (' + x.i + ')')));
+    if (kind === 'controls' || kind === 'both')
+      want('Controls','controls', rec.controls && rec.controls.length,
+        '<p><span class="kind">Controls</span></p>' + ul((rec.controls||[]).map(x => x.c + ' (' + x.t + ')')));
+    if (kind === 'procedures' || kind === 'checklist'){
+      const steps = rec.procedureTable && rec.procedureTable.length
+        ? rec.procedureTable.map(x => x.p + (x.e ? ' — evidence: ' + x.e : ''))
+        : (rec.procedures || []);
+      want('Audit Procedures','procedures', steps.length,
+        '<p><span class="kind">Audit Procedures</span></p>' + ul(steps));
+    }
+    if (kind === 'focus')
+      want('Audit Focus Areas','focus', rec.focus && rec.focus.length,
+        '<p><span class="kind">Audit Focus Areas</span></p>' + ul(rec.focus));
+    if (kind === 'redflags')
+      want('Red Flags','redflags', rec.redFlags && rec.redFlags.length,
+        '<p><span class="kind">Red Flags</span>A red flag indicates a matter for further examination. It does not by itself establish fraud or misconduct.</p>' +
+        ul(rec.redFlags));
+    if (kind === 'checklist' && rec.evidence && rec.evidence.length)
+      want('Required Evidence','evidence', true,
+        '<p><span class="kind">Practical suggestion</span>Draft checklist drawn from the evidence list in this record. Completing it does not by itself establish conformance.</p>' +
+        ul(rec.evidence));
+    if (!blocks.length){
+      const names = {
+        requirements:'the requirements', implementation:'considerations for implementation',
+        conformance:'examples of evidence of conformance', risks:'risks', controls:'controls',
+        both:'risks and controls', procedures:'audit procedures', focus:'audit focus areas',
+        redflags:'red flags', checklist:'checklist material'
+      };
+      return heading(s, rec) + missing(s, names[kind] || 'that section');
+    }
+    let h = heading(s, rec);
+    if (kind === 'checklist')
+      h += '<p><span class="kind">Practical suggestion</span>The list below is assembled from this platform’s record for Standard ' +
+        esc(s.ref) + '. It is not an official requirement, and completing it does not by itself establish conformance.</p>';
+    blocks.forEach(b => { h += b.body; });
+    let links = blocks.map(b => stdLink(s, b.anchor, b.label)).join('');
+    if (kind === 'checklist')
+      links += cite('tools.html?tool=evidence', 'Evidence Checklist') +
+        cite('tools.html?tool=program', 'Audit Program');
+    h += cites(links);
+    return h;
+  }
+
+  function answer(q){
+    const kind = intentOf(q);
+    const numbered = /\b\d{1,2}\.\d+\b/.test(q);
+
+    if (kind === 'compare'){
+      const sample = locate('1.1') || locate('2.2');
+      return '<p><b>Requirements and Considerations for Implementation are different sections.</b> ' +
+        'Requirements are the obligations held for a standard. Considerations for Implementation are practical points for applying it. ' +
+        'They are not additional official requirements, and they are labelled separately on each standard page.</p>' +
+        (sample ? cites(stdLink(sample.s, 'requirements', 'Requirements') +
+          stdLink(sample.s, 'implementation', 'Considerations for Implementation')) : '');
     }
 
-    const top = res[0], r = top.rec, s = top.s;
-    let h = '<p><b>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + '.</b> ' +
-      esc(r.summary) + '</p>';
+    if ((kind === 'howto' || kind === 'finding') && !numbered){
+      const tools = toolHits(q);
+      if (tools.length){
+        const t = tools[0].t;
+        let h = '<p><b>' + esc(t.title) + '.</b> ' + esc(t.blurb) + ' This is a worksheet in the platform. Notes stay in this browser.</p>';
+        h += '<p><span class="kind">How to use it</span>Open the tool and complete these fields from the engagement information you already have:</p>';
+        h += ul(t.fields.map(f => f.label + (f.hint ? ' — ' + f.hint : '')));
+        if (kind === 'finding')
+          h += '<p><span class="kind">Practical suggestion</span>A finding in this tool is structured as criteria, condition, cause, risk and impact, then a recommendation. ' +
+            'That structure is a working aid. It is not an official requirement, and it does not by itself establish a finding.</p>';
+        const words = t.title.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 4);
+        const related = allStandards().filter(s => {
+          if (!standardRecord(s.ref)) return false;
+          const hay = (s.title + ' ' + s.principleTitle).toLowerCase();
+          return words.some(w => hay.includes(w));
+        }).slice(0, 3).map(s => ({ s:s }));
+        h += cites(cite('tools.html?tool=' + encodeURIComponent(t.id), t.title) +
+          related.map(x => stdLink(x.s, '', x.s.title)).join(''));
+        return h;
+      }
+    }
 
-    const sec = top.hits[0];
-    if (sec && sec.anchor === 'requirements')
-      h += '<p><b>Requirement.</b> ' + esc(r.requirement) + '</p>';
-    else if (sec && sec.anchor === 'risks' && r.risks && r.risks.length)
-      h += '<p><b>Risks.</b> ' + r.risks.map(x =>
-        esc(x.r) + ' (' + esc(x.i) + ')').join(' ') + '</p>';
-    else if (sec && sec.anchor === 'controls' && r.controls && r.controls.length)
-      h += '<p><b>Controls.</b> ' + r.controls.map(x =>
-        esc(x.c) + ' (' + esc(x.t) + ')').join(' ') + '</p>';
-    else if (sec && sec.anchor === 'redflags' && r.redFlags && r.redFlags.length)
-      h += '<p><b>Red flags.</b> ' + r.redFlags.map(esc).join(' · ') + '</p>';
-    else if (sec && sec.anchor === 'focus' && r.focus && r.focus.length)
-      h += '<p><b>Audit focus areas.</b> ' + r.focus.map(esc).join(' · ') + '</p>';
-    else
-      h += '<p><b>Requirement.</b> ' + esc(r.requirement) + '</p>';
+    if (!numbered){
+      const refs = refHits(q);
+      const std = searchPlatform(q)[0];
+      if (refs.length && (!std || refs[0].score > 24)){
+        const r = refs[0].r;
+        let h = '<p><b>' + esc(r.title) + '.</b> ' + esc(r.lead) + '</p>';
+        if (r.status === 'Superseded' || r.badge === 'Historical')
+          h += '<p><b>Historical material.</b> This is not the current Global Internal Audit Standards. Use it only when reading older working papers.</p>';
+        else
+          h += '<p>This is supporting reference material held in the platform. It is separate from the current standard requirements.</p>';
+        const named = (r.sections || []).filter(sec => {
+          const hay = (sec.h + ' ' + sec.p).toLowerCase();
+          return q.toLowerCase().split(/[^a-z0-9]+/).some(w => w.length > 4 && hay.includes(w) &&
+            !['standards','internal','principles','reference','material'].includes(w));
+        });
+        const show = named.length ? named : (r.sections || []);
+        show.forEach(sec => {
+          h += '<p><b>' + esc(sec.h) + '.</b> ' + esc(sec.p) + '</p>';
+        });
+        return h + cites(cite('references.html?ref=' + encodeURIComponent(r.id), r.title));
+      }
+    }
 
-    if (res.length > 1)
-      h += '<p><b>Also relevant.</b> ' + res.slice(1).map(x =>
-        'Standard ' + esc(x.s.ref) + ' — ' + esc(x.s.title)).join('; ') + '.</p>';
+    if (kind === 'both' && !numbered){
+      const generic = new Set(['risk','risks','control','controls','relate','related','standard','standards','audit','what']);
+      const terms = q.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 4 && !STOP.has(t) && !generic.has(t));
+      const tops = allStandards().filter(s => {
+        const hay = (s.title + ' ' + s.principleTitle).toLowerCase();
+        return terms.some(t => hay.includes(t));
+      });
+      if (tops.length && !tops.some(s => standardRecord(s.ref))){
+        const ethics = REFS.find(r => (r.keywords || '').split(/\s+/).some(w => terms.includes(w)));
+        return '<p><b>Not enough content in this platform.</b> These standards match that topic, but their risks and controls have not been added yet: ' +
+          tops.map(s => 'Standard ' + esc(s.ref) + ' — ' + esc(s.title)).join('; ') +
+          '. I will not invent them.</p>' +
+          cites(tops.map(s => stdLink(s, '', s.title)).join('') +
+            (ethics ? cite('references.html?ref=' + ethics.id, ethics.title) : ''));
+      }
+    }
 
-    h += '<div class="cites"><span class="lb">Sources — from this platform</span>' +
-      res.map(x => {
-        const a = x.hits[0] ? '#' + x.hits[0].anchor : '';
-        return '<a class="cite" href="standard.html?ref=' +
-          encodeURIComponent(x.s.ref) + a + '">Standard ' + esc(x.s.ref) +
-          (x.hits[0] ? ' · ' + esc(x.hits[0].label) : '') + '</a>';
-      }).join('') + '</div>';
-    return h;
+    const found = locate(q);
+    if (found){
+      if (kind === 'both') return sectionAnswer(found, 'both');
+      return sectionAnswer(found, kind || 'requirements');
+    }
+
+    const tools = toolHits(q);
+    if (tools.length){
+      const t = tools[0].t;
+      return '<p><b>' + esc(t.title) + '.</b> ' + esc(t.blurb) + '</p>' +
+        '<p><span class="kind">How to use it</span></p>' +
+        ul(t.fields.map(f => f.label + (f.hint ? ' — ' + f.hint : ''))) +
+        cites(cite('tools.html?tool=' + encodeURIComponent(t.id), t.title));
+    }
+    const refs = refHits(q);
+    if (refs.length){
+      const r = refs[0].r;
+      return '<p><b>' + esc(r.title) + '.</b> ' + esc(r.lead) + '</p>' +
+        cites(cite('references.html?ref=' + encodeURIComponent(r.id), r.title));
+    }
+
+    return '<p><b>Nothing in this platform covers that closely enough.</b> I answer only from the standards, ' +
+      'references and tools held here. I will not answer from general knowledge or from the internet.</p>' +
+      '<p>Name a standard number, a reference such as COSO or the 2017 standards, or one of the six audit tools, and I will use what this platform holds.</p>';
   }
 
   function addAnswer(q){

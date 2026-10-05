@@ -28,7 +28,12 @@ const ICONS = {
   'star'   :'<path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z"/>',
   'users'  :'<circle cx="7.5" cy="7" r="2.8"/><path d="M2.5 16c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5"/>',
   'clock'  :'<circle cx="10" cy="10" r="7"/><path d="M10 6v4.2l2.8 1.6"/>',
-  'export' :'<path d="M10 3v9M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14v2.5h12V14"/>'
+  'export' :'<path d="M10 3v9M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14v2.5h12V14"/>',
+  'list'   :'<path d="M8 4.5h9M8 10h9M8 15.5h6"/><path d="M3.2 4.6l1.1 1.1 2-2M3.2 10.1l1.1 1.1 2-2M3.2 15.6l1.1 1.1 2-2"/>',
+  'doccheck':'<path d="M5 2.5h6l4 4V17a.5.5 0 01-.5.5h-9A.5.5 0 015 17z"/><path d="M11 2.5v4h4"/><path d="M7.4 12.4l1.5 1.5 3.2-3.4"/>',
+  'circlecheck':'<circle cx="10" cy="10" r="6.5"/><path d="M6.6 10.2l2.1 2.1 4.5-4.8"/>',
+  'hierarchy':'<path d="M7.2 2.4h5.6v3.2H7.2zM10 5.6v1.6M3.2 7.2h13.6M3.2 7.2v1.8M10 7.2v1.8M16.8 7.2v1.8"/><path d="M1.4 9h3.8v3.2H1.4zM8.1 9h3.8v3.2H8.1zM14.8 9h3.8v3.2h-3.8z"/>',
+  'tools'  :'<path d="M13.8 3.2a2.1 2.1 0 01-2.2 3.1L6.4 11.5 4.6 15.2l3.2-1.4 5.2-5.2a2.1 2.1 0 013-2.2L13.6 8"/><path d="M6.2 3.4L3.4 6.2l1.5 1.5 2.8-2.8zM4.2 16.2l5.2-5.2"/>'
 };
 function icon(n, cls){
   return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 20 20" aria-hidden="true">' +
@@ -69,8 +74,7 @@ function renderTop(active){
 }
 
 function renderFooter(){
-  return '<span class="dev">Developed by Noora AlZaraa</span>' +
-    '<span>Internal audit knowledge, clearly structured.</span>';
+  return '<span class="dev">Developed by Noora AlZaraa</span>';
 }
 
 /* ---------- standards navigator ---------- */
@@ -111,7 +115,7 @@ function renderNav(currentRef){
             ' class="' + (s.ref === currentRef ? 'on' : '') + (has ? '' : ' empty') + '"' +
             ' data-ref="' + esc(s.ref) + '" data-title="' + esc(s.title) + '">' +
             '<span class="sr">' + esc(s.ref) + '</span>' +
-            '<span>' + esc(s.title) + '</span></a>';
+            '<span class="st">' + esc(s.title) + '</span></a>';
         });
         h += '</div>';
       }
@@ -130,7 +134,8 @@ function renderSide(opts){
     '</label></div><div class="nav-body" id="sideBody">';
   opts.items.forEach(it => {
     h += '<a class="side-link' + (it.on ? ' on' : '') + '" href="' + it.href +
-      '" data-label="' + esc(it.label) + '">' + esc(it.label) + '</a>';
+      '" data-label="' + esc(it.label) + '">' +
+      (it.icon ? icon(it.icon) : '') + esc(it.label) + '</a>';
   });
   h += '</div>';
   if (opts.note) h += '<div class="nav-note">' + esc(opts.note) + '</div>';
@@ -230,8 +235,8 @@ function mount(opts){
 
 const SECTIONS = [
   { key:'requirement',     label:'Requirements',        anchor:'requirements', w:9 },
-  { key:'implementation',  label:'Implementation',      anchor:'implementation', w:5 },
-  { key:'conformance',     label:'Conformance Evidence',anchor:'conformance', w:5 },
+  { key:'implementation',  label:'Considerations for Implementation', anchor:'implementation', w:5 },
+  { key:'conformance',     label:'Examples of Evidence of Conformance', anchor:'conformance', w:5 },
   { key:'focus',           label:'Audit Focus Areas',   anchor:'focus', w:7 },
   { key:'risks',           label:'Risks',               anchor:'risks', w:7 },
   { key:'controls',        label:'Controls',            anchor:'controls', w:7 },
@@ -486,7 +491,7 @@ const REFS = [
 
 const TOOLS = [
   {
-    id:'engagement', phase:'Planning',
+    id:'engagement', phase:'Planning', icon:'doc',
     title:'Engagement Planning',
     blurb:'Define objectives, scope and key audit activities.',
     keywords:'planning objective scope engagement',
@@ -499,7 +504,7 @@ const TOOLS = [
     ]
   },
   {
-    id:'matrix', phase:'Planning',
+    id:'matrix', phase:'Planning', icon:'hierarchy',
     title:'Risk & Control Matrix',
     blurb:'Map risks, controls and planned audit tests.',
     keywords:'risk control matrix test',
@@ -512,7 +517,7 @@ const TOOLS = [
     ]
   },
   {
-    id:'program', phase:'Fieldwork',
+    id:'program', phase:'Fieldwork', icon:'list',
     title:'Audit Program',
     blurb:'Organise procedures, testing steps and evidence.',
     keywords:'audit program procedure testing fieldwork',
@@ -525,7 +530,7 @@ const TOOLS = [
     ]
   },
   {
-    id:'evidence', phase:'Fieldwork',
+    id:'evidence', phase:'Fieldwork', icon:'doccheck',
     title:'Evidence Checklist',
     blurb:'Track required documents and supporting evidence.',
     keywords:'evidence document checklist',
@@ -538,7 +543,7 @@ const TOOLS = [
     ]
   },
   {
-    id:'finding', phase:'Reporting',
+    id:'finding', phase:'Reporting', icon:'doc',
     title:'Finding Builder',
     blurb:'Structure criteria, condition, cause, impact and recommendations.',
     keywords:'finding observation criteria condition cause impact recommendation',
@@ -553,7 +558,7 @@ const TOOLS = [
     ]
   },
   {
-    id:'followup', phase:'Follow-up',
+    id:'followup', phase:'Follow-up', icon:'circlecheck',
     title:'Action Follow-up',
     blurb:'Monitor agreed actions and completion evidence.',
     keywords:'follow up action recommendation closure overdue',

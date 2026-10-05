@@ -6,7 +6,7 @@
 <title>Audit Tools — Audit Intelligence</title>
 <link rel="stylesheet" href="assets/iia.css">
 </head>
-<body>
+<body class="tools-page">
 <header class="top"></header>
 <div class="shell">
   <aside class="nav"></aside>
@@ -20,9 +20,13 @@
       <h1 id="title">Audit Tools</h1>
       <p id="lede">Plan, test, document and follow up with confidence.</p>
       <form class="searchline" id="searchForm">
-        <input type="search" id="q" placeholder="Search tools, checklists and templates…" aria-label="Search audit tools">
-        <button class="btn-gold" type="submit">Search</button>
+        <label class="search-wrap">
+          <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M17 17l-4-4"/></svg>
+          <input type="search" id="q" placeholder="Search tools, checklists and templates…" aria-label="Search audit tools">
+        </label>
+        <button class="btn-navy" type="submit">Search</button>
       </form>
+      <p class="search-help">Search within the audit tools library</p>
       <div class="chips" id="chips"></div>
     </div>
     <div id="out"></div>
@@ -30,10 +34,11 @@
       <div class="askbar" style="max-width:none;margin:0">
         <div class="ai-i"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/></svg></div>
         <div>
+          <span class="kicker">AI Assistant</span>
           <b>Turn guidance into practical audit steps.</b>
           <span>Get support using the platform’s content and linked Standards.</span>
         </div>
-        <a class="btn-gold" href="assistant.html">Ask AI Assistant</a>
+        <a class="btn-line" href="assistant.html">Ask AI Assistant →</a>
       </div>
     </div>
     <footer></footer>
@@ -50,17 +55,19 @@
   const out = document.getElementById('out');
 
   function side(){
-    const items = [{ href:'tools.html', label:'All Tools', on:phase === 'All Tools' && !qs('tool') }];
+    const icons = { Planning:'doc', Fieldwork:'check', Reporting:'flag', 'Follow-up':'clock' };
+    const items = [{ href:'tools.html', label:'All Tools', icon:'grid', on:phase === 'All Tools' && !qs('tool') }];
     ['Planning','Fieldwork','Reporting','Follow-up'].forEach(p => {
       items.push({
         href:'tools.html?phase=' + encodeURIComponent(p),
         label:p,
+        icon:icons[p],
         on:phase === p && !qs('tool')
       });
     });
     return renderSide({
       title:'Audit Tools',
-      placeholder:'Find a Tool',
+      placeholder:'Find a tool',
       note:'Connected to the Standards. These tools apply the criteria in the platform.',
       items:items
     });
@@ -107,9 +114,10 @@
     }
     let h = '<div class="catalog"><div class="cgrid">';
     rows.forEach(t => {
-      h += '<a class="tcard" href="tools.html?tool=' + encodeURIComponent(t.id) + '">' +
-        '<div class="kicker">' + esc(t.phase) + '</div><h3>' + esc(t.title) + '</h3>' +
-        '<p>' + esc(t.blurb) + '</p><span class="go">Open Tool</span></a>';
+      h += '<a class="tcard tool-card" href="tools.html?tool=' + encodeURIComponent(t.id) + '">' +
+        icon(t.icon || 'doc').replace('class="ic"', 'class="ic tico"') +
+        '<div class="tmain"><div class="kicker">' + esc(t.phase) + '</div><h3>' + esc(t.title) + '</h3>' +
+        '<p>' + esc(t.blurb) + '</p><span class="go">Open Tool →</span></div></a>';
     });
     out.innerHTML = h + '</div></div>';
   }
