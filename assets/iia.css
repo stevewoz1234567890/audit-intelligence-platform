@@ -135,9 +135,9 @@ button{font:inherit;cursor:pointer}
 .dom-btn .ch{flex:none;width:12px;height:12px;stroke:rgba(255,255,255,.5);fill:none;
   stroke-width:2.4;margin-top:5px;transition:transform .18s}
 .dom.open > .dom-btn .ch{transform:rotate(90deg);stroke:var(--gold)}
-.dom.open > .dom-btn.on .ch{stroke:#1A1403}
 .dom-body{display:none}
 .dom.open > .dom-body{display:block}
+.dom.here > .dom-btn{box-shadow:inset 3px 0 0 var(--gold);background:rgba(224,197,106,.12)}
 .dom-body .pr-h{padding-left:18px}
 .purpose{color:rgba(255,255,255,.72);font-size:12.2px}
 .nav-note{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);
@@ -308,11 +308,7 @@ body.tools-page .chip.on:hover{background:var(--navy-2);color:#fff}
 .nav-sec{display:block;padding:8px 16px 8px 28px;font-size:12.5px;color:rgba(255,255,255,.74);line-height:1.35}
 .nav-sec:hover{background:rgba(255,255,255,.06);color:#fff}
 .nav-sec.on{color:var(--gold-3);font-weight:600}
-a.dom-btn{color:inherit}
-.dom-btn.on{background:var(--gold);color:#1A1403}
-.dom-btn.on:hover{background:var(--gold-3);color:#1A1403}
-.dom-btn.on .dx,.dom-btn.on .dn{color:#1A1403}
-.dom-btn.on .ch{stroke:#1A1403}
+.dom-btn .dn{color:var(--gold)}
 body.domain-i-page #statrow,body.domain-i-page #searchForm{display:none}
 body.domain-i-page .page-h{padding-bottom:8px}
 body.domain-i-page .catalog{padding-top:4px}

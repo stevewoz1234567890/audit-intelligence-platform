@@ -134,19 +134,15 @@ function renderNav(currentRef){
   DOMAINS.forEach(d => {
     const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
     const open = currentRef ? contains : (domainQ ? d.id === domainQ : d.id === 'II');
-    const purposeOn = d.id === 'I' && !currentRef && domainQ === 'I';
-    h += '<div class="dom' + (open ? ' open' : '') + (purposeOn ? ' purpose-on' : '') + '" data-dom="' + esc(d.id) + '">';
+    const here = d.id === 'I' && !currentRef && domainQ === 'I';
+    h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
+    h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '"><span><span class="dn">Domain ' +
+      esc(d.num) + '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
+      '<div class="dom-body">';
     if (!d.principles.length){
-      h += '<button class="dom-btn' + (purposeOn ? ' on' : '') + '" type="button"><span><span class="dn">Domain ' +
-        esc(d.num) + '</span><span class="dx">' + esc(d.name) +
-        '</span></span>' + icon('chev','ch') + '</button><div class="dom-body">';
       (DOMAIN_I.sections || []).forEach(sec => {
         h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' + esc(sec.label) + '</a>';
       });
-    } else {
-      h += '<button class="dom-btn" type="button"><span><span class="dn">Domain ' + esc(d.num) +
-        '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
-        '<div class="dom-body">';
     }
     d.principles.forEach(p => {
       const pOpen = p.standards.some(s => s.ref === currentRef);
@@ -198,7 +194,14 @@ function wireNav(){
 
   body.addEventListener('click', e => {
     const dom = e.target.closest('.dom-btn');
-    if (dom){ dom.closest('.dom').classList.toggle('open'); return; }
+    if (dom){
+      e.preventDefault();
+      const box = dom.closest('.dom');
+      const willOpen = !box.classList.contains('open');
+      box.classList.toggle('open', willOpen);
+      dom.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      return;
+    }
     const head = e.target.closest('.pr-h');
     if (!head) return;
     head.closest('.pr').classList.toggle('open');
