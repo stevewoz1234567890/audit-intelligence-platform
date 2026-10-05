@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit Tools — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css">
+</head>
+<body>
+<header class="top"></header>
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="tools.html" id="mid" hidden>Audit Tools</a><span class="sep" id="extraSep" hidden>/</span><b id="crumbHere">Audit Tools</b>
+    </div>
+    <div class="page-h">
+      <div class="eyebrow">Practical audit resources</div>
+      <h1 id="title">Audit Tools</h1>
+      <p id="lede">Plan, test, document and follow up with confidence.</p>
+      <form class="searchline" id="searchForm">
+        <input type="search" id="q" placeholder="Search tools, checklists and templates…" aria-label="Search audit tools">
+        <button class="btn-gold" type="submit">Search</button>
+      </form>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="out"></div>
+    <div style="padding:8px 32px 28px">
+      <div class="askbar" style="max-width:none;margin:0">
+        <div class="ai-i"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/></svg></div>
+        <div>
+          <b>Turn guidance into practical audit steps.</b>
+          <span>Get support using the platform’s content and linked Standards.</span>
+        </div>
+        <a class="btn-gold" href="assistant.html">Ask AI Assistant</a>
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+<script src="data/library.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
+<script>
+(function(){
+  const phases = ['All Tools','Planning','Fieldwork','Reporting','Follow-up'];
+  let phase = 'All Tools';
+  const input = document.getElementById('q');
+  const out = document.getElementById('out');
+
+  function side(){
+    const items = [{ href:'tools.html', label:'All Tools', on:phase === 'All Tools' && !qs('tool') }];
+    ['Planning','Fieldwork','Reporting','Follow-up'].forEach(p => {
+      items.push({
+        href:'tools.html?phase=' + encodeURIComponent(p),
+        label:p,
+        on:phase === p && !qs('tool')
+      });
+    });
+    return renderSide({
+      title:'Audit Tools',
+      placeholder:'Find a Tool',
+      note:'Connected to the Standards. These tools apply the criteria in the platform.',
+      items:items
+    });
+  }
+
+  function paintChips(){
+    document.getElementById('chips').innerHTML = phases.map(p =>
+      '<button type="button" class="chip' + (p===phase?' on':'') + '" data-p="' + esc(p) + '">' +
+      esc(p) + '</button>').join('');
+  }
+
+  function field(tool, f, value){
+    const v = value || '';
+    if (f.options){
+      return '<label>' + esc(f.label) +
+        '<select data-k="' + esc(f.k) + '">' +
+        f.options.map(o => '<option' + (o===v?' selected':'') + '>' + esc(o) + '</option>').join('') +
+        '</select></label>';
+    }
+    if (f.area){
+      return '<label>' + esc(f.label) +
+        (f.hint ? '<span class="hint">' + esc(f.hint) + '</span>' : '') +
+        '<textarea data-k="' + esc(f.k) + '">' + esc(v) + '</textarea></label>';
+    }
+    const type = f.k === 'due' ? 'date' : 'text';
+    return '<label>' + esc(f.label) +
+      '<input type="' + type + '" data-k="' + esc(f.k) + '" value="' + esc(v) + '"></label>';
+  }
+
+  function list(){
+    document.getElementById('title').textContent = 'Audit Tools';
+    document.getElementById('lede').textContent = 'Plan, test, document and follow up with confidence.';
+    document.getElementById('crumbHere').textContent = 'Audit Tools';
+    document.getElementById('mid').hidden = true;
+    document.getElementById('extraSep').hidden = true;
+    document.getElementById('chips').hidden = false;
+    paintChips();
+    const q = input.value.trim();
+    let rows = TOOLS.filter(t => phase === 'All Tools' || t.phase === phase);
+    if (q) rows = matchCatalog(rows, q);
+    if (!rows.length){
+      out.innerHTML = '<div class="empty"><b>No tools match.</b><p>Search covers the tools in this platform.</p></div>';
+      return;
+    }
+    let h = '<div class="catalog"><div class="cgrid">';
+    rows.forEach(t => {
+      h += '<a class="tcard" href="tools.html?tool=' + encodeURIComponent(t.id) + '">' +
+        '<div class="kicker">' + esc(t.phase) + '</div><h3>' + esc(t.title) + '</h3>' +
+        '<p>' + esc(t.blurb) + '</p><span class="go">Open Tool</span></a>';
+    });
+    out.innerHTML = h + '</div></div>';
+  }
+
+  function worksheet(id){
+    const tool = TOOLS.find(t => t.id === id);
+    if (!tool){ list(); return; }
+    document.getElementById('title').textContent = tool.title;
+    document.getElementById('lede').textContent = tool.blurb + ' Notes stay in this browser.';
+    document.getElementById('crumbHere').textContent = tool.title;
+    document.getElementById('mid').hidden = false;
+    document.getElementById('extraSep').hidden = false;
+    document.getElementById('chips').hidden = true;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('ai-tool-' + tool.id) || '{}') || {}; }
+    catch (e) { saved = {}; }
+    let h = '<div class="catalog"><form class="sheet" id="sheet">';
+    tool.fields.forEach(f => { h += field(tool, f, saved[f.k]); });
+    h += '<p class="hint" id="saved" style="margin-top:4px">Nothing is sent off this browser.</p>';
+    h += '</form>';
+    const related = searchPlatform(tool.query).filter(r => r.rec).slice(0, 3);
+    if (related.length){
+      h += '<div class="group-label">Related standards in this platform</div><div class="cgrid">';
+      related.forEach(r => {
+        h += '<a class="tcard" href="standard.html?ref=' + encodeURIComponent(r.s.ref) + '">' +
+          '<div class="kicker">Standard ' + esc(r.s.ref) + '</div><h3>' + esc(r.s.title) + '</h3>' +
+          '<span class="go">Open standard</span></a>';
+      });
+      h += '</div>';
+    }
+    out.innerHTML = h + '</div>';
+    const form = document.getElementById('sheet');
+    const persist = () => {
+      const data = {};
+      form.querySelectorAll('[data-k]').forEach(el => { data[el.dataset.k] = el.value; });
+      try { localStorage.setItem('ai-tool-' + tool.id, JSON.stringify(data)); }
+      catch (e) { /* private mode */ }
+      document.getElementById('saved').textContent = 'Saved in this browser.';
+    };
+    form.addEventListener('input', persist);
+    form.addEventListener('change', persist);
+  }
+
+  function draw(){
+    const tool = qs('tool');
+    const fromPhase = qs('phase');
+    if (fromPhase && phases.includes(fromPhase)) phase = fromPhase;
+    if (tool && !input.value.trim()) worksheet(tool);
+    else list();
+  }
+
+  document.getElementById('chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-p]');
+    if (!b) return;
+    phase = b.dataset.p;
+    const url = new URL(location.href);
+    url.searchParams.delete('tool');
+    if (phase === 'All Tools') url.searchParams.delete('phase');
+    else url.searchParams.set('phase', phase);
+    history.replaceState(null, '', url);
+    draw();
+    document.querySelectorAll('#sideBody .side-link').forEach(a => {
+      const label = a.dataset.label;
+      const on = label === phase;
+      a.classList.toggle('on', on);
+    });
+  });
+  let timer;
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(draw, 120); });
+  document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); draw(); });
+  const opened = qs('phase');
+  if (opened && phases.includes(opened)) phase = opened;
+  draw();
+  mount({ active:'tools', side:side() });
+})();
+</script>
+</body>
+</html>

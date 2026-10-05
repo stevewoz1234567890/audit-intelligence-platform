@@ -50,42 +50,54 @@ function fmtDate(iso){
 
 /* ---------- top bar ---------- */
 function renderTop(active){
-  return '<button class="nav-toggle" id="navToggle" aria-label="Toggle standards navigator">' +
+  const link = (id, href, label) =>
+    '<a href="' + href + '"' + (active===id?' class="on"':'') + '>' + label + '</a>';
+  return '<button class="nav-toggle" id="navToggle" aria-label="Open menu">' +
       icon('menu') + '</button>' +
     '<a class="brand" href="index.html">' +
       '<div class="bm">A</div>' +
-      '<div><b>AUDIT INTELLIGENCE</b>' +
-      '<span>Global Internal Audit Standards</span></div>' +
+      '<div><b>Audit Intelligence</b>' +
+      '<span>IIA Reference Platform</span></div>' +
     '</a>' +
-    '<div class="sub">IIA · 5 Domains · 15 Principles</div>' +
     '<nav class="topnav">' +
-      '<a href="index.html"' + (active==='home'?' class="on"':'') + '>Home</a>' +
-      '<a href="standards.html"' + (active==='library'?' class="on"':'') + '>Standards Library</a>' +
+      link('home','index.html','Home') +
+      link('library','standards.html','IIA Standards') +
+      link('references','references.html','Reference Library') +
+      link('tools','tools.html','Audit Tools') +
       '<a class="cta" href="assistant.html">' + icon('spark') + 'AI Assistant</a>' +
     '</nav>';
 }
 
 function renderFooter(){
-  return '<span>IIA Global Internal Audit Standards · Reference platform</span>' +
-    '<div class="dev"><span>Developed by</span>Noora AlZaraa</div>';
+  return '<span class="dev">Developed by Noora AlZaraa</span>' +
+    '<span>Internal audit knowledge, clearly structured.</span>';
 }
 
 /* ---------- standards navigator ---------- */
 function renderNav(currentRef){
   let h = '<div class="nav-h">' +
-    '<div class="t">Standards Navigator</div>' +
+    '<div class="t">IIA Standards</div>' +
     '<label class="nav-find">' + icon('search') +
-      '<input type="search" id="navFind" placeholder="Find a standard…" ' +
+      '<input type="search" id="navFind" placeholder="Find a Standard" ' +
       'aria-label="Filter standards">' +
-    '</label></div><div class="nav-body" id="navBody">';
+    '</label></div><div class="nav-body" id="navBody">' +
+    '<a class="nav-all' + (currentRef ? '' : ' on') + '" href="standards.html">All Standards</a>';
 
   DOMAINS.forEach(d => {
-    const hasAny = d.principles.some(p => p.standards.length);
-    if (!hasAny && !d.principles.length) return;
-    h += '<div class="dom-h">Domain ' + esc(d.num) + ' · ' + esc(d.name) + '</div>';
+    const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
+    const domainQ = qs('domain');
+    const open = currentRef ? contains : (domainQ ? d.id === domainQ : d.id === 'II');
+    h += '<div class="dom' + (open ? ' open' : '') + '" data-dom="' + esc(d.id) + '">' +
+      '<button class="dom-btn" type="button"><span><span class="dn">Domain ' + esc(d.num) +
+      '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
+      '<div class="dom-body">';
+    if (!d.principles.length){
+      h += '<a class="purpose" href="standards.html?domain=' + encodeURIComponent(d.id) +
+        '">Purpose introduction</a>';
+    }
     d.principles.forEach(p => {
-      const open = p.standards.some(s => s.ref === currentRef);
-      h += '<div class="pr' + (open ? ' open' : '') + '" data-pr="' + p.num + '">' +
+      const pOpen = p.standards.some(s => s.ref === currentRef);
+      h += '<div class="pr' + (pOpen ? ' open' : '') + '" data-pr="' + p.num + '">' +
         '<button class="pr-h" type="button">' +
           '<span class="n">' + p.num + '</span>' +
           '<span class="tx">' + esc(p.title) + '</span>' +
@@ -105,8 +117,24 @@ function renderNav(currentRef){
       }
       h += '</div>';
     });
+    h += '</div></div>';
   });
   return h + '</div>';
+}
+
+function renderSide(opts){
+  let h = '<div class="nav-h"><div class="t">' + esc(opts.title) + '</div>' +
+    '<label class="nav-find">' + icon('search') +
+      '<input type="search" id="sideFind" placeholder="' + esc(opts.placeholder) + '" ' +
+      'aria-label="' + esc(opts.placeholder) + '">' +
+    '</label></div><div class="nav-body" id="sideBody">';
+  opts.items.forEach(it => {
+    h += '<a class="side-link' + (it.on ? ' on' : '') + '" href="' + it.href +
+      '" data-label="' + esc(it.label) + '">' + esc(it.label) + '</a>';
+  });
+  h += '</div>';
+  if (opts.note) h += '<div class="nav-note">' + esc(opts.note) + '</div>';
+  return h;
 }
 
 /* wire accordion + navigator filter */
@@ -115,6 +143,8 @@ function wireNav(){
   if (!body) return;
 
   body.addEventListener('click', e => {
+    const dom = e.target.closest('.dom-btn');
+    if (dom){ dom.closest('.dom').classList.toggle('open'); return; }
     const head = e.target.closest('.pr-h');
     if (!head) return;
     head.closest('.pr').classList.toggle('open');
@@ -124,34 +154,54 @@ function wireNav(){
   if (find){
     find.addEventListener('input', () => {
       const q = find.value.trim().toLowerCase();
-      body.querySelectorAll('.pr').forEach(pr => {
+      body.querySelectorAll('.dom').forEach(dom => {
         let shown = 0;
-        pr.querySelectorAll('.pr-body a').forEach(a => {
-          const hit = !q ||
-            a.dataset.ref.toLowerCase().includes(q) ||
-            a.dataset.title.toLowerCase().includes(q);
-          a.style.display = hit ? '' : 'none';
-          if (hit) shown++;
+        dom.querySelectorAll('.pr').forEach(pr => {
+          let n = 0;
+          pr.querySelectorAll('.pr-body a').forEach(a => {
+            const hit = !q ||
+              a.dataset.ref.toLowerCase().includes(q) ||
+              a.dataset.title.toLowerCase().includes(q);
+            a.style.display = hit ? '' : 'none';
+            if (hit) n++;
+          });
+          const titleHit = !q || pr.querySelector('.tx').textContent.toLowerCase().includes(q);
+          const visible = !q || n || titleHit;
+          pr.style.display = visible ? '' : 'none';
+          if (q && n) pr.classList.add('open');
+          if (visible) shown++;
         });
-        const titleHit = !q ||
-          pr.querySelector('.tx').textContent.toLowerCase().includes(q);
-        pr.style.display = (shown || titleHit) ? '' : 'none';
-        if (q && shown) pr.classList.add('open');
-      });
-      body.querySelectorAll('.dom-h').forEach(dh => {
-        let n = 0, el = dh.nextElementSibling;
-        while (el && el.classList.contains('pr')){
-          if (el.style.display !== 'none') n++;
-          el = el.nextElementSibling;
-        }
-        dh.style.display = n ? '' : 'none';
+        const domHit = !q || dom.querySelector('.dx').textContent.toLowerCase().includes(q);
+        const purpose = dom.querySelector('.purpose');
+        if (purpose) purpose.style.display = (!q || domHit) ? '' : 'none';
+        dom.style.display = (!q || shown || domHit) ? '' : 'none';
+        if (q && (shown || domHit)) dom.classList.add('open');
       });
     });
   }
 
   const tog = document.getElementById('navToggle');
   if (tog) tog.addEventListener('click', () => {
-    document.querySelector('.nav').classList.toggle('open');
+    const nav = document.querySelector('.nav');
+    if (nav) nav.classList.toggle('open');
+  });
+}
+
+function wireSide(){
+  const find = document.getElementById('sideFind');
+  const body = document.getElementById('sideBody');
+  if (find && body){
+    find.addEventListener('input', () => {
+      const q = find.value.trim().toLowerCase();
+      body.querySelectorAll('.side-link').forEach(a => {
+        a.style.display = !q || a.dataset.label.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+  const tog = document.getElementById('navToggle');
+  if (tog) tog.addEventListener('click', () => {
+    const nav = document.querySelector('.nav');
+    if (nav) nav.classList.toggle('open');
   });
 }
 
@@ -162,9 +212,10 @@ function mount(opts){
   const nav = document.querySelector('.nav');
   const ft  = document.querySelector('footer');
   if (top) top.innerHTML = renderTop(opts.active);
-  if (nav) nav.innerHTML = renderNav(opts.ref);
+  if (nav) nav.innerHTML = opts.side || renderNav(opts.ref);
   if (ft)  ft.innerHTML  = renderFooter();
-  wireNav();
+  if (opts.side) wireSide();
+  else wireNav();
   const on = document.querySelector('.pr-body a.on');
   if (on) on.scrollIntoView({ block:'center' });
 }
@@ -334,4 +385,199 @@ function preview(text, query, max){
   if (start > 0) cut = '…' + cut.replace(/^\S*\s/,'');
   if (start + max < text.length) cut = cut.replace(/\s\S*$/,'') + '…';
   return cut;
+}
+
+/* Supporting references and audit tools. Notes here are written for this
+   platform. They identify the official source; they do not reproduce it. */
+const REFS = [
+  {
+    id:'coso', group:'Internal control', chip:'all',
+    title:"COSO's 17 Principles",
+    blurb:'Supporting principles and control guidance.',
+    keywords:'coso internal control principles control environment',
+    status:'Current',
+    official:'https://www.coso.org/', officialLabel:'coso.org',
+    lead:'The COSO Internal Control — Integrated Framework organises internal control into five components. The seventeen principles sit under those components. This page maps the components for auditors using the IIA standards. The principle text itself stays with COSO.',
+    sections:[
+      { h:'Control environment', p:'The tone, structure and accountability that make the other components possible. When you test Domain II standards on integrity and objectivity, look here for how the organisation sets expectations.' },
+      { h:'Risk assessment', p:'How the organisation specifies objectives, identifies change and considers fraud. Pairs with engagement risk assessment in Domain V.' },
+      { h:'Control activities', p:'The policies and procedures, including technology controls, that respond to assessed risk.' },
+      { h:'Information and communication', p:'The quality of information used to run control, and how it is shared inside and outside the organisation.' },
+      { h:'Monitoring', p:'Ongoing and separate evaluations, and the path by which deficiencies reach people who can act.' }
+    ]
+  },
+  {
+    id:'ippf', group:'Professional framework', chip:'all',
+    title:'IPPF Reference Material',
+    blurb:'Understand the framework and its supporting references.',
+    keywords:'ippf international professional practices framework guidance',
+    status:'Current',
+    official:'https://www.theiia.org/en/standards/', officialLabel:'theiia.org/standards',
+    lead:'The International Professional Practices Framework is the IIA’s body of professional guidance. The Global Internal Audit Standards (2024) are the mandatory core. This library’s Domains, Principles and Standards are that core, organised for daily use.',
+    sections:[
+      { h:'Where to read it here', p:'Open IIA Standards and move Domain, then Principle, then Standard. Records that have been loaded show requirements, implementation considerations, conformance evidence, risks, controls, procedures and references.' },
+      { h:'What this page does not do', p:'It does not reprint IIA mandatory guidance. Each populated standard links to the official source.' }
+    ]
+  },
+  {
+    id:'ethics', group:'Professional framework', chip:'ethics',
+    title:'Code of Ethics',
+    blurb:'Foundational ethical guidance for internal auditors.',
+    keywords:'ethics integrity objectivity confidentiality competency code',
+    status:'Updated',
+    official:'https://www.theiia.org/en/standards/2024-standards/global-internal-audit-standards/',
+    officialLabel:'Global Internal Audit Standards',
+    lead:'The standalone IIA Code of Ethics was incorporated into Domain II of the 2024 Global Internal Audit Standards. For current work, use Principles 1 to 5 in this library. Treat older Code of Ethics booklets as historical.',
+    sections:[
+      { h:'Integrity', p:'Standards 1.1, 1.2 and 1.3 — honesty and professional courage, the organisation’s ethical expectations, and legal and ethical behaviour.' },
+      { h:'Objectivity', p:'Standards 2.1, 2.2 and 2.3 — individual objectivity, safeguarding it, and disclosing impairments.' },
+      { h:'Competency, due care, confidentiality', p:'Principles 3, 4 and 5. Their detailed records are added as the source material is supplied.' }
+    ]
+  },
+  {
+    id:'glossary', group:'Terminology', chip:'glossaries',
+    title:'Internal Audit Glossary',
+    blurb:'Find definitions of key internal audit terms.',
+    keywords:'glossary assurance engagement finding criteria condition cause',
+    status:'Current',
+    official:'https://www.theiia.org/en/standards/', officialLabel:'theiia.org',
+    lead:'Working definitions used on this platform, written so search and the assistant share one vocabulary. They are not the IIA glossary.',
+    sections:[
+      { h:'Assurance', p:'An objective examination of evidence for the purpose of providing an independent assessment to the board and management.' },
+      { h:'Criteria', p:'The standard, policy or expectation against which a condition is compared.' },
+      { h:'Condition', p:'What the audit found, stated factually.' },
+      { h:'Cause', p:'Why the condition differs from the criteria.' },
+      { h:'Effect', p:'The risk or consequence of the difference, including financial impact where it can be measured.' },
+      { h:'Engagement', p:'A specific audit, review or advisory assignment with its own objectives and scope.' }
+    ]
+  },
+  {
+    id:'risk-glossary', group:'Terminology', chip:'glossaries',
+    title:'Risk Management Glossary',
+    blurb:'Find definitions of key risk management terms.',
+    keywords:'inherent residual control effectiveness risk owner kri',
+    status:'Current',
+    official:'https://www.theiia.org/en/standards/', officialLabel:'theiia.org',
+    lead:'Working definitions for risk language used beside the standards. They are platform definitions, not a reproduction of COSO ERM or ISO 31000.',
+    sections:[
+      { h:'Inherent risk', p:'The level of risk before considering controls that address it.' },
+      { h:'Residual risk', p:'The level of risk that remains after those controls operate.' },
+      { h:'Control', p:'An action that modifies risk. On this platform, controls are typed Preventive, Detective or Corrective.' },
+      { h:'Red flag', p:'An indicator that warrants further examination. It does not, by itself, establish fraud or misconduct.' }
+    ]
+  },
+  {
+    id:'2017', group:'Historical', chip:'historical',
+    title:'2017 IIA Standards',
+    blurb:'Historical standards for reference.',
+    keywords:'2017 ippf 1000 1100 1200 1300 2000 2100 2200 2300 2400 2500 2600 attribute performance',
+    status:'Superseded',
+    badge:'Historical',
+    official:'https://www.theiia.org/en/standards/2024-standards/global-internal-audit-standards/',
+    officialLabel:'2024 Global Internal Audit Standards',
+    lead:'The 2017 International Standards for the Professional Practice of Internal Auditing were superseded by the Global Internal Audit Standards, effective 9 January 2025. Use them only to read older working papers. Do not cite them as the current requirements.',
+    sections:[
+      { h:'Attribute series', p:'1000 Purpose, Authority, and Responsibility. 1100 Independence and Objectivity. 1200 Proficiency and Due Professional Care. 1300 Quality Assurance and Improvement Program.' },
+      { h:'Performance series', p:'2000 Managing the Internal Audit Activity. 2100 Nature of Work. 2200 Engagement Planning. 2300 Performing the Engagement. 2400 Communicating Results. 2500 Monitoring Progress. 2600 Communicating the Acceptance of Risks.' },
+      { h:'Current equivalent', p:'The same professional ground is now covered by Domains I to V and Principles 1 to 15 in this library.' }
+    ]
+  }
+];
+
+const TOOLS = [
+  {
+    id:'engagement', phase:'Planning',
+    title:'Engagement Planning',
+    blurb:'Define objectives, scope and key audit activities.',
+    keywords:'planning objective scope engagement',
+    query:'engagement planning scope',
+    fields:[
+      { k:'name', label:'Engagement name' },
+      { k:'objective', label:'Objective', area:true, hint:'What the engagement will conclude on.' },
+      { k:'scope', label:'Scope', area:true, hint:'What is included, and what is explicitly out of scope.' },
+      { k:'activities', label:'Key audit activities', area:true }
+    ]
+  },
+  {
+    id:'matrix', phase:'Planning',
+    title:'Risk & Control Matrix',
+    blurb:'Map risks, controls and planned audit tests.',
+    keywords:'risk control matrix test',
+    query:'risk control',
+    fields:[
+      { k:'risk', label:'Risk', area:true },
+      { k:'control', label:'Expected control', area:true },
+      { k:'test', label:'Planned test', area:true },
+      { k:'evidence', label:'Evidence the test will produce', area:true }
+    ]
+  },
+  {
+    id:'program', phase:'Fieldwork',
+    title:'Audit Program',
+    blurb:'Organise procedures, testing steps and evidence.',
+    keywords:'audit program procedure testing fieldwork',
+    query:'audit procedure testing',
+    fields:[
+      { k:'procedure', label:'Procedure', area:true },
+      { k:'sample', label:'Sample or population' },
+      { k:'steps', label:'Testing steps', area:true },
+      { k:'evidence', label:'Evidence to retain', area:true }
+    ]
+  },
+  {
+    id:'evidence', phase:'Fieldwork',
+    title:'Evidence Checklist',
+    blurb:'Track required documents and supporting evidence.',
+    keywords:'evidence document checklist',
+    query:'required evidence',
+    fields:[
+      { k:'item', label:'Evidence item' },
+      { k:'source', label:'Who will provide it' },
+      { k:'status', label:'Status', options:['Not requested','Requested','Received','Sufficient','Exception'] },
+      { k:'note', label:'Note', area:true }
+    ]
+  },
+  {
+    id:'finding', phase:'Reporting',
+    title:'Finding Builder',
+    blurb:'Structure criteria, condition, cause, impact and recommendations.',
+    keywords:'finding observation criteria condition cause impact recommendation',
+    query:'findings recommendations',
+    fields:[
+      { k:'title', label:'Finding title' },
+      { k:'criteria', label:'Criteria', area:true, hint:'The standard, policy or expectation.' },
+      { k:'condition', label:'Condition', area:true, hint:'What was found.' },
+      { k:'cause', label:'Cause', area:true },
+      { k:'effect', label:'Risk and impact', area:true },
+      { k:'recommendation', label:'Recommendation', area:true }
+    ]
+  },
+  {
+    id:'followup', phase:'Follow-up',
+    title:'Action Follow-up',
+    blurb:'Monitor agreed actions and completion evidence.',
+    keywords:'follow up action recommendation closure overdue',
+    query:'recommendations follow',
+    fields:[
+      { k:'action', label:'Agreed action', area:true },
+      { k:'owner', label:'Responsible person' },
+      { k:'due', label:'Target date' },
+      { k:'status', label:'Status', options:['Open','In progress','Implemented','Overdue','Closed'] },
+      { k:'proof', label:'Implementation evidence', area:true }
+    ]
+  }
+];
+
+function catalogHay(item){
+  return [item.title, item.blurb, item.phase, item.group, item.keywords, item.lead]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+function matchCatalog(list, q){
+  const terms = String(q||'').trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
+  if (!terms.length) return list.slice();
+  return list.filter(item => {
+    const hay = catalogHay(item);
+    return terms.filter(t => hay.includes(t)).length >= Math.min(2, terms.length) ||
+      terms.some(t => item.title.toLowerCase().includes(t));
+  });
 }

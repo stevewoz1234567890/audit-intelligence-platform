@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supporting References — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css">
+</head>
+<body>
+<header class="top"></header>
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="references.html" id="mid" hidden>Reference Library</a><span class="sep" id="extraSep" hidden>/</span><b id="crumbHere">Reference Library</b>
+    </div>
+    <div class="page-h">
+      <div class="eyebrow">Supporting material</div>
+      <h1 id="title">Supporting References</h1>
+      <p id="lede">Explore the resources that support your use of the IIA Standards.</p>
+      <form class="searchline" id="searchForm">
+        <input type="search" id="q" placeholder="Search references, terms and guidance…" aria-label="Search references">
+        <button class="btn-gold" type="submit">Search</button>
+      </form>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="out"></div>
+    <div style="padding:8px 32px 28px">
+      <div class="askbar" style="max-width:none;margin:0">
+        <div class="ai-i"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/></svg></div>
+        <div>
+          <b>Connect references to the Standards.</b>
+          <span>Ask the AI Assistant to locate relevant standards and sources inside this platform.</span>
+        </div>
+        <a class="btn-gold" href="assistant.html">Ask AI Assistant</a>
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+<script src="data/library.js"></script>
+<script src="data/iia.js"></script>
+<script src="assets/iia.js"></script>
+<script>
+(function(){
+  const chips = [
+    { id:'all', label:'All' },
+    { id:'ethics', label:'Ethics' },
+    { id:'glossaries', label:'Glossaries' },
+    { id:'historical', label:'Historical' }
+  ];
+  let chip = 'all';
+  const input = document.getElementById('q');
+  const out = document.getElementById('out');
+
+  function side(activeId){
+    const items = [{ href:'references.html', label:'All References', on:!activeId }];
+    REFS.forEach(r => items.push({
+      href:'references.html?ref=' + encodeURIComponent(r.id),
+      label:r.title, on:r.id === activeId
+    }));
+    return renderSide({
+      title:'Reference Library',
+      placeholder:'Find a Reference',
+      note:'Historical material. Legacy references are clearly labelled.',
+      items:items
+    });
+  }
+
+  function paintChips(){
+    document.getElementById('chips').innerHTML = chips.map(c =>
+      '<button type="button" class="chip' + (c.id===chip?' on':'') + '" data-c="' + c.id + '">' +
+      esc(c.label) + '</button>').join('');
+  }
+
+  function list(){
+    document.getElementById('title').textContent = 'Supporting References';
+    document.getElementById('lede').textContent = 'Explore the resources that support your use of the IIA Standards.';
+    document.getElementById('crumbHere').textContent = 'Reference Library';
+    document.getElementById('mid').hidden = true;
+    document.getElementById('extraSep').hidden = true;
+    document.getElementById('chips').hidden = false;
+    paintChips();
+    const q = input.value.trim();
+    let rows = REFS.filter(r => chip === 'all' || r.chip === chip || (chip === 'all'));
+    if (chip !== 'all') rows = REFS.filter(r => r.chip === chip);
+    if (q) rows = matchCatalog(rows, q);
+    if (!rows.length){
+      out.innerHTML = '<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
+      return;
+    }
+    const groups = [];
+    rows.forEach(r => { if (!groups.includes(r.group)) groups.push(r.group); });
+    let h = '<div class="catalog">';
+    groups.forEach(g => {
+      h += '<div class="group-label">' + esc(g) + '</div><div class="cgrid">';
+      rows.filter(r => r.group === g).forEach(r => {
+        h += '<a class="tcard" href="references.html?ref=' + encodeURIComponent(r.id) + '">' +
+          '<div class="kicker">' + esc(r.group) +
+          (r.badge ? '<span class="badge">' + esc(r.badge) + '</span>' : '') + '</div>' +
+          '<h3>' + esc(r.title) + '</h3><p>' + esc(r.blurb) + '</p>' +
+          '<span class="go">Open reference</span></a>';
+      });
+      h += '</div>';
+    });
+    out.innerHTML = h + '</div>';
+  }
+
+  function detail(id){
+    const r = REFS.find(x => x.id === id);
+    if (!r){ list(); return; }
+    document.getElementById('title').textContent = r.title;
+    document.getElementById('lede').textContent = r.lead;
+    document.getElementById('crumbHere').textContent = r.title;
+    document.getElementById('mid').hidden = false;
+    document.getElementById('extraSep').hidden = false;
+    document.getElementById('chips').hidden = true;
+    let h = '<div class="catalog"><div class="sheet"><p><b>' + esc(r.status) + '.</b> ' + esc(r.lead) + '</p>' +
+      '<p style="margin-top:10px">Official source: <a href="' + esc(r.official) + '" target="_blank" rel="noopener noreferrer">' +
+      esc(r.officialLabel) + '</a></p></div>';
+    r.sections.forEach(s => {
+      h += '<div class="group-label">' + esc(s.h) + '</div><div class="sheet"><p>' + esc(s.p) + '</p></div>';
+    });
+    if (r.id === 'ethics'){
+      h += '<div class="group-label">In this library</div><div class="cgrid">';
+      ['1.1','1.2','1.3','2.1','2.2','2.3'].forEach(ref => {
+        const s = allStandards().find(x => x.ref === ref);
+        if (!s) return;
+        h += '<a class="tcard" href="standard.html?ref=' + encodeURIComponent(ref) + '">' +
+          '<div class="kicker">Standard ' + esc(ref) + '</div><h3>' + esc(s.title) + '</h3>' +
+          '<span class="go">Open standard</span></a>';
+      });
+      h += '</div>';
+    }
+    out.innerHTML = h + '</div>';
+  }
+
+  function draw(){
+    const id = qs('ref');
+    const q = input.value.trim();
+    const url = new URL(location.href);
+    if (q) url.searchParams.set('q', q); else url.searchParams.delete('q');
+    if (!id) history.replaceState(null, '', url);
+    if (id && !q) detail(id); else list();
+  }
+
+  document.getElementById('chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]');
+    if (!b) return;
+    chip = b.dataset.c;
+    if (qs('ref')) history.replaceState(null, '', 'references.html');
+    draw();
+    document.querySelectorAll('#sideBody .side-link').forEach(a => {
+      a.classList.toggle('on', a.dataset.label === 'All References');
+    });
+  });
+  let timer;
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(draw, 120); });
+  document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); draw(); });
+  const seed = qs('q');
+  if (seed) input.value = seed;
+  draw();
+  mount({ active:'references', side:side(qs('ref') && !input.value.trim() ? qs('ref') : '') });
+})();
+</script>
+</body>
+</html>
