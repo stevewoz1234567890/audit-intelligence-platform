@@ -135,6 +135,7 @@ button{font:inherit;cursor:pointer}
 .dom-btn .ch{flex:none;width:12px;height:12px;stroke:rgba(255,255,255,.5);fill:none;
   stroke-width:2.4;margin-top:5px;transition:transform .18s}
 .dom.open > .dom-btn .ch{transform:rotate(90deg);stroke:var(--gold)}
+.dom.open > .dom-btn.on .ch{stroke:#1A1403}
 .dom-body{display:none}
 .dom.open > .dom-body{display:block}
 .dom-body .pr-h{padding-left:18px}
@@ -304,6 +305,63 @@ body.tools-page .chip.on:hover{background:var(--navy-2);color:#fff}
   padding:18px 20px;box-shadow:var(--sh-1)}
 .card>p{margin:0;font-size:13.8px;line-height:1.75;color:var(--ink-2)}
 .card>p+p{margin-top:11px}
+.nav-sec{display:block;padding:8px 16px 8px 28px;font-size:12.5px;color:rgba(255,255,255,.74);line-height:1.35}
+.nav-sec:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-sec.on{color:var(--gold-3);font-weight:600}
+a.dom-btn{color:inherit}
+.dom-btn.on{background:var(--gold);color:#1A1403}
+.dom-btn.on:hover{background:var(--gold-3);color:#1A1403}
+.dom-btn.on .dx,.dom-btn.on .dn{color:#1A1403}
+.dom-btn.on .ch{stroke:#1A1403}
+body.domain-i-page #statrow,body.domain-i-page #searchForm{display:none}
+body.domain-i-page .page-h{padding-bottom:8px}
+body.domain-i-page .catalog{padding-top:4px}
+.di{display:flex;flex-direction:column;gap:22px}
+.di-statement{background:linear-gradient(180deg,#fffdf8,#f6efe0);border:1px solid var(--gold-line);
+  border-radius:14px;padding:22px 22px 0;box-shadow:var(--sh-1)}
+.di-statement-top{display:flex;gap:16px;align-items:flex-start}
+.di-ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#fff;
+  border:1px solid var(--gold-line);flex:none}
+.di-ico .ic{width:22px;height:22px;stroke:var(--gold-2);fill:none;stroke-width:1.6}
+.di-statement h2{font-size:28px;line-height:1.2;color:var(--navy)}
+.di-statement p{margin:8px 0 0;color:var(--ink-2);font-size:15px;line-height:1.65;max-width:75ch}
+.di-tabs{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px;border-top:1px solid rgba(201,168,74,.35)}
+.di-tab{padding:12px 0;color:var(--ink-2);font-size:13.5px;font-weight:600;border-bottom:2px solid transparent}
+.di-tab.on,.di-tab:hover{color:var(--navy);border-bottom-color:var(--gold-2)}
+.di-kicker{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700;margin:0 0 4px}
+.di h3{font-size:24px;line-height:1.25;margin:0 0 12px;color:var(--navy)}
+.di-values{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.di-v{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 16px 18px}
+.di-v .ic{width:22px;height:22px;stroke:var(--gold-2);fill:none;stroke-width:1.6}
+.di-v h3{font-size:18px;margin:10px 0 6px}
+.di-v p{margin:0;color:var(--ink-2);font-size:13.2px;line-height:1.5}
+.di-split{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.di-box,.di-block{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 18px 10px}
+.di-block p{margin:0 0 12px;color:var(--ink-2);font-size:14px;line-height:1.65}
+.di-block h4{margin:16px 0 8px;font-family:"Source Sans 3",sans-serif;font-size:14px;font-weight:700;color:var(--navy)}
+.di-item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+.di-item:last-child{border-bottom:0}
+.di-item .ic{width:18px;height:18px;stroke:var(--gold-2);fill:none;stroke-width:1.7;flex:none;margin-top:2px}
+.di-item b{display:block;font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
+.di-item span{display:block;margin-top:2px;font-size:12.8px;color:var(--ink-2);line-height:1.5}
+.di-note{margin:8px 0 8px;font-size:12.6px;color:var(--ink-3);line-height:1.55}
+.di-source{margin:14px 0 8px;font-size:13px;color:var(--ink-2);line-height:1.6}
+.di-source a{color:var(--navy-3);font-weight:600}
+#domain-i-purpose,#domain-i-value,#domain-i-enhances,#domain-i-conditions,#domain-i-practical,#domain-i-related{scroll-margin-top:84px}
+.domain-i-sheet{background:linear-gradient(180deg,#fff, #fbfaf6);border:1px solid var(--line);
+  border-radius:14px;box-shadow:var(--sh-2);padding:22px;position:relative;overflow:hidden}
+.domain-i-sheet::before{content:"";position:absolute;inset:0 0 auto 0;height:84px;
+  background:linear-gradient(180deg,rgba(224,197,106,.12),rgba(224,197,106,0));pointer-events:none}
+.domain-i-lede{margin:8px 0 0;font-size:14px;color:var(--ink-2);line-height:1.72;max-width:72ch}
+.domain-i-band{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}
+.domain-i-mini{background:linear-gradient(180deg,#fff,#fcfaf4);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.domain-i-mini b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);margin-bottom:6px}
+.domain-i-mini span{display:block;font-size:13.2px;color:var(--ink-2);line-height:1.6}
+.domain-i-hero{margin-top:6px;background:linear-gradient(135deg,#fffdf6,#f7f0dc);border-color:var(--gold-line);box-shadow:0 6px 20px rgba(15,40,71,.06)}
+.domain-i-card{min-height:0}
+.domain-i-list .rq{gap:10px}
+.domain-i-conditions .row .tx b{margin-bottom:4px}
+.domain-i-card .go{font-size:12.4px;line-height:1.55;background:var(--panel-2)}
 
 /* numbered requirement list */
 .rq{margin:0;padding:0;list-style:none;counter-reset:rq;display:flex;flex-direction:column;gap:11px}
@@ -418,6 +476,8 @@ footer .dev{font-family:"Cormorant Garamond",Georgia,serif;font-size:16px;font-w
 .nav-toggle .ic{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
 
 @media(max-width:1000px){
+  .di-values{grid-template-columns:1fr 1fr}
+  .di-split{grid-template-columns:1fr}
   .shell{grid-template-columns:1fr}
   .nav{position:fixed;top:var(--bar);left:0;width:300px;z-index:55;height:calc(100vh - var(--bar));
     transform:translateX(-100%);transition:transform .22s ease;box-shadow:var(--sh-3)}
@@ -427,6 +487,10 @@ footer .dev{font-family:"Cormorant Garamond",Georgia,serif;font-size:16px;font-w
   .std-h,.crumb,.body,.tabs,.pager{padding-left:18px;padding-right:18px}
 }
 @media(max-width:680px){
+  .di-values{grid-template-columns:1fr}
+  .di-statement h2{font-size:22px}
+  .di-statement-top{flex-direction:column}
+  .domain-i-band{grid-template-columns:1fr}
   .std-h h1{font-size:23px}
   .brand span{display:none}
   .topnav a{padding:8px 8px;font-size:12px}

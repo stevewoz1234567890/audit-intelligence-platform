@@ -29,7 +29,7 @@
     </div>
     <div id="out"></div>
     <div style="padding:8px 32px 28px">
-      <div class="askbar" style="max-width:none;margin:0">
+      <div class="askbar" id="pageAsk" style="max-width:none;margin:0">
         <div class="ai-i"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/></svg></div>
         <div>
           <b>Need help finding guidance?</b>
@@ -71,8 +71,109 @@
       '<span class="go">Explore Domain</span></a>';
   }
 
+  function diItem(item){
+    return '<div class="di-item">' + icon(item.icon || 'check') +
+      '<div><b>' + esc(item.title) + '</b><span>' + esc(item.text) + '</span></div></div>';
+  }
+
+  function domainIPanel(){
+    const value = DOMAIN_I.howValueProvides.map(item =>
+      '<article class="di-v">' + icon(item.icon || 'shield') +
+      '<h3>' + esc(item.title) + '</h3><p>' + esc(item.short || item.text) + '</p></article>').join('');
+    const enhances = DOMAIN_I.enhances.map(diItem).join('');
+    const conditions = DOMAIN_I.conditions.map(diItem).join('');
+    const valueStates = DOMAIN_I.valueContributions.map(item =>
+      '<div class="di-item">' + icon('check') + '<div><b>' + esc(item.title) + '</b><span>' + esc(item.text) + '</span></div></div>').join('');
+    const characteristics = DOMAIN_I.characteristics.map(item =>
+      '<div class="di-item">' + icon('shield') + '<div><b>' + esc(item.title) + '</b><span>' + esc(item.text) + '</span></div></div>').join('');
+    const questions = DOMAIN_I.practicalQuestions.map(item =>
+      '<div class="di-item">' + icon('list') + '<div><b>' + esc(item.question) + '</b><span>' + esc(item.application) + '</span></div></div>').join('');
+    const forms = DOMAIN_I.howValueProvides.map(item =>
+      '<div class="di-item">' + icon(item.icon || 'spark') + '<div><b>' + esc(item.title) + '</b><span>' +
+      esc(item.text) + ' ' + esc(item.application) + '</span></div></div>').join('');
+    const related = DOMAIN_I.relatedTopics.map(item =>
+      '<div class="di-item">' + icon('link') + '<div><b>' + esc(item.topic) + '</b><span>' + esc(item.principles) + '</span></div></div>').join('');
+    return '<div class="di">' +
+      '<section class="di-statement" id="domain-i-purpose">' +
+        '<div class="di-statement-top"><div class="di-ico">' + icon('book') + '</div><div>' +
+          '<h2>' + esc(DOMAIN_I.headline) + '</h2>' +
+          '<p>' + esc(DOMAIN_I.statement) + '</p></div></div>' +
+        '<div class="di-tabs">' +
+          '<a class="di-tab on" href="#domain-i-purpose">Purpose statement</a>' +
+          '<a class="di-tab" href="#domain-i-practical">Practical application</a>' +
+          '<a class="di-tab" href="#domain-i-related">Related Principles</a>' +
+        '</div></section>' +
+      '<section id="domain-i-value">' +
+        '<div class="di-kicker">Forms of contribution</div>' +
+        '<h3>How Internal Auditing Provides Value</h3>' +
+        '<div class="di-values">' + value + '</div></section>' +
+      '<div class="di-split">' +
+        '<section class="di-box" id="domain-i-enhances"><h3>What Internal Auditing Enhances</h3>' + enhances + '</section>' +
+        '<section class="di-box" id="domain-i-conditions"><h3>Conditions for Effectiveness</h3>' + conditions +
+          '<p class="di-note">' + esc(DOMAIN_I.conditionsNote) + '</p></section>' +
+      '</div>' +
+      '<section class="di-block" id="domain-i-practical">' +
+        '<div class="di-kicker">Practical application</div>' +
+        '<h3>Put the purpose into the engagement</h3>' +
+        '<p>' + esc(DOMAIN_I.intro) + '</p>' +
+        '<p>' + esc(DOMAIN_I.purposeDetail) + '</p>' +
+        '<h4>Create, protect and sustain value</h4>' + valueStates +
+        '<h4>Essential characteristics</h4>' + characteristics +
+        '<h4>Questions to carry into the work</h4>' + questions +
+        '<h4>How an engagement contributes</h4>' +
+        '<p>' + esc(DOMAIN_I.practicalIllustration) + '</p>' +
+        forms +
+        '<h4>Illustrative engagement example: Payroll</h4>' +
+        '<p>' + esc(DOMAIN_I.payrollExample.intro) + '</p>' +
+        '<ul class="rq dot">' + DOMAIN_I.payrollExample.contributions.map(item => '<li><span>' + esc(item) + '</span></li>').join('') + '</ul>' +
+        '<p class="di-note">' + esc(DOMAIN_I.payrollExample.note) + '</p>' +
+      '</section>' +
+      '<section class="di-block" id="domain-i-related">' +
+        '<div class="di-kicker">Related principles</div>' +
+        '<h3>Where Domain I continues in the Standards</h3>' +
+        related +
+        '<p class="di-source">The purpose statement is published by the Institute of Internal Auditors. Read the official text at <a href="' +
+          esc(DOMAIN_I.official) + '" target="_blank" rel="noopener noreferrer">theiia.org</a>.</p>' +
+      '</section></div>';
+  }
+
+  function setChrome(domainI){
+    document.body.classList.toggle('domain-i-page', !!domainI);
+    const crumb = document.querySelector('.crumb');
+    const eyebrow = document.querySelector('.page-h .eyebrow');
+    const h1 = document.querySelector('.page-h h1');
+    const ask = document.getElementById('pageAsk');
+    if (domainI){
+      crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><a href="standards.html">IIA Standards</a><span class="sep">/</span><b>Domain I</b>';
+      eyebrow.textContent = 'Domain I · Purpose introduction';
+      h1.textContent = DOMAIN_I.title;
+      lede.textContent = DOMAIN_I.summary;
+      ask.querySelector('b').textContent = 'Explore the purpose of internal auditing';
+      ask.querySelector('span').textContent = 'Get support using the platform’s content and guidance.';
+    } else {
+      crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><b>IIA Standards</b>';
+      eyebrow.textContent = 'Professional framework';
+      h1.textContent = 'Global Internal Audit Standards';
+      lede.textContent = 'Explore the framework by Domain, Principle and Standard.';
+      ask.querySelector('b').textContent = 'Need help finding guidance?';
+      ask.querySelector('span').textContent = 'Ask the AI Assistant. It answers from the standards in this platform.';
+    }
+  }
+
+  function markDomainI(){
+    const onI = qs('domain') === 'I' && !input.value.trim();
+    const current = location.hash || '#domain-i-purpose';
+    document.querySelectorAll('.di-tab').forEach(a => {
+      a.classList.toggle('on', onI && a.getAttribute('href') === current);
+    });
+    document.querySelectorAll('.nav-sec').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      a.classList.toggle('on', onI && href.indexOf(current) !== -1);
+    });
+  }
+
   function domains(){
-    lede.textContent = 'Explore the framework by Domain, Principle and Standard.';
+    setChrome(false);
     const top = DOMAINS.slice(0, 2).map(card).join('');
     const rest = DOMAINS.slice(2).map(card).join('');
     out.innerHTML = '<div class="catalog"><div class="group-label">Explore the five Domains</div>' +
@@ -83,16 +184,18 @@
   function domainView(id){
     const d = DOMAINS.find(x => x.id === id);
     if (!d){ domains(); return; }
+    if (d.id === 'I'){
+      setChrome(true);
+      out.innerHTML = '<div class="catalog">' + domainIPanel() + '</div>';
+      markDomainI();
+      return;
+    }
+    setChrome(false);
     lede.textContent = 'Domain ' + d.num + ' — ' + d.name + '. ' + span(d) + '.';
     let h = '<div class="catalog"><a class="go" href="standards.html" style="font-weight:700;color:var(--navy)">All domains</a>';
     h += '<div class="group-label">Domain ' + esc(d.num) + '</div>';
     h += '<div class="tcard" style="margin-bottom:16px"><div class="kicker">' + esc(span(d)) + '</div>' +
       '<h3>' + esc(d.name) + '</h3><p>' + esc(d.blurb) + '</p></div>';
-    if (!d.principles.length){
-      h += '<div class="sheet"><p>Domain I is the purpose of internal auditing. It states why the function exists and the value it provides to the organisation. It has no numbered principles. The principles and standards begin in Domain II, Ethics and Professionalism.</p>' +
-        '<p style="margin-top:10px">The purpose statement is published by the Institute of Internal Auditors. Read the authoritative text at ' +
-        '<a href="https://www.theiia.org/en/standards/2024-standards/global-internal-audit-standards/" target="_blank" rel="noopener noreferrer">theiia.org</a>.</p></div>';
-    }
     d.principles.forEach(p => {
       h += '<div class="group-label">Principle ' + p.num + ' — ' + esc(p.title) + '</div><div class="cgrid">';
       p.standards.forEach(s => {
@@ -117,16 +220,26 @@
       if (domain) domainView(domain); else domains();
       return;
     }
+    setChrome(false);
     lede.textContent = 'Results are limited to the standards held in this platform.';
     let res = searchPlatform(q);
+    const domainIRes = searchDomainI(q);
     const domain = qs('domain');
     if (domain) res = res.filter(r => r.s.domainId === domain);
-    if (!res.length){
+    if (!res.length && !(domain === 'I' && domainIRes.length) && !(!domain && domainIRes.length)){
       out.innerHTML = '<div class="empty"><b>No results for “' + esc(q) + '”</b>' +
         '<p>Try a keyword, a topic, or a standard number such as 2.2. This search reads the content of the standards, not the internet.</p></div>';
       return;
     }
     let h = '<div class="results">';
+    if ((!domain || domain === 'I') && domainIRes.length){
+      domainIRes.forEach(r => {
+        const src = (r.hits[0] && r.hits[0].text) || r.summary || '';
+        h += '<a class="hit" href="standards.html?domain=I' + (r.hits[0] ? '#' + r.hits[0].anchor : '') + '">' +
+          '<span class="sref">Domain I</span><h3>' + highlight(r.title, q) + '</h3>' +
+          '<p>' + highlight(preview(src, q), q) + '</p></a>';
+      });
+    }
     res.forEach(r => {
       const s = r.s;
       const href = 'standard.html?ref=' + encodeURIComponent(s.ref);
@@ -145,6 +258,8 @@
   const seed = qs('q');
   if (seed){ input.value = seed; run(); } else run();
   mount({ active:'library' });
+  markDomainI();
+  window.addEventListener('hashchange', markDomainI);
 })();
 </script>
 </body>

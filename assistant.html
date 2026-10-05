@@ -155,6 +155,8 @@
       'Standard ' + s.ref + (label ? ' · ' + label : ''));
   }
   function locate(q){
+    if (/\bdomain\s*i\b|purpose of internal auditing|create,? protect,? and sustain value|\bforesight\b|\binsight\b/.test(q.toLowerCase()))
+      return { domain:'I', rec:DOMAIN_I };
     const m = q.match(/\b(\d{1,2}\.\d+)\b/);
     if (m){
       const s = allStandards().find(x => x.ref === m[1]);
@@ -162,6 +164,41 @@
     }
     const hit = searchPlatform(q)[0];
     return hit ? { s:hit.s, rec:hit.rec } : null;
+  }
+  function domainIAnswer(query){
+    const q = String(query || '').toLowerCase();
+    let h = '<p><b>Domain I — ' + esc(DOMAIN_I.title) + '.</b> ' + esc(DOMAIN_I.summary) + '</p>';
+    if (/create value|protect value|sustain value|purpose/.test(q)){
+      h += '<p><span class="kind">Purpose</span>' + esc(DOMAIN_I.statement) + '</p>' +
+        ul(DOMAIN_I.valueContributions.map(x => x.title + ' — ' + x.text));
+    } else if (/assurance|advice|insight|foresight|provide value/.test(q)){
+      h += '<p><span class="kind">How internal auditing provides value</span></p>' +
+        ul(DOMAIN_I.howValueProvides.map(x => x.title + ' — ' + x.text + ' Example: ' + x.application));
+    } else if (/enhanc|public interest|reputation|stakeholder|what internal auditing/.test(q)){
+      h += '<p><span class="kind">What internal auditing enhances</span></p>' +
+        ul(DOMAIN_I.enhances.map(x => x.title + ' — ' + x.text));
+    } else if (/effective|effectiveness|competent|positioning|undue influence|independent|objective|risk-based/.test(q)){
+      h += '<p><span class="kind">Conditions for effectiveness</span></p>' +
+        ul(DOMAIN_I.conditions.map(x => x.title + ' — ' + x.text + ' Indicators: ' + x.indicators));
+    } else if (/practical|question|application|payroll/.test(q)){
+      h += '<p><span class="kind">Practical application</span></p>' +
+        ul(DOMAIN_I.practicalQuestions.map(x => x.question + ' — ' + x.application)) +
+        '<p><b>Illustrative engagement example: Payroll.</b> ' + esc(DOMAIN_I.payrollExample.intro) + '</p>' +
+        ul(DOMAIN_I.payrollExample.contributions) +
+        '<p>' + esc(DOMAIN_I.payrollExample.note) + '</p>';
+    } else if (/related principles|principle/.test(q)){
+      h += '<p><span class="kind">Related principles</span></p>' +
+        ul(DOMAIN_I.relatedTopics.map(x => x.topic + ' — ' + x.principles));
+    } else {
+      h += '<p><span class="kind">Purpose</span>' + esc(DOMAIN_I.statement) + '</p>';
+      h += '<p><span class="kind">How it provides value</span></p>' +
+        ul(DOMAIN_I.howValueProvides.map(x => x.title + ' — ' + x.text));
+      h += '<p><span class="kind">What internal auditing enhances</span></p>' +
+        ul(DOMAIN_I.enhances.map(x => x.title + ' — ' + x.text));
+      h += '<p><span class="kind">Conditions for effectiveness</span></p>' +
+        ul(DOMAIN_I.conditions.map(x => x.title + ' — ' + x.text));
+    }
+    return h + cites(cite('standards.html?domain=I', 'Domain I · Purpose of Internal Auditing'));
   }
   function toolHits(q){
     const low = q.toLowerCase();
@@ -352,6 +389,7 @@
 
     const found = locate(q);
     if (found){
+      if (found.domain === 'I') return domainIAnswer(q);
       if (kind === 'both') return sectionAnswer(found, 'both');
       return sectionAnswer(found, kind || 'requirements');
     }
@@ -373,7 +411,7 @@
 
     return '<p><b>Nothing in this platform covers that closely enough.</b> I answer only from the standards, ' +
       'references and tools held here. I will not answer from general knowledge or from the internet.</p>' +
-      '<p>Name a standard number, a reference such as COSO or the 2017 standards, or one of the six audit tools, and I will use what this platform holds.</p>';
+      '<p>Name a standard number, Domain I, a reference such as COSO or the 2017 standards, or one of the six audit tools, and I will use what this platform holds.</p>';
   }
 
   function addAnswer(q){

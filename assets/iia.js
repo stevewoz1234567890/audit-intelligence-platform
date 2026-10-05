@@ -53,6 +53,49 @@ function fmtDate(iso){
   return d + ' ' + M[+m - 1] + ' ' + y;
 }
 
+function validatePlatformData(){
+  const issues = [];
+  try {
+    if (typeof DOMAINS === 'undefined' || !Array.isArray(DOMAINS) || !DOMAINS.length)
+      issues.push('DOMAINS is missing or empty.');
+    if (typeof DOMAIN_I === 'undefined' || !DOMAIN_I || !DOMAIN_I.title)
+      issues.push('DOMAIN_I is missing required content.');
+    if (typeof RECORDS === 'undefined' || !Array.isArray(RECORDS))
+      issues.push('RECORDS is missing or invalid.');
+
+    const standardRefs = new Set();
+    if (typeof allStandards === 'function'){
+      allStandards().forEach(s => {
+        if (!s.ref || standardRefs.has(s.ref)) issues.push('Duplicate or missing standard ref in DOMAINS: ' + (s.ref || '(blank)'));
+        standardRefs.add(s.ref);
+      });
+    }
+
+    if (Array.isArray(RECORDS)){
+      const recordRefs = new Set();
+      RECORDS.forEach(r => {
+        if (!r || r.fw !== 'iia') return;
+        if (!r.ref) issues.push('IIA record missing ref.');
+        if (recordRefs.has(r.ref)) issues.push('Duplicate IIA record ref: ' + r.ref);
+        recordRefs.add(r.ref);
+        if (!r.title) issues.push('IIA record missing title for ' + r.ref);
+        if (!r.summary) issues.push('IIA record missing summary for ' + r.ref);
+      });
+      standardRefs.forEach(ref => {
+        const full = 'Standard ' + ref;
+        if (!RECORDS.some(r => r && r.fw === 'iia' && r.ref === full)){
+          /* intentionally informational because partial population is allowed */
+        }
+      });
+    }
+  } catch (e){
+    issues.push('Validation failed: ' + e.message);
+  }
+  if (issues.length) console.warn('[Audit Intelligence validation]', issues);
+  else console.info('[Audit Intelligence validation] OK');
+  return issues;
+}
+
 /* ---------- top bar ---------- */
 function renderTop(active){
   const link = (id, href, label) =>
@@ -79,25 +122,31 @@ function renderFooter(){
 
 /* ---------- standards navigator ---------- */
 function renderNav(currentRef){
+  const domainQ = qs('domain');
   let h = '<div class="nav-h">' +
     '<div class="t">IIA Standards</div>' +
     '<label class="nav-find">' + icon('search') +
       '<input type="search" id="navFind" placeholder="Find a Standard" ' +
       'aria-label="Filter standards">' +
     '</label></div><div class="nav-body" id="navBody">' +
-    '<a class="nav-all' + (currentRef ? '' : ' on') + '" href="standards.html">All Standards</a>';
+    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">All Standards</a>';
 
   DOMAINS.forEach(d => {
     const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
-    const domainQ = qs('domain');
     const open = currentRef ? contains : (domainQ ? d.id === domainQ : d.id === 'II');
-    h += '<div class="dom' + (open ? ' open' : '') + '" data-dom="' + esc(d.id) + '">' +
-      '<button class="dom-btn" type="button"><span><span class="dn">Domain ' + esc(d.num) +
-      '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
-      '<div class="dom-body">';
+    const purposeOn = d.id === 'I' && !currentRef && domainQ === 'I';
+    h += '<div class="dom' + (open ? ' open' : '') + (purposeOn ? ' purpose-on' : '') + '" data-dom="' + esc(d.id) + '">';
     if (!d.principles.length){
-      h += '<a class="purpose" href="standards.html?domain=' + encodeURIComponent(d.id) +
-        '">Purpose introduction</a>';
+      h += '<a class="dom-btn' + (purposeOn ? ' on' : '') + '" href="standards.html?domain=' +
+        encodeURIComponent(d.id) + '"><span><span class="dx">' + esc(d.name) +
+        '</span></span>' + icon('chev','ch') + '</a><div class="dom-body">';
+      (DOMAIN_I.sections || []).forEach(sec => {
+        h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' + esc(sec.label) + '</a>';
+      });
+    } else {
+      h += '<button class="dom-btn" type="button"><span><span class="dn">Domain ' + esc(d.num) +
+        '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
+        '<div class="dom-body">';
     }
     d.principles.forEach(p => {
       const pOpen = p.standards.some(s => s.ref === currentRef);
@@ -149,7 +198,7 @@ function wireNav(){
 
   body.addEventListener('click', e => {
     const dom = e.target.closest('.dom-btn');
-    if (dom){ dom.closest('.dom').classList.toggle('open'); return; }
+    if (dom && dom.tagName !== 'A'){ dom.closest('.dom').classList.toggle('open'); return; }
     const head = e.target.closest('.pr-h');
     if (!head) return;
     head.closest('.pr').classList.toggle('open');
@@ -177,8 +226,11 @@ function wireNav(){
           if (visible) shown++;
         });
         const domHit = !q || dom.querySelector('.dx').textContent.toLowerCase().includes(q);
-        const purpose = dom.querySelector('.purpose');
-        if (purpose) purpose.style.display = (!q || domHit) ? '' : 'none';
+        dom.querySelectorAll('.nav-sec').forEach(a => {
+          const hit = !q || a.textContent.toLowerCase().includes(q);
+          a.style.display = hit || domHit ? '' : 'none';
+          if (hit) shown++;
+        });
         dom.style.display = (!q || shown || domHit) ? '' : 'none';
         if (q && (shown || domHit)) dom.classList.add('open');
       });
@@ -216,6 +268,10 @@ function mount(opts){
   const top = document.querySelector('.top');
   const nav = document.querySelector('.nav');
   const ft  = document.querySelector('footer');
+  if (!window.__aiValidated){
+    window.__aiValidated = true;
+    validatePlatformData();
+  }
   if (top) top.innerHTML = renderTop(opts.active);
   if (nav) nav.innerHTML = opts.side || renderNav(opts.ref);
   if (ft)  ft.innerHTML  = renderFooter();
@@ -363,6 +419,54 @@ function searchPlatform(query){
   });
 
   return out.sort((a,b) => b.score - a.score);
+}
+
+function searchDomainI(query){
+  if (typeof DOMAIN_I === 'undefined') return [];
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return [];
+  const raw = q.split(/\s+/)
+    .map(t => t.replace(/[?!,;:()"'’]/g,'').replace(/\.$/,''))
+    .filter(Boolean);
+  const terms = raw.filter(t => !STOP.has(t) && t.length > 1);
+  if (!terms.length) return [];
+
+  const sections = [
+    { label:'Purpose of Internal Auditing', anchor:'domain-i-purpose', text:[DOMAIN_I.title, DOMAIN_I.headline, DOMAIN_I.summary, DOMAIN_I.intro, DOMAIN_I.classification, DOMAIN_I.statement, DOMAIN_I.purposeDetail, flat(DOMAIN_I.valueContributions), DOMAIN_I.practicalIllustration, flat(DOMAIN_I.characteristics)].join(' '), w:10 },
+    { label:'Forms of Contribution', anchor:'domain-i-value', text:['Forms of contribution', 'How internal auditing provides value', flat(DOMAIN_I.howValueProvides)].join(' '), w:8 },
+    { label:'What Internal Auditing Enhances', anchor:'domain-i-enhances', text:flat(DOMAIN_I.enhances), w:7 },
+    { label:'Conditions for Effectiveness', anchor:'domain-i-conditions', text:flat(DOMAIN_I.conditions), w:7 },
+    { label:'Practical Application', anchor:'domain-i-practical', text:[flat(DOMAIN_I.practicalQuestions), DOMAIN_I.payrollExample.intro, flat(DOMAIN_I.payrollExample.contributions), DOMAIN_I.payrollExample.note].join(' '), w:6 },
+    { label:'Related Principles', anchor:'domain-i-related', text:[flat(DOMAIN_I.relatedTopics), flat(DOMAIN_I.related)].join(' '), w:4 }
+  ];
+
+  let score = 0;
+  const hits = [];
+  sections.forEach(sec => {
+    const text = String(sec.text || '').toLowerCase();
+    let secScore = 0;
+    terms.forEach(t => {
+      if (text.includes(t)) secScore += sec.w;
+    });
+    if (secScore > 0){
+      score += secScore;
+      hits.push({ label:sec.label, anchor:sec.anchor, text:sec.text });
+    }
+  });
+
+  const hay = sections.map(s => s.text).join(' ').toLowerCase();
+  const matched = terms.filter(t => hay.includes(t));
+  const enough = terms.some(t => ['domain','purpose','internal','auditing','value','assurance','advice','insight','foresight'].includes(t)) ||
+    (terms.length === 1 ? matched.length === 1 : matched.length >= 2);
+  if (!score || !enough) return [];
+  return [{
+    kind:'domain',
+    id:'I',
+    title:DOMAIN_I.title,
+    summary:DOMAIN_I.summary,
+    score:score + (q.includes('domain i') ? 25 : 0),
+    hits:hits
+  }];
 }
 
 /* wrap matches for display; escape first so markup is never re-matched */

@@ -108,9 +108,17 @@
     history.replaceState(null, '', url);
     if (!query){ found.hidden = true; library.hidden = false; hits.innerHTML = ''; return; }
     const standards = searchPlatform(query).slice(0, 8);
+    const domainI = searchDomainI(query).slice(0, 1);
     const tools = matchCatalog(TOOLS, query);
     const refs = matchCatalog(REFS, query);
     let h = '';
+    domainI.forEach(r => {
+      const src = (r.hits[0] && r.hits[0].text) || r.summary || '';
+      const href = 'standards.html?domain=I' + (r.hits[0] ? '#' + r.hits[0].anchor : '');
+      h += '<a class="hit" href="' + href + '"><span class="sref">Domain I</span>' +
+        '<h3>' + highlight(r.title, query) + '</h3>' +
+        '<p>' + highlight(preview(src, query), query) + '</p></a>';
+    });
     standards.forEach(r => {
       const src = (r.hits[0] && r.hits[0].text) || (r.rec && r.rec.summary) || '';
       const href = 'standard.html?ref=' + encodeURIComponent(r.s.ref) +

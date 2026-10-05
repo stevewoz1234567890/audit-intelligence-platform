@@ -124,6 +124,92 @@ const DOMAINS = [
   }
 ];
 
+const DOMAIN_I = {
+  title:'Purpose of Internal Auditing',
+  summary:'Understand why internal auditing exists, the value it provides, and what enables it to be effective.',
+  headline:'Create, protect and sustain value.',
+  intro:'The purpose of this domain is to help internal auditors, the board, management, and other stakeholders understand and communicate the contribution of internal auditing.',
+  classification:'The purpose statement, what internal auditing enhances, and the conditions for effectiveness follow Domain I of the Global Internal Audit Standards. Practical questions, illustrations, and the payroll example show how to apply that purpose.',
+  statement:'Internal auditing strengthens the organization’s ability to create, protect, and sustain value by providing the board and management with independent, risk-based, and objective assurance, advice, insight, and foresight.',
+  purposeDetail:'Its contribution extends beyond identifying weaknesses. Internal auditing helps the organization understand its risks, evaluate the effectiveness of its processes, make informed decisions, and identify opportunities for improvement.',
+  sections:[
+    { id:'domain-i-purpose', label:'Purpose & Value' },
+    { id:'domain-i-value', label:'Forms of Contribution' },
+    { id:'domain-i-enhances', label:'What Auditing Enhances' },
+    { id:'domain-i-conditions', label:'Conditions for Effectiveness' },
+    { id:'domain-i-practical', label:'Practical Application' },
+    { id:'domain-i-related', label:'Related Principles' }
+  ],
+  valueContributions:[
+    { title:'Create value', text:'Identify opportunities to improve processes and support the achievement of organizational objectives.' },
+    { title:'Protect value', text:'Evaluate how effectively governance, risk management, and controls address threats to the organization.' },
+    { title:'Sustain value', text:'Support improvements that strengthen performance, resilience, and the organization’s ability to achieve its objectives over time.' }
+  ],
+  practicalIllustration:'When reviewing a procurement process, internal auditing may identify opportunities to improve purchasing efficiency, assess controls intended to prevent unauthorized transactions, and recommend improvements that support reliable operations over time. This illustrates how an engagement can contribute to creating, protecting, and sustaining value.',
+  howValueProvides:[
+    { icon:'shield', title:'Assurance', short:'Independent assessments, risks and controls', text:'An objective assessment that helps stakeholders understand whether governance, risk management, and controls are effective.', application:'Assess whether payment approvals and supporting documentation operate as intended.' },
+    { icon:'users', title:'Advice', short:'Helping management address responsibilities', text:'Guidance that helps management consider improvements while management retains responsibility for decisions and implementation.', application:'Advise on control considerations when redesigning a procurement process.' },
+    { icon:'spark', title:'Insight', short:'Understanding patterns, causes and implications', text:'An understanding of patterns, underlying causes, and relationships that may not be apparent from individual issues.', application:'Identify a common access-management weakness behind recurring exceptions across several departments.' },
+    { icon:'clock', title:'Foresight', short:'Anticipating emerging risks and future implications', text:'A forward-looking perspective on emerging risks and their potential implications.', application:'Highlight control considerations associated with a planned system migration before implementation.' }
+  ],
+  characteristics:[
+    { title:'Independent', text:'The internal audit function is positioned to perform its responsibilities without inappropriate interference.' },
+    { title:'Risk-based', text:'Internal audit attention is informed by risks that could affect organizational objectives.' },
+    { title:'Objective', text:'Assessments and conclusions are based on balanced professional judgment and evidence.' }
+  ],
+  enhances:[
+    { icon:'target', title:'Organizational objectives', text:'Successful achievement of the organization’s objectives.', application:'Assess whether project governance supports delivery against approved objectives, budgets, and timelines.' },
+    { icon:'shield', title:'Governance, risk management and controls', text:'Governance, risk management, and control processes.', application:'Evaluate whether significant risks have clear owners, appropriate responses, and monitoring arrangements.' },
+    { icon:'scale', title:'Decision-making and oversight', text:'Decision-making and oversight.', application:'Provide the board with observations on whether reporting on a strategic initiative is complete, reliable, and timely.' },
+    { icon:'star', title:'Reputation and stakeholder confidence', text:'Reputation and credibility with its stakeholders.', application:'Report whether delegated approval authorities are operating in line with policy and oversight expectations.' },
+    { icon:'users', title:'Ability to serve the public interest', text:'Ability to serve the public interest.', application:'Perform the work in conformance with the Standards, which are set in the public interest.' }
+  ],
+  conditions:[
+    { icon:'users', title:'Competent professionals', text:'It is performed by competent professionals in conformance with the Global Internal Audit Standards, which are set in the public interest.', indicators:'Relevant knowledge and skills, professional development, appropriate methodologies, engagement supervision, and quality assessments.' },
+    { icon:'scale', title:'Independence and objectivity', text:'Internal auditors are committed to making objective assessments.', indicators:'Disclosure of conflicts, safeguards for objectivity, and evidence-supported conclusions.' },
+    { icon:'hierarchy', title:'Appropriate positioning', text:'The internal audit function is independently positioned with direct accountability to the board.', indicators:'Clear reporting arrangements, direct board access, and opportunities to raise concerns about restrictions or interference.' },
+    { icon:'shield', title:'Independent assurance', text:'The board and management receive independent, risk-based, and objective assurance.', indicators:'Engagements are scoped to risk, and conclusions are supported by evidence rather than directed by management.' },
+    { icon:'check', title:'Freedom from undue influence', text:'Internal auditors are free from undue influence and committed to making objective assessments.', indicators:'Escalation of inappropriate pressure, and safeguards when independence or objectivity could be affected.' }
+  ],
+  conditionsNote:'Detailed obligations for these conditions are addressed in the related principles and standards.',
+  practicalQuestions:[
+    { question:'Which organizational objectives does this engagement support?', application:'Explain the connection between the activity under review and the organization’s intended outcomes.' },
+    { question:'Which risks could affect those objectives?', application:'Direct attention to matters that could materially affect performance or outcomes.' },
+    { question:'What assurance or advice will the engagement provide?', application:'Establish a clear contribution that is consistent with the engagement’s objectives and scope.' },
+    { question:'What evidence supports the assessment?', application:'Base findings and conclusions on appropriate information and analysis.' },
+    { question:'What broader insight can be drawn from the results?', application:'Consider recurring issues, shared causes, or implications across activities.' },
+    { question:'Are there emerging risks that stakeholders should understand?', application:'Consider relevant future changes and potential implications.' },
+    { question:'Could independence or objectivity be affected?', application:'Identify and address relevant restrictions, conflicts, or inappropriate influence.' },
+    { question:'How will the results support decisions or oversight?', application:'Communicate the significance of the work in a form stakeholders can use.' }
+  ],
+  payrollExample:{
+    intro:'An internal audit engagement may assess whether payroll payments are accurate, authorized, and supported by reliable employee records.',
+    contributions:[
+      'Assurance: Assess whether key payroll controls operate effectively.',
+      'Advice: Suggest improvements to the process for updating employee payment details.',
+      'Insight: Identify whether recurring payroll exceptions arise from a common weakness in HR and finance coordination.',
+      'Foresight: Highlight risks associated with an upcoming payroll-system implementation.'
+    ],
+    note:'Management remains responsible for operating payroll, making decisions, and implementing agreed actions.'
+  },
+  relatedTopics:[
+    { topic:'Integrity and objective professional judgment', principles:'Principle 1 — Demonstrate Integrity; Principle 2 — Maintain Objectivity' },
+    { topic:'Competence and professional care', principles:'Principle 3 — Demonstrate Competency; Principle 4 — Exercise Due Professional Care' },
+    { topic:'Board authorization, independence, and oversight', principles:'Principle 6 — Authorized by the Board; Principle 7 — Positioned Independently; Principle 8 — Overseen by the Board' },
+    { topic:'Planning work around organizational objectives and risks', principles:'Principle 9 — Plan Strategically; Principle 13 — Plan Engagements Effectively' },
+    { topic:'Communication and quality', principles:'Principle 11 — Communicate Effectively; Principle 12 — Enhance Quality' },
+    { topic:'Evidence-based engagement work', principles:'Principle 14 — Conduct Engagement Work' },
+    { topic:'Communicating results and monitoring action plans', principles:'Principle 15 — Communicate Engagement Results and Monitor Action Plans' }
+  ],
+  related:[
+    'Domain II — Ethics and Professionalism',
+    'Domain III — Governing the Internal Audit Function',
+    'Domain IV — Managing the Internal Audit Function',
+    'Domain V — Performing Internal Audit Services'
+  ],
+  official:'https://www.theiia.org/en/standards/2024-standards/global-internal-audit-standards/'
+};
+
 /* ---- derived helpers ---- */
 
 /* every standard, flattened, carrying its domain and principle */
