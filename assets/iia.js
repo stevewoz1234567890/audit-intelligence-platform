@@ -132,8 +132,10 @@ function renderNav(currentRef){
     '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">All Standards</a>';
 
   DOMAINS.forEach(d => {
+    const hashPrinciple = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
     const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
-    const open = currentRef ? contains : (domainQ ? d.id === domainQ : d.id === 'II');
+    const hashInDomain = hashPrinciple && d.principles.some(p => String(p.num) === hashPrinciple);
+    const open = currentRef ? contains : (domainQ ? d.id === domainQ : (hashInDomain || d.id === 'II'));
     const here = d.id === 'I' && !currentRef && domainQ === 'I';
     h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
     h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '"><span><span class="dn">Domain ' +
@@ -145,7 +147,7 @@ function renderNav(currentRef){
       });
     }
     d.principles.forEach(p => {
-      const pOpen = p.standards.some(s => s.ref === currentRef);
+      const pOpen = p.standards.some(s => s.ref === currentRef) || String(p.num) === hashPrinciple;
       h += '<div class="pr' + (pOpen ? ' open' : '') + '" data-pr="' + p.num + '">' +
         '<button class="pr-h" type="button">' +
           '<span class="n">' + p.num + '</span>' +

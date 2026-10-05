@@ -193,13 +193,13 @@ const DOMAIN_I = {
     note:'Management remains responsible for operating payroll, making decisions, and implementing agreed actions.'
   },
   relatedTopics:[
-    { topic:'Integrity and objective professional judgment', principles:'Principle 1 — Demonstrate Integrity; Principle 2 — Maintain Objectivity' },
-    { topic:'Competence and professional care', principles:'Principle 3 — Demonstrate Competency; Principle 4 — Exercise Due Professional Care' },
-    { topic:'Board authorization, independence, and oversight', principles:'Principle 6 — Authorized by the Board; Principle 7 — Positioned Independently; Principle 8 — Overseen by the Board' },
-    { topic:'Planning work around organizational objectives and risks', principles:'Principle 9 — Plan Strategically; Principle 13 — Plan Engagements Effectively' },
-    { topic:'Communication and quality', principles:'Principle 11 — Communicate Effectively; Principle 12 — Enhance Quality' },
-    { topic:'Evidence-based engagement work', principles:'Principle 14 — Conduct Engagement Work' },
-    { topic:'Communicating results and monitoring action plans', principles:'Principle 15 — Communicate Engagement Results and Monitor Action Plans' }
+    { topic:'Integrity and objective professional judgment', principles:[1, 2] },
+    { topic:'Competence and professional care', principles:[3, 4] },
+    { topic:'Board authorization, independence, and oversight', principles:[6, 7, 8] },
+    { topic:'Planning work around organizational objectives and risks', principles:[9, 13] },
+    { topic:'Communication and quality', principles:[11, 12] },
+    { topic:'Evidence-based engagement work', principles:[14] },
+    { topic:'Communicating results and monitoring action plans', principles:[15] }
   ],
   related:[
     'Domain II — Ethics and Professionalism',

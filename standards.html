@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Internal Audit Standards — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=6">
+<link rel="stylesheet" href="assets/iia.css?v=7">
 </head>
 <body>
 
@@ -43,9 +43,9 @@
 </div>
 
 <script src="data/library.js"></script>
-<script src="data/iia.js"></script>
+<script src="data/iia.js?v=7"></script>
 <script src="data/references.js"></script>
-<script src="assets/iia.js?v=6"></script>
+<script src="assets/iia.js?v=7"></script>
 <script>
 (function(){
   const input = document.getElementById('q');
@@ -92,8 +92,15 @@
     const forms = DOMAIN_I.howValueProvides.map(item =>
       '<div class="di-item">' + icon(item.icon || 'spark') + '<div><b>' + esc(item.title) + '</b><span>' +
       esc(item.text) + ' ' + esc(item.application) + '</span></div></div>').join('');
-    const related = DOMAIN_I.relatedTopics.map(item =>
-      '<div class="di-item">' + icon('link') + '<div><b>' + esc(item.topic) + '</b><span>' + esc(item.principles) + '</span></div></div>').join('');
+    const related = DOMAIN_I.relatedTopics.map(item => {
+      const links = (item.principles || []).map(num => {
+        const found = principleOf(num);
+        if (!found) return '';
+        const label = 'Principle ' + found.principle.num + ' — ' + found.principle.title;
+        return '<a href="standards.html?domain=' + encodeURIComponent(found.domain.id) + '#principle-' + found.principle.num + '">' + esc(label) + '</a>';
+      }).join('');
+      return '<div class="di-item">' + icon('link') + '<div><b>' + esc(item.topic) + '</b><span class="principle-links">' + links + '</span></div></div>';
+    }).join('');
     return '<div class="di">' +
       '<section class="di-statement" id="domain-i-purpose">' +
         '<div class="di-statement-top"><div class="di-ico">' + icon('book') + '</div><div>' +
@@ -198,7 +205,7 @@
     h += '<div class="tcard" style="margin-bottom:16px"><div class="kicker">' + esc(span(d)) + '</div>' +
       '<h3>' + esc(d.name) + '</h3><p>' + esc(d.blurb) + '</p></div>';
     d.principles.forEach(p => {
-      h += '<div class="group-label">Principle ' + p.num + ' — ' + esc(p.title) + '</div><div class="cgrid">';
+      h += '<div class="group-label" id="principle-' + p.num + '">Principle ' + p.num + ' — ' + esc(p.title) + '</div><div class="cgrid">';
       p.standards.forEach(s => {
         const rec = standardRecord(s.ref);
         h += '<a class="tcard" href="standard.html?ref=' + encodeURIComponent(s.ref) + '">' +
@@ -260,6 +267,13 @@
   if (seed){ input.value = seed; run(); } else run();
   mount({ active:'library' });
   markDomainI();
+  const principleJump = (location.hash || '').match(/^#principle-(\d+)$/);
+  if (principleJump){
+    const target = document.getElementById('principle-' + principleJump[1]);
+    if (target) target.scrollIntoView({ block:'start' });
+    const row = document.querySelector('.pr.open');
+    if (row) row.scrollIntoView({ block:'nearest' });
+  }
   window.addEventListener('hashchange', markDomainI);
 })();
 </script>
