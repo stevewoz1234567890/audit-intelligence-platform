@@ -26,7 +26,9 @@ const ICONS = {
   'arrow'  :'<path d="M4 10h11M11 6l4 4-4 4"/>',
   'back'   :'<path d="M16 10H5M9 6l-4 4 4 4"/>',
   'layer'  :'<path d="M10 3l7 3.5-7 3.5-7-3.5z"/><path d="M3 11l7 3.5 7-3.5"/>',
-  'scale'  :'<path d="M10 3v14M5 17h10"/><path d="M10 6L4 8.5M10 6l6 2.5"/>',
+  'scale'  :'<path d="M10 2v15M5 17h10M3 7l7-2 7 2M4 7l-2 5h4zM16 7l-2 5h4z"/>',
+  'coins'  :'<ellipse cx="7" cy="6" rx="4" ry="2"/><path d="M3 6v6c0 1.1 1.8 2 4 2 .7 0 1.4-.1 2-.3M3 9c0 1.1 1.8 2 4 2"/><ellipse cx="13" cy="11" rx="4" ry="2"/><path d="M9 11v5c0 1.1 1.8 2 4 2s4-.9 4-2v-5M9 14c0 1.1 1.8 2 4 2s4-.9 4-2"/>',
+  'building':'<path d="M2 17.5h16M3 7h14L10 3zM4 9h2v6H4zM9 9h2v6H9zM14 9h2v6h-2zM2 15.5h16"/>',
   'menu'   :'<path d="M3 6h14M3 10h14M3 14h14"/>',
   'star'   :'<path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z"/>',
   'users'  :'<circle cx="7.5" cy="7" r="2.8"/><path d="M2.5 16c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5"/>',
@@ -93,6 +95,15 @@ function validatePlatformData(){
         if (!RECORDS.some(r => r && r.fw === 'iia' && r.ref === full)){
           /* intentionally informational because partial population is allowed */
         }
+      });
+    }
+    if (typeof SUPPLIED_RECORDS !== 'undefined'){
+      const suppliedRefs = new Set();
+      SUPPLIED_RECORDS.forEach(r => {
+        if (suppliedRefs.has(r.ref)) issues.push('Duplicate PDF record: ' + r.ref);
+        suppliedRefs.add(r.ref);
+        if (!standardRefs.has(r.ref.replace(/^Standard /,''))) issues.push('Unknown PDF standard: ' + r.ref);
+        if (!r.sourceSections || r.sourceSections.length !== 8) issues.push('Incomplete PDF sections for ' + r.ref);
       });
     }
   } catch (e){
@@ -189,8 +200,10 @@ function renderNav(currentRef){
     });
     h += '</div></div>';
   });
-  h += '<a class="nav-all public-app' + (domainQ === 'public-sector' ? ' on' : '') + '" href="standards.html?domain=public-sector">' +
-    icon('doclines') + '<span>Public Sector Application</span></a>';
+  h += '<div class="nav-guidance"><div class="nav-guidance-label">Additional Application Guidance</div>' +
+    '<a class="nav-all public-app' + (domainQ === 'public-sector' ? ' on' : '') + '" href="standards.html?domain=public-sector">' +
+    icon('building') + '<span>Public Sector Application</span></a>' +
+    '<a class="nav-all" href="standards.html">' + icon('back') + '<span>Back to All Standards</span></a></div>';
   return h + '</div>';
 }
 
@@ -396,6 +409,21 @@ function searchPlatform(query){
     terms.forEach(t => { if (pLow.includes(t)) score += 6; });
 
     if (rec){
+      if (rec.sourceSections){
+        rec.sourceSections.filter(x => x.number >= 2 && x.number <= 8).forEach(x => {
+          const labels = {2:['Audit Focus Areas','focus'],3:['Risks','risks'],
+            4:['Suggested Controls','controls'],5:['Suggested Audit Procedures','procedures'],
+            6:['Red Flags','redflags'],7:['Illustrative Common Findings','findings'],
+            8:['Professional References','source']};
+          const [label,anchor] = labels[x.number];
+          const text = x.text.toLowerCase();
+          if (terms.some(t => text.includes(t))) {
+            score += terms.filter(t => text.includes(t)).length * 4;
+            if (!hits.some(h => h.anchor === anchor))
+              hits.push({label,anchor,text:x.text.replace(/\s+/g,' ').slice(0,220)});
+          }
+        });
+      }
       SECTIONS.forEach(sec => {
         const text = flat(rec[sec.key]).toLowerCase();
         if (!text) return;
@@ -431,10 +459,11 @@ function searchPlatform(query){
     /* Section labels are searchable too, so "red flags" finds the
        standards that have a red flags section. */
     const labels = rec ? SECTIONS.filter(x => flat(rec[x.key]))
-      .map(x => x.label).join(' ') : '';
+      .map(x => x.label).join(' ') + ' ' + (rec.sourceSections || []).map(x => x.title).join(' ') : '';
     const haystack = (s.ref + ' ' + s.title + ' ' + s.principleTitle + ' ' +
       s.domainName + ' ' + labels + ' ' +
       (rec ? SECTIONS.map(x => flat(rec[x.key])).join(' ') +
+      ' ' + flat(rec.sourceSections) + ' ' + (rec.practicalApplication||'') +
       ' ' + (rec.summary||'') + ' ' + flat(rec.tags) : '')).toLowerCase();
 
     const word = (t, hay) => new RegExp('(^|[^a-z0-9])' +

@@ -19,6 +19,7 @@
 </div>
 
 <script src="data/library.js"></script>
+<script src="data/supplied-standards.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=9"></script>
@@ -62,8 +63,8 @@
     '<div class="std-meta">' +
       '<span class="mtag"><b>Domain</b> ' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</span>' +
       (rec ? '<span class="mtag"><b>Version</b> ' + esc(rec.version) + '</span>' +
-             '<span class="mtag"><b>Effective</b> ' + fmtDate(rec.effective) + '</span>' +
-             '<span class="mtag"><b>Updated</b> ' + fmtDate(rec.updated) + '</span>'
+             (rec.effective ? '<span class="mtag"><b>Effective</b> ' + fmtDate(rec.effective) + '</span>' : '') +
+             (rec.updated ? '<span class="mtag"><b>Updated</b> ' + fmtDate(rec.updated) + '</span>' : '')
            : '') +
     '</div>';
 
@@ -74,6 +75,13 @@
   add('implementation','Considerations for Implementation','check');
   add('conformance','Examples of Evidence of Conformance','doc');
   if (rec){
+    if (rec.sourceSections){
+      const nav = [null,null,['focus','Audit Focus Areas','target'],['risks','Risks','alert'],
+        ['controls','Suggested Controls','shield'],['procedures','Suggested Audit Procedures','check'],
+        ['redflags','Red Flags','flag'],['findings','Illustrative Common Findings','grid']];
+      rec.sourceSections.filter(x => x.number >= 2 && x.number <= 7).forEach(x => add(...nav[x.number]));
+      if (rec.practicalApplication) add('practical','Practical Application','list');
+    }
     if (rec.focus && rec.focus.length) add('focus','Audit Focus Areas','target', rec.focus.length);
     if (rec.risks && rec.risks.length) add('risks','Risks','alert', rec.risks.length);
     if (rec.controls && rec.controls.length) add('controls','Controls','shield', rec.controls.length);
@@ -131,6 +139,9 @@
 
     /* --- requirements and guidance --- */
     let g = '<div class="card"><p>' + esc(rec.requirement) + '</p></div>';
+    if (rec.sourcePdf) g = '<div class="scope">' + icon('doc') +
+      '<div><b>Source summary and practical guidance</b><span>The supplied PDF summarizes requirements and guidance. Audit Focus Areas through Illustrative Common Findings are suggested practical material, not additional IIA requirements. ' +
+      '<a href="' + esc(rec.sourcePdf) + '" target="_blank" rel="noopener noreferrer">View the supplied PDF ↗</a></span></div></div>' + g;
     if (rec.assignmentTable && rec.assignmentTable.length)
       g += '<div class="sect-h" style="margin-top:18px">' + icon('scale') +
            '<h2 style="font-size:15px">Previous Responsibilities &amp; Engagement Assignments</h2></div>' +
@@ -142,15 +153,27 @@
     h += sect('requirements','Standards &amp; Guidance','doc', g);
     h += sect('implementation','Considerations for Implementation','check',
       (rec.implementation && rec.implementation.length)
-        ? ul(rec.implementation,'dot')
+        ? (rec.sourcePdf ? '<div class="card"><p>' + esc(rec.implementation[0]) + '</p></div>' : ul(rec.implementation,'dot'))
         : gap('Considerations for Implementation'),
       (rec.implementation && rec.implementation.length) || undefined);
     h += sect('conformance','Examples of Evidence of Conformance','doc',
       (rec.conformance && rec.conformance.length)
-        ? ul(rec.conformance,'tick')
+        ? (rec.sourcePdf ? '<div class="card"><p>' + esc(rec.conformance[0]) + '</p></div>' : ul(rec.conformance,'tick'))
         : gap('Examples of Evidence of Conformance'),
       (rec.conformance && rec.conformance.length) || undefined);
 
+    if (rec.sourceSections){
+      const sections = [null,null,'focus','risks','controls','procedures',
+        'redflags','findings','source'];
+      const titles = [null,null,'Audit Focus Areas','Risks','Suggested Controls',
+        'Suggested Audit Procedures','Red Flags','Illustrative Common Findings',
+        'Professional References'];
+      const icons = [null,null,'target','alert','shield','check','flag','grid','link'];
+      rec.sourceSections.filter(x => x.number >= 2 && x.number <= 7).forEach(x => {
+        h += sect(sections[x.number],titles[x.number],icons[x.number],
+          '<div class="card"><p>' + esc(x.text) + '</p></div>');
+      });
+    }
     if (rec.focus && rec.focus.length)
       h += sect('focus','Audit Focus Areas','target', ul(rec.focus,'dot'), rec.focus.length);
 
@@ -206,18 +229,24 @@
       h += sect('recommendations','Recommendations','star', ul(rec.recommendations),
         rec.recommendations.length);
 
+    if (rec.practicalApplication)
+      h += sect('practical','Practical Application','list',
+        '<div class="card"><p>' + esc(rec.practicalApplication) + '</p></div>');
+
     /* references and provenance */
     h += sect('source','Professional References','link',
+      (rec.sourceSections ? '<div class="card"><p>' + esc(rec.sourceSections.find(x => x.number === 8).text) + '</p></div>' : '') +
       '<div class="srcbox"><dl>' +
         '<dt>Source</dt><dd>' + esc(rec.source) + '</dd>' +
         '<dt>Standard</dt><dd>' + esc(rec.ref) + ' — ' + esc(s.title) + '</dd>' +
         '<dt>Domain</dt><dd>' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</dd>' +
         '<dt>Principle</dt><dd>' + s.principleNum + ' — ' + esc(s.principleTitle) + '</dd>' +
         '<dt>Version</dt><dd>' + esc(rec.version) + '</dd>' +
-        '<dt>Effective</dt><dd>' + fmtDate(rec.effective) + '</dd>' +
-        '<dt>Last updated</dt><dd>' + fmtDate(rec.updated) + '</dd>' +
-        '<dt>Official</dt><dd><a href="' + esc(rec.url) + '" target="_blank" ' +
-          'rel="noopener noreferrer">' + esc(rec.url.replace(/^https?:\/\//,'')) + ' &#8599;</a></dd>' +
+        (rec.effective ? '<dt>Effective</dt><dd>' + fmtDate(rec.effective) + '</dd>' : '') +
+        (rec.updated ? '<dt>Last updated</dt><dd>' + fmtDate(rec.updated) + '</dd>' : '') +
+        (rec.url ? '<dt>Official</dt><dd><a href="' + esc(rec.url) + '" target="_blank" ' +
+          'rel="noopener noreferrer">' + esc(rec.url.replace(/^https?:\/\//,'')) + ' &#8599;</a></dd>' : '') +
+        (rec.sourcePdf ? '<dt>Supplied document</dt><dd><a href="' + esc(rec.sourcePdf) + '" target="_blank" rel="noopener noreferrer">View PDF &#8599;</a></dd>' : '') +
       '</dl></div>' +
       (rec.references && rec.references.length
         ? '<div class="card" style="margin-top:13px"><ul class="rq dot">' +

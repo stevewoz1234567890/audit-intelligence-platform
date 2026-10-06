@@ -475,6 +475,10 @@ function allStandards(){
 
 /* the record holding this standard's content, if it exists yet */
 function standardRecord(ref){
+  if (typeof SUPPLIED_RECORDS !== 'undefined'){
+    const supplied = SUPPLIED_RECORDS.find(r => r.ref === 'Standard ' + ref);
+    if (supplied) return supplied;
+  }
   if (typeof RECORDS === 'undefined') return null;
   return RECORDS.find(r => r.fw === 'iia' && r.ref === 'Standard ' + ref) || null;
 }

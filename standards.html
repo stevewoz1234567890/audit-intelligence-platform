@@ -35,7 +35,7 @@
           <b>Need help finding guidance?</b>
           <span>Ask the AI Assistant. It answers from the standards in this platform.</span>
         </div>
-        <a class="btn-gold" href="assistant.html">Ask AI Assistant</a>
+        <a class="btn-gold" href="assistant.html">Ask AI Assistant →</a>
       </div>
     </div>
     <footer></footer>
@@ -43,6 +43,7 @@
 </div>
 
 <script src="data/library.js"></script>
+<script src="data/supplied-standards.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=9"></script>
@@ -77,46 +78,52 @@
       '<div><b>' + esc(item.title) + '</b><span>' + esc(item.text) + '</span></div></div>';
   }
 
-  function psLinks(rows){
-    return rows.map(item => '<a href="standard.html?ref=' + encodeURIComponent(item.ref) + '"><b>Standard ' + esc(item.ref) + '</b> — ' + esc(item.title) + '</a><span>' + esc(item.connection) + '</span>').join('');
+  function psList(items){
+    return '<ul class="rq dot">' + items.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
   }
-
-  function psBlock(title, body, focus, risks, controls, procedures, redFlags, findings, extra){
-    let h = '<section class="di-block"><div class="di-kicker">Public Sector Application</div><h3>' + esc(title) + '</h3>';
-    (body || []).forEach(p => { h += '<p>' + esc(p) + '</p>'; });
-    if (extra) h += extra;
-    if (focus && focus.length) h += '<h4>Audit Focus Areas</h4><ul class="rq dot">' + focus.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
-    if (risks && risks.length) h += '<h4>Risks</h4><div class="di-item-list">' + risks.map(x => '<div class="di-item">' + icon('alert') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
-    if (controls && controls.length) h += '<h4>Controls</h4><ul class="rq dot">' + controls.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
-    if (procedures && procedures.length) h += '<h4>Audit Procedures and Required Evidence — Suggested</h4><ul class="rq dot">' + procedures.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
-    if (redFlags && redFlags.length) h += '<h4>Red Flags</h4><ul class="rq dot">' + redFlags.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
-    if (findings && findings.length) h += '<h4>Common Findings — Illustrative Examples</h4><ul class="rq dot">' + findings.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>';
-    return h + '</section>';
+  function psItems(items, symbol){
+    return '<div class="di-item-list">' + items.map(x => '<div class="di-item">' + icon(symbol) +
+      '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
   }
-
+  function psPanel(title, content, cls){
+    return '<section class="ps-panel' + (cls ? ' ' + cls : '') + '"><h4>' + esc(title) + '</h4>' + content + '</section>';
+  }
+  function psArea(id, title, data, symbol){
+    const parts = [psPanel('Application Considerations', data.text.map(x => '<p>' + esc(x) + '</p>').join('') +
+      psItems(data.subtopics, symbol) + (data.arrangements ? '<h5>Examples of Governance Arrangements</h5>' + psItems(data.arrangements, 'users') : '')),
+      psPanel('Audit Focus Areas', psList(data.focus)),
+      psPanel('Risks', psItems(data.risks, 'alert')),
+      psPanel('Suggested Controls', psList(data.controls)),
+      psPanel('Audit Procedures', psList(data.procedures)),
+      psPanel('Evidence', data.evidence && data.evidence.length ? psList(data.evidence) :
+        '<p>Document the records examined and conclusions reached for each audit procedure. The supplied content combines suggested audit procedures and required evidence; it does not provide a separate evidence list for this area.</p>'),
+      psPanel('Red Flags', psList(data.redFlags)),
+      psPanel('Illustrative Findings', psList(data.findings))];
+    return '<section class="ps-view" id="' + id + '" role="tabpanel" aria-labelledby="tab-' + id + '" hidden>' +
+      '<h2 class="ps-area-title">' + icon(symbol) + esc(title) + '</h2><div class="ps-area-grid">' + parts.join('') + '</div></section>';
+  }
   function publicSectorPanel(){
-    const overviewExtra = '<h4>Public Sector Audit Priorities</h4><ul class="rq dot">' + PUBLIC_SECTOR.overview.priorities.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul>' +
-      '<h4>Application Areas</h4><div class="di-item-list">' + PUBLIC_SECTOR.overview.applicationAreas.map(x => '<div class="di-item">' + icon('doc') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
-    const govExtra = '<h4>Examples of Governance Arrangements</h4><div class="di-item-list">' + PUBLIC_SECTOR.governance.arrangements.map(x => '<div class="di-item">' + icon('users') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
-    return '<div class="di public-sector">' +
-      '<section class="di-statement" id="ps-overview">' +
-        '<div class="di-statement-top"><div class="di-ico">' + icon('doclines') + '</div><div>' +
-          '<h2>' + esc(PUBLIC_SECTOR.title) + '</h2>' +
-          '<p>' + esc(PUBLIC_SECTOR.summary) + '</p></div></div>' +
-        '<div class="scope" style="margin-top:16px"><div>' + icon('check') + '</div><div><b>Content classification</b><span>' + esc(PUBLIC_SECTOR.classification) + '</span></div></div>' +
-        '<div class="di-tabs">' +
-          '<a class="di-tab on" href="#ps-overview">Overview</a>' +
-          '<a class="di-tab" href="#ps-laws">Laws & Regulations</a>' +
-          '<a class="di-tab" href="#ps-governance">Governance & Structure</a>' +
-          '<a class="di-tab" href="#ps-funding">Funding</a>' +
-          '<a class="di-tab" href="#ps-references">Professional References</a>' +
-        '</div></section>' +
-      psBlock('Overview and Purpose', [PUBLIC_SECTOR.overview.intro, PUBLIC_SECTOR.overview.detail, PUBLIC_SECTOR.overview.note], null, null, null, null, null, null, overviewExtra).replace('<section class="di-block">','<section class="di-block" id="ps-overview-body">') +
-      psBlock('Laws and Regulations', PUBLIC_SECTOR.laws.text, PUBLIC_SECTOR.laws.focus, PUBLIC_SECTOR.laws.risks, PUBLIC_SECTOR.laws.controls, PUBLIC_SECTOR.laws.procedures, PUBLIC_SECTOR.laws.redFlags, PUBLIC_SECTOR.laws.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.laws.subtopics.map(x => '<div class="di-item">' + icon('scale') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>').replace('<section class="di-block">','<section class="di-block" id="ps-laws">') +
-      psBlock('Governance and Organizational Structure', PUBLIC_SECTOR.governance.text, PUBLIC_SECTOR.governance.focus, PUBLIC_SECTOR.governance.risks, PUBLIC_SECTOR.governance.controls, PUBLIC_SECTOR.governance.procedures, PUBLIC_SECTOR.governance.redFlags, PUBLIC_SECTOR.governance.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.governance.subtopics.map(x => '<div class="di-item">' + icon('board') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>' + govExtra).replace('<section class="di-block">','<section class="di-block" id="ps-governance">') +
-      psBlock('Funding', PUBLIC_SECTOR.funding.text, PUBLIC_SECTOR.funding.focus, PUBLIC_SECTOR.funding.risks, PUBLIC_SECTOR.funding.controls, PUBLIC_SECTOR.funding.procedures, PUBLIC_SECTOR.funding.redFlags, PUBLIC_SECTOR.funding.findings, '<div class="di-item-list">' + PUBLIC_SECTOR.funding.subtopics.map(x => '<div class="di-item">' + icon('gear') + '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>').replace('<section class="di-block">','<section class="di-block" id="ps-funding">') +
-      '<section class="di-block" id="ps-references"><div class="di-kicker">Public Sector Application</div><h3>Professional References</h3><div class="ps-links">' + psLinks(PUBLIC_SECTOR.references) + '</div></section>' +
-    '</div>';
+    const o = PUBLIC_SECTOR.overview;
+    const cards = [
+      { title:'Laws & Regulations', text:o.applicationAreas[0].text, id:'ps-laws', icon:'scale', action:'Explore Legal Considerations' },
+      { title:'Governance & Structure', text:o.applicationAreas[1].text, id:'ps-governance', icon:'hierarchy', action:'Explore Governance' },
+      { title:'Funding', text:o.applicationAreas[2].text, id:'ps-funding', icon:'coins', action:'Explore Funding' }
+    ];
+    const refs = '<div class="ps-table-wrap"><table class="ps-table"><thead><tr><th scope="col">Standard</th><th scope="col">Title</th><th scope="col">Relevance to Public Sector Application</th></tr></thead><tbody>' +
+      PUBLIC_SECTOR.references.map(x => '<tr><td><a href="standard.html?ref=' + encodeURIComponent(x.ref) + '">Standard ' + esc(x.ref) + '</a></td><td>' + esc(x.title) + '</td><td>' + esc(x.connection) + '</td></tr>').join('') + '</tbody></table></div>';
+    return '<div class="di public-sector"><div class="ps-heading">' +
+      '<div class="di-tabs" role="tablist" aria-label="Public Sector Application sections">' +
+      PUBLIC_SECTOR.sections.map((x,i) => '<button type="button" class="di-tab' + (i ? '' : ' on') + '" role="tab" id="tab-' + x.id + '" aria-controls="' + x.id + '" aria-selected="' + !i + '" tabindex="' + (i ? '-1' : '0') + '" data-ps-tab="' + x.id + '">' + esc(x.label) + '</button>').join('') + '</div></div>' +
+      '<section class="ps-view" id="ps-overview" role="tabpanel" aria-labelledby="tab-ps-overview">' +
+        psPanel('Applying the Standards in Context', '<p>' + esc(o.intro) + '</p><p>' + esc(o.detail) + '</p><p>' + esc(o.note) + '</p>', 'ps-intro') +
+        '<div class="ps-cards">' + cards.map(x => '<article class="ps-card">' + icon(x.icon) + '<div class="ps-card-content"><h3>' + esc(x.title) + '</h3><p>' + esc(x.text) + '</p>' +
+          '<button type="button" class="ps-explore" data-ps-tab="' + x.id + '">' + esc(x.action) + ' ' + icon('arrow') + '</button></div></article>').join('') + '</div>' +
+        '<div class="ps-lower">' + psPanel('Public Sector Audit Priorities', psList(o.priorities)) +
+        psPanel('Within Each Application Area', psList(['Standards Application','Audit Focus Areas','Risks & Suggested Controls','Audit Procedures & Evidence','Red Flags','Illustrative Findings'])) + '</div></section>' +
+      psArea('ps-laws','Laws & Regulations', PUBLIC_SECTOR.laws, 'scale') +
+      psArea('ps-governance','Governance & Structure', PUBLIC_SECTOR.governance, 'hierarchy') +
+      psArea('ps-funding','Funding', PUBLIC_SECTOR.funding, 'coins') +
+      '<section class="ps-view" id="ps-references" role="tabpanel" aria-labelledby="tab-ps-references" hidden><h2 class="ps-area-title">Professional References</h2>' + refs + '</section></div>';
   }
 
   function domainIPanel(){
@@ -190,15 +197,24 @@
   function setChrome(domainI){
     const publicSector = domainI === 'public-sector';
     document.body.classList.toggle('domain-i-page', !!domainI);
+    document.body.classList.toggle('public-sector-page', publicSector);
     const crumb = document.querySelector('.crumb');
     const eyebrow = document.querySelector('.page-h .eyebrow');
     const h1 = document.querySelector('.page-h h1');
     const ask = document.getElementById('pageAsk');
+    let classification = document.querySelector('.ps-page-note');
+    if (publicSector && !classification){
+      classification = document.createElement('p');
+      classification.className = 'ps-page-note';
+      document.querySelector('.page-h').append(classification);
+    }
+    if (classification) classification.hidden = !publicSector;
     if (publicSector){
       crumb.innerHTML = '<a href="index.html">Home</a><span class="sep">/</span><a href="standards.html">IIA Standards</a><span class="sep">/</span><b>Public Sector Application</b>';
-      eyebrow.textContent = 'Practice Guide';
+      eyebrow.textContent = 'Public Sector Application';
       h1.textContent = PUBLIC_SECTOR.title;
       lede.textContent = PUBLIC_SECTOR.summary;
+      classification.textContent = PUBLIC_SECTOR.classification;
       ask.querySelector('b').textContent = 'Ask about Public Sector Application';
       ask.querySelector('span').textContent = 'Explore how public sector arrangements affect application of the Standards.';
     } else if (domainI){
@@ -218,18 +234,21 @@
     }
   }
 
-  function markPublicSector(){
-    const onPs = qs('domain') === 'public-sector' && !input.value.trim();
-    const current = location.hash || '#ps-overview';
-    document.querySelectorAll('.di-tab').forEach(a => {
-      a.classList.toggle('on', onPs && a.getAttribute('href') === current);
+  function selectPublicSector(id){
+    if (!PUBLIC_SECTOR.sections.some(x => x.id === id)) id = 'ps-overview';
+    document.querySelectorAll('.public-sector [role="tab"]').forEach(tab => {
+      const active = tab.dataset.psTab === id;
+      tab.classList.toggle('on', active);
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
     });
+    document.querySelectorAll('.public-sector [role="tabpanel"]').forEach(panel => { panel.hidden = panel.id !== id; });
   }
 
   function markDomainI(){
     const onI = qs('domain') === 'I' && !input.value.trim();
     const current = location.hash || '#domain-i-intro';
-    document.querySelectorAll('.di-tab').forEach(a => {
+    document.querySelectorAll('.di:not(.public-sector) .di-tab').forEach(a => {
       a.classList.toggle('on', onI && a.getAttribute('href') === current);
     });
     document.querySelectorAll('.nav-sec').forEach(a => {
@@ -307,7 +326,7 @@
       if (domain === 'public-sector'){
         setChrome('public-sector');
         out.innerHTML = '<div class="catalog">' + publicSectorPanel() + '</div>';
-        markPublicSector();
+        selectPublicSector((location.hash || '').slice(1));
         return;
       }
       if (domain) domainView(domain); else domains();
@@ -350,9 +369,26 @@
   document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); run(); });
   const seed = qs('q');
   if (seed){ input.value = seed; run(); } else run();
+  out.addEventListener('click', e => {
+    const button = e.target.closest('[data-ps-tab]');
+    if (!button || !out.contains(button)) return;
+    selectPublicSector(button.dataset.psTab);
+  });
+  out.addEventListener('keydown', e => {
+    const tab = e.target.closest('.public-sector [role="tab"]');
+    if (!tab || !['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+    e.preventDefault();
+    const tabs = Array.from(out.querySelectorAll('.public-sector [role="tab"]'));
+    const i = tabs.indexOf(tab);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 :
+      (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    selectPublicSector(tabs[next].dataset.psTab);
+    tabs[next].focus();
+  });
   function revealTarget(){
     const hash = (location.hash || '').replace(/^#/, '');
-    const id = hash || (qs('domain') === 'I' && !input.value.trim() ? 'domain-i-intro' : '');
+    const id = qs('domain') === 'public-sector' && !input.value.trim() ? '' :
+      (hash || (qs('domain') === 'I' && !input.value.trim() ? 'domain-i-intro' : ''));
     if (id === 'domain-i-intro'){
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     } else if (id){
@@ -374,7 +410,8 @@
   revealTarget();
   window.addEventListener('hashchange', () => {
     const domain = qs('domain');
-    if (!(domain === 'I' && document.querySelector('.di')) && domain && !input.value.trim()) domainView(domain);
+    if (domain === 'public-sector' && !input.value.trim()) selectPublicSector((location.hash || '').slice(1));
+    else if (!(domain === 'I' && document.querySelector('.di')) && domain && !input.value.trim()) domainView(domain);
     markDomainI();
     revealTarget();
   });
