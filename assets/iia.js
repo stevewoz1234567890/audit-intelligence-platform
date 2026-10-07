@@ -157,7 +157,7 @@ function renderNav(currentRef){
     const hashPrinciple = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
     const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
     const hashInDomain = hashPrinciple && d.principles.some(p => String(p.num) === hashPrinciple);
-    const open = currentRef ? contains : (domainQ ? d.id === domainQ : (hashInDomain || d.id === 'II'));
+    const open = currentRef ? contains : (domainQ ? d.id === domainQ : !!hashInDomain);
     const here = d.id === 'I' && !currentRef && domainQ === 'I';
     h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
     const domainIcon = {
