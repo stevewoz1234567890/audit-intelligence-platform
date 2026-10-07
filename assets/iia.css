@@ -205,7 +205,8 @@ body.tools-page .chip.on:hover{background:var(--navy-2);color:#fff}
 .lib-card h3{font-size:22px;font-weight:600;margin:0 0 6px;line-height:1.2}
 .lib-card p{margin:0;color:var(--ink-3);font-size:14.5px;line-height:1.55}
 .lib-card .go{margin-top:16px;font-weight:600;font-size:13.5px;color:var(--navy);
-  border:1px solid var(--line-2);border-radius:8px;padding:7px 12px}
+  border:1px solid var(--line-2);border-radius:8px;padding:7px 12px;display:inline-flex;align-items:center;gap:8px}
+.lib-card .go .ic{width:17px;height:17px;flex:none;stroke:var(--gold-2);fill:none;stroke-width:1.7}
 .hero{position:relative;min-height:320px;background:#0e2240;color:#fff;overflow:hidden;
   display:flex;align-items:center}
 .hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center}

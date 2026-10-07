@@ -30,11 +30,29 @@ const pages=()=>new Promise((resolve,reject)=>http.get('http://127.0.0.1:9339/js
     return result.result.value;
   };
   try{
-    await send('Page.navigate',{url:pathToFileURL(path.join(root,'index.html')).href});
+    const base=process.env.HOME_LIBRARY_BASE
+      ? new URL('index.html',process.env.HOME_LIBRARY_BASE).href
+      : pathToFileURL(path.join(root,'index.html')).href;
+    const url=new URL(base);
+    url.searchParams.set('layout-test',String(Date.now()));
+    await send('Page.navigate',{url:url.href});
     for(let attempt=0;attempt<100;attempt++){
-      if(await evaluate('document.querySelectorAll(".lib-card").length === 3 && !!document.styleSheets.length'))break;
+      if(await evaluate(`location.href === ${JSON.stringify(url.href)} && document.readyState === 'complete' && document.querySelectorAll('.lib-card').length === 3`))break;
       await new Promise(resolve=>setTimeout(resolve,100));
     }
+    assert.equal(await evaluate('document.querySelectorAll(".lib-card").length'),3);
+    const standardsAction=await evaluate(`(()=>{
+      const card=document.querySelector('.lib-card[href="standards.html"]');
+      const action=card.querySelector('.go');
+      const book=action.querySelector('svg');
+      return {text:action.textContent.trim(),href:card.getAttribute('href'),
+        paths:book?.querySelectorAll('path').length,
+        stroke:book && getComputedStyle(book).stroke,
+        fill:book && getComputedStyle(book).fill,
+        alignment:getComputedStyle(action).alignItems};
+    })()`);
+    assert.deepEqual(standardsAction,{text:'Explore the Standards →',href:'standards.html',
+      paths:2,stroke:'rgb(201, 168, 74)',fill:'none',alignment:'center'});
     for(const width of [1280,1024,901,390]){
       await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:false});
       await evaluate('document.fonts.ready');
