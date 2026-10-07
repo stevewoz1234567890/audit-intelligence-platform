@@ -656,3 +656,22 @@ function refItems(page){
   (page.groups || []).forEach(g => (g.items || []).forEach(item => items.push({ group:g.title, item:item })));
   return items;
 }
+
+/* Search the displayed reference items, not just the six card descriptions. */
+function searchReferences(query){
+  const low=String(query).toLowerCase();
+  const terms=(low.match(/[\p{L}\p{N}]+/gu)||[])
+    .filter(t=>t.length>1 && !['what','does','mean','about','the','and','for','with','how','is','of','principle','standard'].includes(t));
+  if(!terms.length)return [];
+  return REF_PAGES.flatMap(page=>refItems(page).flatMap(({item})=>{
+    const text=refFlat({groups:[{items:[item]}]})[0]?.p||'';
+    const title=(page.title+' '+item.title+' '+(item.num||'')).toLowerCase();
+    const matched=terms.filter(t=>(title+' '+text.toLowerCase()).includes(t));
+    if(!matched.length || (terms.length>1 && matched.length<Math.min(2,terms.length)))return [];
+    const score=matched.length*10+terms.filter(t=>title.includes(t)).length*18+
+      (terms.includes(String(item.num||'').toLowerCase())?50:0)+
+      (low.includes(item.title.toLowerCase())?120:0)+
+      (low.includes(page.title.toLowerCase())?25:0);
+    return [{page,item,text: item.title+' — '+text,score}];
+  })).sort((a,b)=>b.score-a.score);
+}

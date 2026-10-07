@@ -87,6 +87,7 @@
 
 <script src="data/library.js"></script>
 <script src="data/supplied-standards.js"></script>
+<script src="data/supplied-tables.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=9"></script>
@@ -111,8 +112,9 @@
     if (!query){ found.hidden = true; library.hidden = false; hits.innerHTML = ''; return; }
     const standards = searchPlatform(query).slice(0, 8);
     const domainI = searchDomainI(query).slice(0, 1);
+    const publicSector = searchPublicSector(query);
     const tools = matchCatalog(TOOLS, query);
-    const refs = matchCatalog(REFS, query);
+    const refs = searchReferences(query).slice(0,8);
     let h = '';
     domainI.forEach(r => {
       const src = (r.hits[0] && r.hits[0].text) || r.summary || '';
@@ -121,11 +123,18 @@
         '<h3>' + highlight(r.title, query) + '</h3>' +
         '<p>' + highlight(preview(src, query), query) + '</p></a>';
     });
+    publicSector.forEach(r=>{
+      h+='<a class="hit" href="standards.html?domain=public-sector#'+r.anchor+'">'+
+        '<span class="sref">Public Sector Application · '+esc(r.label)+'</span><h3>'+esc(r.title)+'</h3>'+
+        '<p>'+highlight(preview(r.text,query),query)+'</p></a>';
+    });
     standards.forEach(r => {
-      const src = (r.hits[0] && r.hits[0].text) || (r.rec && r.rec.summary) || '';
+      const src = cleanSummary((r.hits[0] && r.hits[0].text) || (r.rec && r.rec.summary));
       const href = 'standard.html?ref=' + encodeURIComponent(r.s.ref) +
+        (r.hits[0]?.match ? '&match=' + encodeURIComponent(r.hits[0].match) : '') +
         (r.hits[0] ? '#' + r.hits[0].anchor : '');
-      h += '<a class="hit" href="' + href + '"><span class="sref">' + esc(r.s.ref) + '</span>' +
+      h += '<a class="hit" href="' + href + '"><span class="sref">' + esc(r.s.ref) +
+        (r.hits[0] ? ' · ' + esc(r.hits[0].label) : '') + '</span>' +
         '<h3>' + highlight(r.s.title, query) + '</h3>' +
         (r.hits[0] ? '<p>' + highlight(preview(src, query), query) + '</p>' : '<p>Standard</p>') +
         '</a>';
@@ -134,9 +143,10 @@
       h += '<a class="hit" href="tools.html?tool=' + encodeURIComponent(t.id) + '">' +
         '<span class="sref">Tool</span><h3>' + esc(t.title) + '</h3><p>' + esc(t.blurb) + '</p></a>';
     });
-    refs.forEach(r => {
-      h += '<a class="hit" href="references.html?ref=' + encodeURIComponent(r.id) + '">' +
-        '<span class="sref">Reference</span><h3>' + esc(r.title) + '</h3><p>' + esc(r.blurb) + '</p></a>';
+    refs.forEach(({page,item,text}) => {
+      h += '<a class="hit" href="references.html?ref=' + encodeURIComponent(page.id) + '&item=' + encodeURIComponent(item.id) + '">' +
+        '<span class="sref">' + esc(page.title) + '</span><h3>' + esc(item.title) + '</h3><p>' +
+        highlight(preview(text,query),query) + '</p></a>';
     });
     if (!h) h = '<div class="empty"><b>Nothing in this platform matches that.</b>' +
       '<p>Search covers the standards, references and tools held here.</p></div>';

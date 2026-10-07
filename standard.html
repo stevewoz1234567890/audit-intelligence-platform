@@ -20,9 +20,12 @@
 
 <script src="data/library.js"></script>
 <script src="data/supplied-standards.js"></script>
+<script src="data/supplied-tables.js"></script>
+<script src="data/supplied-appendix-tables.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=9"></script>
+<script src="assets/source-format.js"></script>
 <script>
 (function(){
   const ref = qs('ref') || '1.1';
@@ -59,7 +62,7 @@
     '<div class="std-eyebrow">Standard ' + esc(s.ref) + ' · Principle ' + s.principleNum +
       ' — ' + esc(s.principleTitle) + '</div>' +
     '<h1>' + esc(s.title) + '</h1>' +
-    (rec ? '<p class="lede">' + esc(rec.summary) + '</p>' : '') +
+    (rec ? '<p class="lede">' + esc(cleanSummary(rec.summary)) + '</p>' : '') +
     '<div class="std-meta">' +
       '<span class="mtag"><b>Domain</b> ' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</span>' +
       (rec ? '<span class="mtag"><b>Version</b> ' + esc(rec.version) + '</span>' +
@@ -138,7 +141,8 @@
         '</td></tr>').join('') + '</tbody></table></div>';
 
     /* --- requirements and guidance --- */
-    let g = '<div class="card"><p>' + esc(rec.requirement) + '</p></div>';
+    const appendices = typeof SUPPLIED_APPENDIX_TABLES !== 'undefined' && SUPPLIED_APPENDIX_TABLES[s.ref];
+    let g = rec.sourcePdf ? sourceFormat(rec.requirement,'Requirements',null,null,appendices) : '<div class="card"><p>' + esc(rec.requirement) + '</p></div>';
     if (rec.sourcePdf) g = '<div class="scope">' + icon('doc') +
       '<div><b>Source summary and practical guidance</b><span>The supplied PDF summarizes requirements and guidance. Audit Focus Areas through Illustrative Common Findings are suggested practical material, not additional IIA requirements. ' +
       '<a href="' + esc(rec.sourcePdf) + '" target="_blank" rel="noopener noreferrer">View the supplied PDF ↗</a></span></div></div>' + g;
@@ -153,14 +157,14 @@
     h += sect('requirements','Standards &amp; Guidance','doc', g);
     h += sect('implementation','Considerations for Implementation','check',
       (rec.implementation && rec.implementation.length)
-        ? (rec.sourcePdf ? '<div class="card"><p>' + esc(rec.implementation[0]) + '</p></div>' : ul(rec.implementation,'dot'))
+         ? (rec.sourcePdf ? sourceFormat(rec.implementation[0],'Considerations for Implementation',null,null,appendices) : ul(rec.implementation,'dot'))
         : gap('Considerations for Implementation'),
-      (rec.implementation && rec.implementation.length) || undefined);
+      !rec.sourcePdf && rec.implementation && rec.implementation.length || undefined);
     h += sect('conformance','Examples of Evidence of Conformance','doc',
       (rec.conformance && rec.conformance.length)
-        ? (rec.sourcePdf ? '<div class="card"><p>' + esc(rec.conformance[0]) + '</p></div>' : ul(rec.conformance,'tick'))
+         ? (rec.sourcePdf ? sourceFormat(rec.conformance[0],'Examples of Evidence of Conformance') : ul(rec.conformance,'tick'))
         : gap('Examples of Evidence of Conformance'),
-      (rec.conformance && rec.conformance.length) || undefined);
+      !rec.sourcePdf && rec.conformance && rec.conformance.length || undefined);
 
     if (rec.sourceSections){
       const sections = [null,null,'focus','risks','controls','procedures',
@@ -171,7 +175,8 @@
       const icons = [null,null,'target','alert','shield','check','flag','grid','link'];
       rec.sourceSections.filter(x => x.number >= 2 && x.number <= 7).forEach(x => {
         h += sect(sections[x.number],titles[x.number],icons[x.number],
-          '<div class="card"><p>' + esc(x.text) + '</p></div>');
+          [3,4,5].includes(x.number) ? sourceFormat(x.text,x.title,'table',
+            SUPPLIED_TABLES[s.ref] && SUPPLIED_TABLES[s.ref][x.number]) : sourceFormat(x.text,x.title,'list'));
       });
     }
     if (rec.focus && rec.focus.length)
@@ -231,11 +236,13 @@
 
     if (rec.practicalApplication)
       h += sect('practical','Practical Application','list',
-        '<div class="card"><p>' + esc(rec.practicalApplication) + '</p></div>');
+        sourceFormat(rec.practicalApplication,'Practical Application','practical',null,appendices));
 
     /* references and provenance */
+    const suppliedPdf=rec.sourcePdf || (+s.ref.split('.')[0]<=2 ?
+      'assets/standards/standard-'+s.ref.split('.')[0]+'.pdf' : '');
     h += sect('source','Professional References','link',
-      (rec.sourceSections ? '<div class="card"><p>' + esc(rec.sourceSections.find(x => x.number === 8).text) + '</p></div>' : '') +
+      (rec.sourceSections ? sourceFormat(rec.sourceSections.find(x => x.number === 8).text,'Professional References') : '') +
       '<div class="srcbox"><dl>' +
         '<dt>Source</dt><dd>' + esc(rec.source) + '</dd>' +
         '<dt>Standard</dt><dd>' + esc(rec.ref) + ' — ' + esc(s.title) + '</dd>' +
@@ -246,7 +253,7 @@
         (rec.updated ? '<dt>Last updated</dt><dd>' + fmtDate(rec.updated) + '</dd>' : '') +
         (rec.url ? '<dt>Official</dt><dd><a href="' + esc(rec.url) + '" target="_blank" ' +
           'rel="noopener noreferrer">' + esc(rec.url.replace(/^https?:\/\//,'')) + ' &#8599;</a></dd>' : '') +
-        (rec.sourcePdf ? '<dt>Supplied document</dt><dd><a href="' + esc(rec.sourcePdf) + '" target="_blank" rel="noopener noreferrer">View PDF &#8599;</a></dd>' : '') +
+        (suppliedPdf ? '<dt>Supplied document</dt><dd><a href="' + esc(suppliedPdf) + '" target="_blank" rel="noopener noreferrer">View PDF &#8599;</a></dd>' : '') +
       '</dl></div>' +
       (rec.references && rec.references.length
         ? '<div class="card" style="margin-top:13px"><ul class="rq dot">' +
@@ -315,6 +322,25 @@
     if (el) setTimeout(() => window.scrollTo({
       top: el.getBoundingClientRect().top + window.scrollY - OFFSET
     }), 80);
+  }
+  const match=qs('match');
+  if(match){
+    const section=document.getElementById(location.hash.slice(1)) || document.getElementById('requirements');
+    if(section){
+      const words=match.toLowerCase().match(/[\p{L}\p{N}]+/gu)||[];
+      const candidates=[...section.querySelectorAll('tbody tr,li,.row,p,dd')].filter(el=>
+        !el.closest('tbody tr,li,.row') || el.matches('tbody tr,li,.row'));
+      const target=candidates.map(el=>{
+        const text=el.textContent.toLowerCase().replace(/\s+/g,' ');
+        return {el,score:(text.includes(match.toLowerCase().replace(/\s+/g,' '))?1000:0)+
+          words.filter(word=>text.includes(word)).length};
+      }).sort((a,b)=>b.score-a.score)[0];
+      if(target && target.score){
+        target.el.classList.add('search-target');
+        setTimeout(()=>window.scrollTo({top:Math.max(0,target.el.getBoundingClientRect().top+
+          window.scrollY-120),behavior:'instant'}),130);
+      }
+    }
   }
 })();
 </script>

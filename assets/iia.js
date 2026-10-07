@@ -50,6 +50,9 @@ function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function cleanSummary(text){
+  return String(text == null ? '' : text).replace(/^\s*[•●▪◦]\s*/, '').trim();
+}
 function qs(name){ return new URLSearchParams(location.search).get(name) || ''; }
 function fmtDate(iso){
   if (!iso) return '—';
@@ -363,10 +366,67 @@ function flat(v){
   return String(v);
 }
 
-/* Search every standard in the platform. Returns ranked hits,
-   each naming the sections that matched. */
-/* Words carrying no retrieval signal. Dropped from the query so a
-   natural question behaves like the keywords inside it. */
+function suppliedBullets(text){
+  return String(text||'').split('\n').map(line=>line.trim()).filter(Boolean)
+    .reduce((items,line)=>{
+      if(/^[•●▪◦]\s*/.test(line))items.push(line.replace(/^[•●▪◦]\s*/,''));
+      else if(items.length)items[items.length-1]+=' '+line;
+      return items;
+    },[]);
+}
+
+/* Use the same imported cells the standard page displays. Never infer an
+   evidence/control pairing from the flattened PDF prose. */
+function standardSections(s, rec){
+  if (!rec) return [];
+  const sections = [
+    {label:'Requirements',anchor:'requirements',text:rec.requirement},
+    {label:'Considerations for Implementation',anchor:'implementation',text:flat(rec.implementation)},
+    {label:'Examples of Evidence of Conformance',anchor:'conformance',text:flat(rec.conformance)}
+  ];
+  if (rec.sourceSections){
+    const labels={2:['Audit Focus Areas','focus'],3:['Risks','risks'],
+      4:['Suggested Controls','controls'],5:['Suggested Audit Procedures and Evidence','procedures'],
+      6:['Red Flags','redflags'],7:['Illustrative Common Findings','findings'],
+      8:['Professional References','source']};
+    for(const section of rec.sourceSections.filter(x=>x.number>=2 && x.number<=8)){
+      const [label,anchor]=labels[section.number];
+      const structured=typeof SUPPLIED_TABLES!=='undefined' && SUPPLIED_TABLES[s.ref]?.[section.number];
+      sections.push({label,anchor,text:section.text,items:structured
+        ? structured.rows.map(row=>row.left+' — '+row.right)
+        : suppliedBullets(section.text).length?suppliedBullets(section.text):[section.text]});
+    }
+    if(rec.practicalApplication)sections.push({label:'Practical Application',anchor:'practical',text:rec.practicalApplication});
+  } else {
+    for(const sec of SECTIONS.slice(3)){
+      const value=flat(rec[sec.key]);
+      if(value)sections.push({label:sec.label,anchor:sec.anchor,text:value});
+    }
+  }
+  return sections.filter(section=>section.text);
+}
+
+function queryTerms(query){
+  return (String(query).toLowerCase().match(/\d{1,2}\.\d+|[\p{L}\p{N}]+/gu)||[])
+    .filter(word=>word.length>1 && !STOP.has(word));
+}
+function matchingSnippet(text,query){
+  const clean=String(text||'').replace(/\s+/g,' ').trim();
+  const terms=queryTerms(query).filter(t=>!/^\d+\.\d+$/.test(t));
+  const low=clean.toLowerCase();
+  const exact=String(query).toLowerCase().replace(/[?!.,;:]+$/,'').trim();
+  if(exact.length>8 && low.includes(exact)){
+    const at=low.indexOf(exact);
+    return {text:preview(clean,exact,220),match:clean.slice(at,at+exact.length)};
+  }
+  const phrase=terms.join(' ');
+  const at=phrase && low.indexOf(phrase)>=0 ? low.indexOf(phrase) :
+    terms.map(t=>low.indexOf(t)).filter(i=>i>=0).sort((a,b)=>a-b)[0];
+  if(at===undefined)return {text:clean.slice(0,220),match:''};
+  return {text:preview(clean,terms.join(' '),220),match:phrase && low.includes(phrase)?clean.slice(at,at+phrase.length):
+    clean.slice(at,at+terms.find(t=>low.indexOf(t)===at).length)};
+}
+
 const STOP = new Set(['the','a','an','is','are','was','were','be','of','for','to',
   'in','on','at','by','and','or','not','what','which','who','whom','that','this',
   'these','those','how','why','when','where','do','does','did','can','could',
@@ -375,111 +435,42 @@ const STOP = new Set(['the','a','an','is','are','was','were','be','of','for','to
   'require','requires','required','mean','means','tell','show','give','need']);
 
 function searchPlatform(query){
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const raw = q.split(/\s+/)
-    .map(t => t.replace(/[?!,;:()"'’]/g,'').replace(/\.$/,''))
-    .filter(Boolean);
-  /* keep content words; if the query is only stopwords, fall back to raw */
-  const terms = raw.filter(t => !STOP.has(t) && t.length > 1);
-  if (!terms.length) return [];
-  const out = [];
-
-  allStandards().forEach(s => {
-    const rec = standardRecord(s.ref);
-    let score = 0;
-    const hits = [];
-
-    /* standard number — exact and prefix matches rank highest */
-    const refLow = s.ref.toLowerCase();
-    terms.forEach(t => {
-      if (refLow === t) score += 60;
-      else if (refLow.startsWith(t)) score += 34;
-      else if (refLow.includes(t)) score += 16;
-    });
-
-    /* title */
-    const titleLow = s.title.toLowerCase();
-    terms.forEach(t => {
-      if (titleLow.includes(t))
-        score += new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(titleLow) ? 22 : 11;
-    });
-    /* principle name */
-    const pLow = s.principleTitle.toLowerCase();
-    terms.forEach(t => { if (pLow.includes(t)) score += 6; });
-
-    if (rec){
-      if (rec.sourceSections){
-        rec.sourceSections.filter(x => x.number >= 2 && x.number <= 8).forEach(x => {
-          const labels = {2:['Audit Focus Areas','focus'],3:['Risks','risks'],
-            4:['Suggested Controls','controls'],5:['Suggested Audit Procedures','procedures'],
-            6:['Red Flags','redflags'],7:['Illustrative Common Findings','findings'],
-            8:['Professional References','source']};
-          const [label,anchor] = labels[x.number];
-          const text = x.text.toLowerCase();
-          if (terms.some(t => text.includes(t))) {
-            score += terms.filter(t => text.includes(t)).length * 4;
-            if (!hits.some(h => h.anchor === anchor))
-              hits.push({label,anchor,text:x.text.replace(/\s+/g,' ').slice(0,220)});
-          }
-        });
+  const terms=queryTerms(query);
+  if(!terms.length)return [];
+  return allStandards().flatMap(s=>{
+    const rec=standardRecord(s.ref);
+    const number=terms.includes(s.ref.toLowerCase());
+    const title=terms.some(t=>s.title.toLowerCase().includes(t));
+    const hits=[];
+    for(const section of standardSections(s,rec)){
+      if(number && section.anchor==='source')continue;
+      const candidates=section.items||[section.text];
+      for(const text of candidates){
+        const low=text.toLowerCase();
+        const found=terms.filter(t=>!/^\d+\.\d+$/.test(t) && low.includes(t));
+        if(!found.length)continue;
+        const snippet=matchingSnippet(text,query);
+        const weight=section.anchor==='source'?-22:
+          section.anchor==='requirements'?18:
+          section.anchor==='risks'||section.anchor==='controls'||section.anchor==='procedures'?12:0;
+        hits.push({label:section.label,anchor:section.anchor,text:snippet.text,
+          match:snippet.match,score:found.length*12+(found.length===terms.length?24:0)+
+            (low.includes(terms.join(' '))?40:0)+
+            (String(query).trim().length>8 && low.includes(String(query).toLowerCase().replace(/[?!.,;:]+$/,''))?100:0)+weight});
       }
-      SECTIONS.forEach(sec => {
-        const text = flat(rec[sec.key]).toLowerCase();
-        if (!text) return;
-        let secScore = 0, snippetSrc = null;
-        terms.forEach(t => {
-          if (text.includes(t)){
-            const whole = new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b').test(text);
-            secScore += sec.w * (whole ? 1 : 0.45);
-            if (!snippetSrc) snippetSrc = flat(rec[sec.key]);
-          }
-        });
-        if (secScore > 0){
-          score += secScore;
-          if (!hits.some(h => h.anchor === sec.anchor))
-            hits.push({ label:sec.label, anchor:sec.anchor, text:snippetSrc });
-        }
-      });
-      const sum = (rec.summary || '').toLowerCase();
-      terms.forEach(t => { if (sum.includes(t)) score += 8; });
+      if(!number && terms.every(t=>section.label.toLowerCase().includes(t)) &&
+        !hits.some(hit=>hit.anchor===section.anchor)){
+        hits.push({label:section.label,anchor:section.anchor,
+          text:section.items?.[0]||section.text.replace(/\s+/g,' ').slice(0,220),match:'',score:60});
+      }
     }
-
-    /* Decide whether this is a genuine match.
-
-       Two problems to avoid. Requiring every term makes natural
-       questions fail, because words like "require" are not in the
-       text. Accepting a simple majority lets an unrelated question
-       through whenever one of its words happens to appear somewhere —
-       "what is the capital of france" matched on "capital" alone.
-
-       So: match on whole words rather than substrings, and require
-       either a strong signal (the standard number, or a word in the
-       title) or at least two distinct content words. */
-    /* Section labels are searchable too, so "red flags" finds the
-       standards that have a red flags section. */
-    const labels = rec ? SECTIONS.filter(x => flat(rec[x.key]))
-      .map(x => x.label).join(' ') + ' ' + (rec.sourceSections || []).map(x => x.title).join(' ') : '';
-    const haystack = (s.ref + ' ' + s.title + ' ' + s.principleTitle + ' ' +
-      s.domainName + ' ' + labels + ' ' +
-      (rec ? SECTIONS.map(x => flat(rec[x.key])).join(' ') +
-      ' ' + flat(rec.sourceSections) + ' ' + (rec.practicalApplication||'') +
-      ' ' + (rec.summary||'') + ' ' + flat(rec.tags) : '')).toLowerCase();
-
-    const word = (t, hay) => new RegExp('(^|[^a-z0-9])' +
-      t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '([^a-z0-9]|$)').test(hay);
-
-    const matched  = terms.filter(t => word(t, haystack));
-    const refHit   = terms.some(t => s.ref.toLowerCase() === t);
-    const titleHit = terms.some(t => word(t, s.title.toLowerCase()));
-
-    const enough = refHit || titleHit ||
-      (terms.length === 1 ? matched.length === 1 : matched.length >= 2);
-
-    if (score > 0 && enough) out.push({ s, rec, score, hits });
-  });
-
-  return out.sort((a,b) => b.score - a.score);
+    hits.sort((a,b)=>b.score-a.score);
+    if(!number && !title && (!hits.length || (terms.length>1 &&
+      !hits.some(h=>h.score>=Math.min(terms.length,2)*12+24))))return [];
+    const top=number && terms.length===1 ? null : hits[0];
+    return [{s,rec,hits:top?[top]:number?[{label:'Requirements',anchor:'requirements',text:rec?.requirement||s.title,match:''}]:[],
+      score:(number?200:0)+(title?35:0)+(top?.score||0)}];
+  }).sort((a,b)=>b.score-a.score);
 }
 
 function searchDomainI(query){
@@ -491,14 +482,18 @@ function searchDomainI(query){
     .filter(Boolean);
   const terms = raw.filter(t => !STOP.has(t) && t.length > 1);
   if (!terms.length) return [];
+  if(!/\bdomain\s+i\b|\bpurpose\b|\bvalue\b|\bassurance\b|\bforesight\b|\binsight\b/i.test(q))return [];
 
   const sections = [
-    { label:'Purpose of Internal Auditing', anchor:'domain-i-purpose', text:[DOMAIN_I.title, DOMAIN_I.headline, DOMAIN_I.summary, DOMAIN_I.intro, DOMAIN_I.classification, DOMAIN_I.statement, DOMAIN_I.purposeDetail, flat(DOMAIN_I.valueContributions), DOMAIN_I.practicalIllustration, flat(DOMAIN_I.characteristics)].join(' '), w:10 },
-    { label:'Forms of Contribution', anchor:'domain-i-value', text:['Forms of contribution', 'How internal auditing provides value', flat(DOMAIN_I.howValueProvides)].join(' '), w:8 },
+    { label:'Purpose of Internal Auditing', anchor:'domain-i-purpose', text:[DOMAIN_I.headline,DOMAIN_I.statement].join(' '), w:10 },
+    { label:'Forms of Contribution', anchor:'domain-i-value', text:flat(DOMAIN_I.howValueProvides.map(x=>[x.title,x.short||x.text])), w:8 },
     { label:'What Internal Auditing Enhances', anchor:'domain-i-enhances', text:flat(DOMAIN_I.enhances), w:7 },
-    { label:'Conditions for Effectiveness', anchor:'domain-i-conditions', text:flat(DOMAIN_I.conditions), w:7 },
-    { label:'Practical Application', anchor:'domain-i-practical', text:[flat(DOMAIN_I.practicalQuestions), DOMAIN_I.payrollExample.intro, flat(DOMAIN_I.payrollExample.contributions), DOMAIN_I.payrollExample.note].join(' '), w:6 },
-    { label:'Related Principles', anchor:'domain-i-related', text:[flat(DOMAIN_I.relatedTopics), flat(DOMAIN_I.related)].join(' '), w:4 }
+    { label:'Conditions for Effectiveness', anchor:'domain-i-conditions', text:flat(DOMAIN_I.conditions.map(x=>[x.title,x.text])), w:7 },
+    { label:'Practical Application', anchor:'domain-i-practical', text:[DOMAIN_I.intro,DOMAIN_I.purposeDetail,
+      flat(DOMAIN_I.valueContributions),flat(DOMAIN_I.characteristics),flat(DOMAIN_I.practicalQuestions),
+      DOMAIN_I.practicalIllustration,flat(DOMAIN_I.howValueProvides),DOMAIN_I.payrollExample.intro,
+      flat(DOMAIN_I.payrollExample.contributions),DOMAIN_I.payrollExample.note].join(' '), w:6 },
+    { label:'Related Principles', anchor:'domain-i-related', text:flat(DOMAIN_I.relatedTopics), w:4 }
   ];
 
   let score = 0;
@@ -511,7 +506,7 @@ function searchDomainI(query){
     });
     if (secScore > 0){
       score += secScore;
-      hits.push({ label:sec.label, anchor:sec.anchor, text:sec.text });
+      hits.push({ label:sec.label, anchor:sec.anchor, text:matchingSnippet(sec.text,query).text,score:secScore });
     }
   });
 
@@ -526,8 +521,27 @@ function searchDomainI(query){
     title:DOMAIN_I.title,
     summary:DOMAIN_I.summary,
     score:score + (q.includes('domain i') ? 25 : 0),
-    hits:hits
+    hits:hits.sort((a,b)=>b.score-a.score)
   }];
+}
+
+function searchPublicSector(query){
+  if(typeof PUBLIC_SECTOR==='undefined')return [];
+  const terms=queryTerms(query).filter(t=>!['public','sector','application','audit','standards'].includes(t));
+  const q=String(query).toLowerCase();
+  if(!/public\s+sector/.test(q))return [];
+  const areas=[
+    {label:'Overview',anchor:'ps-overview',text:flat(PUBLIC_SECTOR.overview)},
+    {label:'Laws & Regulations',anchor:'ps-laws',text:flat(PUBLIC_SECTOR.laws)},
+    {label:'Governance & Structure',anchor:'ps-governance',text:flat(PUBLIC_SECTOR.governance)},
+    {label:'Funding',anchor:'ps-funding',text:flat(PUBLIC_SECTOR.funding)},
+    {label:'Professional References',anchor:'ps-references',text:flat(PUBLIC_SECTOR.references)}
+  ];
+  const hits=areas.filter(area=>!terms.length||terms.some(t=>area.text.toLowerCase().includes(t) || area.label.toLowerCase().includes(t)));
+  const sorted=hits.sort((a,b)=>terms.filter(t=>b.label.toLowerCase().includes(t)).length-
+    terms.filter(t=>a.label.toLowerCase().includes(t)).length);
+  return sorted.slice(0,3).map(area=>({title:PUBLIC_SECTOR.title,anchor:area.anchor,
+    label:area.label,text:matchingSnippet(area.text,query).text}));
 }
 
 /* wrap matches for display; escape first so markup is never re-matched */
@@ -644,7 +658,8 @@ const TOOLS = [
 ];
 
 function catalogHay(item){
-  return [item.title, item.blurb, item.phase, item.group, item.keywords, item.lead]
+  return [item.title, item.blurb, item.phase, item.group, item.keywords, item.lead,
+    ...(item.fields||[]).map(field=>field.label+' '+(field.hint||'')+' '+(field.options||[]).join(' '))]
     .filter(Boolean).join(' ').toLowerCase();
 }
 function matchCatalog(list, q){

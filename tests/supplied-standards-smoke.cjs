@@ -40,7 +40,7 @@ function get(url){
   }
   async function navigate(url,ready){
     await send('Page.navigate',{url});
-    for (let attempt=0; attempt<60; attempt++){
+    for (let attempt=0; attempt<200; attempt++){
       if (await evaluate(ready)) return;
       await new Promise(r=>setTimeout(r,100));
     }
@@ -65,20 +65,49 @@ function get(url){
   const url=pathToFileURL(path.join(root,'standard.html')).href;
   const refs=await evaluate('allStandards().map(s=>s.ref)');
   assert.equal(refs.length,52);
+  await navigate(url+'?ref=1.1',`location.search === '?ref=1.1' && !!document.querySelector('#requirements .card')`);
+  const baseline=await evaluate(`(()=>{const head=getComputedStyle(document.querySelector('.sect-h h2'));const card=getComputedStyle(document.querySelector('#requirements .card'));return {headingFont:head.fontFamily,headingSize:head.fontSize,headingColor:head.color,cardBackground:card.backgroundColor,cardRadius:card.borderRadius,cardPadding:card.padding}})()`);
   for (const ref of refs){
-    await navigate(url+'?ref='+ref,`location.search === '?ref=${ref}' && document.title.includes('Standard ${ref} —') && document.querySelector('#source') !== null`);
-    const state=await evaluate(`(()=>({title:document.title,sections:[...document.querySelectorAll('.body .sect')].map(x=>x.id),pdf:document.querySelector('#source a[href$=".pdf"]')?.getAttribute('href'),requirement:document.querySelector('#requirements .card p')?.textContent,hasError:!!document.querySelector('#requirements .empty'),tabTargets:[...document.querySelectorAll('.std-h .tab')].every(x=>document.getElementById(x.dataset.go))}))()`);
+    await navigate(url+'?ref='+ref,`location.search === '?ref=${ref}' && document.title.includes('Standard ${ref} —') && document.querySelector('#source') !== null && document.querySelector('#requirements .card') !== null`);
+    const state=await evaluate(`(()=>{const head=getComputedStyle(document.querySelector('.sect-h h2'));const card=getComputedStyle(document.querySelector('#requirements .card'));return {title:document.title,sections:[...document.querySelectorAll('.body .sect')].map(x=>x.id),pdf:document.querySelector('#source a[href$=".pdf"]')?.getAttribute('href'),requirement:document.querySelector('#requirements .source-content, #requirements .card')?.textContent,fullRequirement:document.querySelector('#requirements')?.textContent,hasError:!!document.querySelector('#requirements .empty'),tabTargets:[...document.querySelectorAll('.std-h .tab')].every(x=>document.getElementById(x.dataset.go)),formatted:[...document.querySelectorAll('.source-content')].length,tables:[...document.querySelectorAll('.source-data-table')].length,tableRows:[...document.querySelectorAll('.source-data-table tbody tr')].length,rawBullets:[...document.querySelectorAll('.source-content p')].some(p=>/[•]/.test(p.textContent)),repeatedHeading:document.querySelector('#implementation .source-content')?.textContent.trim().startsWith('Considerations for Implementation'),bullets:[...document.querySelectorAll('.source-content .rq li')].length,sourceNotes:[...document.querySelectorAll('.source-table-note')].length,summary:document.querySelector('.std-h .lede')?.textContent.trim(),style:{headingFont:head.fontFamily,headingSize:head.fontSize,headingColor:head.color,cardBackground:card.backgroundColor,cardRadius:card.borderRadius,cardPadding:card.padding}}})()`);
     assert(state.title.includes(`Standard ${ref}`),ref);
     assert(!state.hasError,ref);
-    assert(state.requirement.length>100,ref);
+    assert(state.requirement.length>40,ref);
+    assert(state.fullRequirement.length>100,`${ref} requirements were truncated`);
     assert(state.tabTargets,`broken tab ${ref}`);
+    assert.deepEqual(state.style,baseline,`${ref} differs from earlier standard's headings and card styling`);
     if (+ref.split('.')[0]>=3){
+      assert(state.formatted>=6,`${ref} has unformatted PDF sections`);
+      const embedded = {'10.2':1,'12.2':1,'13.4':1,'14.1':1,'14.3':1,'14.6':1,'15.2':2};
+      assert.equal(state.tables,3+(embedded[ref]||0),`${ref} has missing or extra structured tables`);
+      assert(state.tableRows>5,`${ref} missing structured table rows`);
+      assert(state.sourceNotes<=2,`${ref} unexpected unstructured tables`);
+      assert(state.bullets>0,`${ref} contains no formatted source bullets`);
+      assert(!state.rawBullets,`${ref} has PDF bullet glyphs in paragraphs`);
+      assert(!/^[•●▪◦]/.test(state.summary),`${ref} summary starts with a PDF bullet glyph`);
+      assert(!state.repeatedHeading,`${ref} repeats its section heading`);
       assert.equal(state.pdf,`assets/standards/standard-${ref.split('.')[0]}.pdf`,ref);
       for (const key of ['requirements','implementation','conformance','focus','risks','controls','procedures','redflags','findings','source'])
         assert(state.sections.includes(key),`${ref} missing ${key}`);
       if (ref==='15.2') assert(state.sections.includes('practical'));
     }
   }
+  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  for (const ref of refs){
+    await navigate(url+'?ref='+ref,`location.search === '?ref=${ref}' && !!document.querySelector('#source .srcbox')`);
+    const layout=await evaluate(`(()=>({overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,tables:[...document.querySelectorAll('.source-table')].every(e=>e.scrollWidth>=e.clientWidth&&getComputedStyle(e).overflowX==='auto'),stacked:[...document.querySelectorAll('.source-data-table')].every(e=>e.querySelectorAll('tbody tr').length>0 && getComputedStyle(e.querySelector('tbody tr')).display==='block' && getComputedStyle(e.querySelector('tbody td')).display==='block'),font:getComputedStyle(document.querySelector('.sect-h h2')).fontFamily,headings:[...document.querySelectorAll('.sect-h h2')].map(x=>x.textContent)}))()`);
+    assert(!layout.overflow,`${ref} overflows the mobile viewport`);
+    assert(layout.tables,`${ref} source tables are not scrollable`);
+    if (+ref.split('.')[0]>=3) assert(layout.stacked,`${ref} data tables are not readable as mobile rows`);
+    assert(layout.font.includes('Playfair')||layout.font.includes('Georgia'),`${ref} heading font differs`);
+  }
+  await send('Emulation.clearDeviceMetricsOverride');
+  await navigate(pathToFileURL(path.join(root,'standards.html')).href+'?domain=II',
+    '!!document.querySelector(".catalog .tcard .kicker") && typeof cleanSummary === "function"');
+  assert.equal(await evaluate(`(()=>{const cards=[...document.querySelectorAll('.catalog .tcard')]
+    .filter(card => card.querySelector('.kicker')?.textContent.trim()==='Standard 3.1');
+    return cards.length===1 && cards.every(card => !/^[•●▪◦]/.test(card.querySelector('p')?.textContent.trim()))})()`),true,
+    'standard list summaries must not display PDF bullet glyphs');
   socket.close();
-  console.log('PASS: original banner, 52 populated standards, 13 linked PDFs, section navigation');
+  console.log('PASS: banner, 52 standards, 13 PDFs, formatted sections and mobile layout');
 })().catch(e=>{console.error(e);process.exitCode=1;});

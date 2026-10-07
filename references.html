@@ -127,7 +127,17 @@
     paintChips();
     const q = input.value.trim();
     let rows = REF_PAGES.filter(r => chip === 'all' || r.chip === chip);
-    if (q) rows = matchCatalog(rows, q);
+    if(q){
+      const hits=searchReferences(q).filter(hit=>chip==='all'||hit.page.chip===chip);
+      if(!hits.length){
+        out.innerHTML='<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
+        return;
+      }
+      out.innerHTML='<div class="results">'+hits.slice(0,40).map(({page,item,text})=>
+        '<a class="hit" href="references.html?ref='+encodeURIComponent(page.id)+'&item='+encodeURIComponent(item.id)+'">'+
+        '<span class="sref">'+esc(page.title)+'</span><h3>'+esc(item.title)+'</h3><p>'+esc(preview(text,q))+'</p></a>').join('')+'</div>';
+      return;
+    }
     if (!rows.length){
       out.innerHTML = '<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
       return;

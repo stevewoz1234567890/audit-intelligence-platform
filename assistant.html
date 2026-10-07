@@ -97,6 +97,7 @@
 
 <script src="data/library.js"></script>
 <script src="data/supplied-standards.js"></script>
+<script src="data/supplied-tables.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=9"></script>
@@ -137,7 +138,7 @@
     if (/risk/.test(s) && /control/.test(s)) return 'both';
     if (/\brisks?\b/.test(s)) return 'risks';
     if (/\bcontrols?\b/.test(s)) return 'controls';
-    if (/procedure/.test(s)) return 'procedures';
+    if (/procedure|evidence to examine|required evidence/.test(s)) return 'procedures';
     if (/focus area/.test(s)) return 'focus';
     if (/\brequire/.test(s)) return 'requirements';
     return null;
@@ -157,13 +158,13 @@
       'Standard ' + s.ref + (label ? ' · ' + label : ''));
   }
   function locate(q){
-    if (/\bdomain\s*i\b|purpose of internal auditing|create,? protect,? and sustain value|\bforesight\b|\binsight\b/.test(q.toLowerCase()))
-      return { domain:'I', rec:DOMAIN_I };
     const m = q.match(/\b(\d{1,2}\.\d+)\b/);
     if (m){
       const s = allStandards().find(x => x.ref === m[1]);
       if (s) return { s:s, rec:standardRecord(s.ref) };
     }
+    if (/\bdomain\s*i\b|purpose of internal auditing|create,? protect,? and sustain value|\bforesight\b|\binsight\b/.test(q.toLowerCase()))
+      return { domain:'I', rec:DOMAIN_I };
     const hit = searchPlatform(q)[0];
     return hit ? { s:hit.s, rec:hit.rec } : null;
   }
@@ -216,25 +217,9 @@
       return { t, score };
     }).filter(x => x.score >= 12).sort((a,b) => b.score - a.score);
   }
-  function refHits(q){
-    const low = q.toLowerCase();
-    return REFS.map(r => {
-      let score = 0;
-      if (low.includes(r.title.toLowerCase())) score += 40;
-      if (r.id === 'coso' && low.includes('coso')) score += 40;
-      if (r.id === 'ippf' && low.includes('ippf')) score += 40;
-      if (r.id === '2017' && (low.includes('2017') || low.includes('historical'))) score += 40;
-      if (r.id === 'ethics' && (low.includes('code of ethics') || low.includes('ethics'))) score += 30;
-      if (r.id.indexOf('glossary') !== -1 && low.includes('glossary')) score += 24;
-      (r.keywords || '').split(/\s+/).forEach(w => {
-        if (w.length > 3 && low.includes(w)) score += 5;
-      });
-      return { r, score };
-    }).filter(x => x.score >= 10).sort((a,b) => b.score - a.score);
-  }
   function heading(s, rec){
     let h = '<p><b>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + '.</b>';
-    if (rec && rec.summary) h += ' ' + esc(rec.summary);
+    if (rec && rec.summary) h += ' ' + esc(cleanSummary(rec.summary));
     h += '</p>';
     if (rec && rec.title && rec.title !== s.title)
       h += '<p>The navigator lists this standard as ' + esc(s.title) +
@@ -251,6 +236,38 @@
   function sectionAnswer(found, kind){
     const s = found.s, rec = found.rec;
     if (!rec) return missing(s, 'its detailed content');
+    if(rec.sourceSections){
+      const byNumber=n=>rec.sourceSections.find(section=>section.number===n)?.text||'';
+      const rows=n=>typeof SUPPLIED_TABLES!=='undefined' ? SUPPLIED_TABLES[s.ref]?.[n]?.rows||[] : [];
+      const cells=n=>rows(n).map(row=>row.left+' — '+row.right);
+      const bullet=n=>byNumber(n).split('\n').map(line=>line.trim()).filter(Boolean)
+        .reduce((items,line)=>{
+          if(/^[•●▪◦]\s*/.test(line))items.push(line.replace(/^[•●▪◦]\s*/,''));
+          else if(items.length)items[items.length-1]+=' '+line;
+          return items;
+        },[]);
+      const body=(label,values)=>'<p><span class="kind">'+esc(label)+'</span></p>'+ul(values);
+      const blocks=[];
+      const add=(label,anchor,values)=>{if(values.length)blocks.push({label,anchor,html:body(label,values)});};
+      if(kind==='requirements'||kind==='checklist')add('Requirements (supplied summary)','requirements',[rec.requirement]);
+      if(kind==='implementation')add('Considerations for Implementation','implementation',rec.implementation||[]);
+      if(kind==='conformance')add('Examples of Evidence of Conformance','conformance',rec.conformance||[]);
+      if(kind==='focus')add('Audit Focus Areas','focus',bullet(2));
+      if(kind==='risks'||kind==='both')add('Suggested risks and potential consequences','risks',cells(3));
+      if(kind==='controls'||kind==='both')add('Suggested controls and control types','controls',cells(4));
+      if(kind==='procedures'||kind==='checklist')add('Suggested audit procedures and evidence to examine','procedures',cells(5));
+      if(kind==='redflags')add('Red Flags','redflags',bullet(6));
+      if(!blocks.length)return heading(s,rec)+missing(s,kind||'the requested content');
+      let html=heading(s,rec);
+      if(kind==='requirements')html+='<p>This is the client-supplied summary, not a verbatim IIA publication. Consult the linked PDF and official Standards for authoritative wording.</p>';
+      if(kind==='checklist')html+='<p><span class="kind">Practical suggestion</span>Use the following supplied procedure/evidence pairs as draft checklist items. They are not additional IIA requirements. Completing a checklist alone does not establish conformance.</p>';
+      if(['both','risks','controls','procedures','checklist','focus','redflags'].includes(kind))
+        html+='<p>The following is suggested practical audit material from the supplied PDF, separate from its summarized requirements.</p>';
+      html+=blocks.map(block=>block.html).join('');
+      html+=cites(blocks.map(block=>stdLink(s,block.anchor,block.label)).join('')+
+        (kind==='checklist'?cite('tools.html?tool=evidence','Evidence Checklist'):''));
+      return html;
+    }
     const blocks = [];
     const want = (label, anchor, ok, html) => {
       if (!ok) return;
@@ -320,12 +337,39 @@
   function answer(q){
     const kind = intentOf(q);
     const numbered = /\b\d{1,2}\.\d+\b/.test(q);
+    if(/\bpublic\s+sector\b/i.test(q)){
+      const found=searchPublicSector(q)[0];
+      if(found){
+        const source=found.anchor==='ps-laws'?PUBLIC_SECTOR.laws:
+          found.anchor==='ps-governance'?PUBLIC_SECTOR.governance:
+          found.anchor==='ps-funding'?PUBLIC_SECTOR.funding:
+          found.anchor==='ps-references'?PUBLIC_SECTOR.references:PUBLIC_SECTOR.overview;
+        const points=Array.isArray(source.text)?source.text:
+          source.intro?[source.intro,source.detail,source.note]:[];
+        const body=points.length?ul(points):'<p>'+esc(found.text)+'</p>';
+        return '<p><b>'+esc(PUBLIC_SECTOR.title+' — '+found.label)+'.</b></p>'+body+
+          '<p>These application considerations and practical suggestions do not add IIA requirements or replace applicable legislation.</p>'+
+          cites(cite('standards.html?domain=public-sector#'+found.anchor,
+            'Public Sector Application · '+found.label));
+      }
+    }
+    const specificReference=searchReferences(q)[0];
+    const asksReference=/\bcoso\b|\bippf\b|\bethics\b|\bglossary\b|\b2017\b/i.test(q);
+    if(!numbered && asksReference && specificReference){
+      const {page,item}=specificReference;
+      const lead=item.summary||item.definition||item.overview||'';
+      let html='<p><b>'+esc(page.title+' — '+(item.num ? 'Principle '+item.num+' · ' : '')+item.title)+'.</b> '+esc(lead)+'</p>';
+      if(page.id==='2017')html+='<p><b>Historical reference:</b> this is not a current Global Internal Audit Standard.</p>';
+      else html+='<p>This is supporting reference material, not an additional IIA requirement.</p>';
+      return html+cites(cite('references.html?ref='+encodeURIComponent(page.id)+'&item='+encodeURIComponent(item.id),
+        page.title+' · '+item.title));
+    }
 
     if (kind === 'compare'){
       const sample = locate('1.1') || locate('2.2');
       return '<p><b>Requirements and Considerations for Implementation are different sections.</b> ' +
-        'Requirements are the obligations held for a standard. Considerations for Implementation are practical points for applying it. ' +
-        'They are not additional official requirements, and they are labelled separately on each standard page.</p>' +
+        'Requirements summarize obligations in the supplied standard record. Considerations for Implementation are practical points for applying it. ' +
+        'The client-supplied PDFs are summaries, not the official IIA publication; practical points are not additional requirements.</p>' +
         (sample ? cites(stdLink(sample.s, 'requirements', 'Requirements') +
           stdLink(sample.s, 'implementation', 'Considerations for Implementation')) : '');
     }
@@ -352,44 +396,13 @@
       }
     }
 
-    if (!numbered){
-      const refs = refHits(q);
-      const std = searchPlatform(q)[0];
-      if (refs.length && (!std || refs[0].score > 24)){
-        const r = refs[0].r;
-        let h = '<p><b>' + esc(r.title) + '.</b> ' + esc(r.lead) + '</p>';
-        if (r.status === 'Superseded' || r.badge === 'Historical')
-          h += '<p><b>Historical material.</b> This is not the current Global Internal Audit Standards. Use it only when reading older working papers.</p>';
-        else
-          h += '<p>This is supporting reference material held in the platform. It is separate from the current standard requirements.</p>';
-        const named = (r.sections || []).filter(sec => {
-          const hay = (sec.h + ' ' + sec.p).toLowerCase();
-          return q.toLowerCase().split(/[^a-z0-9]+/).some(w => w.length > 4 && hay.includes(w) &&
-            !['standards','internal','principles','reference','material'].includes(w));
-        });
-        const show = named.length ? named : (r.sections || []);
-        show.forEach(sec => {
-          h += '<p><b>' + esc(sec.h) + '.</b> ' + esc(sec.p) + '</p>';
-        });
-        return h + cites(cite('references.html?ref=' + encodeURIComponent(r.id), r.title));
-      }
-    }
-
-    if (kind === 'both' && !numbered){
-      const generic = new Set(['risk','risks','control','controls','relate','related','standard','standards','audit','what']);
-      const terms = q.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 4 && !STOP.has(t) && !generic.has(t));
-      const tops = allStandards().filter(s => {
-        const hay = (s.title + ' ' + s.principleTitle).toLowerCase();
-        return terms.some(t => hay.includes(t));
-      });
-      if (tops.length && !tops.some(s => standardRecord(s.ref))){
-        const ethics = REFS.find(r => (r.keywords || '').split(/\s+/).some(w => terms.includes(w)));
-        return '<p><b>Not enough content in this platform.</b> These standards match that topic, but their risks and controls have not been added yet: ' +
-          tops.map(s => 'Standard ' + esc(s.ref) + ' — ' + esc(s.title)).join('; ') +
-          '. I will not invent them.</p>' +
-          cites(tops.map(s => stdLink(s, '', s.title)).join('') +
-            (ethics ? cite('references.html?ref=' + ethics.id, ethics.title) : ''));
-      }
+    if(kind==='both' && !numbered){
+      const topic=queryTerms(q).filter(t=>!['risks','risk','controls','control','relate','related'].includes(t));
+      const relevant=allStandards().filter(s=>{
+        const text=(s.title+' '+s.principleTitle).toLowerCase();
+        return topic.some(t=>text.includes(t));
+      }).filter(s=>standardRecord(s.ref));
+      if(relevant.length)return relevant.slice(0,2).map(s=>sectionAnswer({s,rec:standardRecord(s.ref)},'both')).join('');
     }
 
     const found = locate(q);
@@ -407,11 +420,10 @@
         ul(t.fields.map(f => f.label + (f.hint ? ' — ' + f.hint : ''))) +
         cites(cite('tools.html?tool=' + encodeURIComponent(t.id), t.title));
     }
-    const refs = refHits(q);
-    if (refs.length){
-      const r = refs[0].r;
-      return '<p><b>' + esc(r.title) + '.</b> ' + esc(r.lead) + '</p>' +
-        cites(cite('references.html?ref=' + encodeURIComponent(r.id), r.title));
+    if(specificReference){
+      const {page,item}=specificReference;
+      return '<p><b>'+esc(page.title+' — '+item.title)+'</b> '+esc(item.summary||item.definition||item.overview||'')+'</p>'+
+        cites(cite('references.html?ref='+encodeURIComponent(page.id)+'&item='+encodeURIComponent(item.id),item.title));
     }
 
     return '<p><b>Nothing in this platform covers that closely enough.</b> I answer only from the standards, ' +

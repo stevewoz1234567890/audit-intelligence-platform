@@ -16,7 +16,8 @@ const standards = context.standards;
 const pdfText = process.env.PDFTOTEXT || 'pdftotext';
 
 function linesFor(number){
-  const name = number === 14 ? 'Standared 14.pdf' : `Standard ${number}.pdf`;
+  const name = process.env.AUDIT_IMPORT_OUTPUT ? `standard-${number}.pdf` :
+    number === 14 ? 'Standared 14.pdf' : `Standard ${number}.pdf`;
   const pdf = path.join(source, name);
   if (!fs.existsSync(pdf)) throw Error(`Missing ${pdf}`);
   const temp = path.join(os.tmpdir(), `audit-import-${process.pid}-${number}.txt`);
@@ -113,7 +114,7 @@ for (let number=3; number<=15; number++){
 }
 if (records.length !== standards.filter(s => +s.ref.split('.')[0] >= 3).length)
   throw Error(`Only generated ${records.length} of the expected standard records.`);
-const output = path.join(root, 'data/supplied-standards.js');
+const output = process.env.AUDIT_IMPORT_OUTPUT || path.join(root, 'data/supplied-standards.js');
 fs.writeFileSync(output, '/* Extracted from the supplied PDFs; retain qualifiers and layout of the source.\n' +
   '   Do not mistake the suggested applications for IIA requirements. */\n' +
   'const SUPPLIED_RECORDS = ' + JSON.stringify(records,null,2) + ';\n');
