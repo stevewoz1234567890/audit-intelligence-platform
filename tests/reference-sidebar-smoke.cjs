@@ -42,8 +42,29 @@ const {pathToFileURL}=require('node:url');
     throw Error('Reference page did not load: '+url.href+'; state '+JSON.stringify(await evaluate(
       `({url:location.href,categories:document.querySelectorAll('.ref-category').length,title:document.title})`)));
   }
+  async function checkCardActions(columns){
+    const rows=await evaluate(`document.fonts.ready.then(()=>{
+      const cards=[...document.querySelectorAll('.ref-grid .ref-card')];
+      return cards.map(card=>{
+        const button=card.querySelector('.go').getBoundingClientRect();
+        const box=card.getBoundingClientRect();
+        return {title:card.querySelector('h3').textContent,top:button.top,bottom:button.bottom,
+          height:button.height,cardTop:box.top,cardBottom:box.bottom,link:card.getAttribute('href')};
+      });
+    })`);
+    assert.equal(rows.length,6,'All six reference cards must render');
+    for(let i=0;i<rows.length;i++){
+      const row=rows[i];
+      assert(row.height>=40 && Math.abs(row.height-rows[0].height)<1,JSON.stringify(rows));
+      assert(Math.abs(row.cardBottom-row.bottom-(rows[0].cardBottom-rows[0].bottom))<1,JSON.stringify(rows));
+      assert(row.link.startsWith('references.html?ref='),row.link);
+      if(i%columns)assert(Math.abs(row.top-rows[i-1].top)<1,JSON.stringify(rows));
+    }
+  }
   try{
+    await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false});
     await visit('','document.querySelectorAll(".ref-category").length === 5');
+    await checkCardActions(3);
     assert.equal(await evaluate('document.querySelectorAll(".ref-submenu:not([hidden])").length'),0);
     assert.equal(await evaluate('document.querySelector(".ref-all").classList.contains("on")'),true);
     const categories=[['coso','coso','17'],['ippf','ippf','9'],['ethics','ethics','4'],
@@ -97,11 +118,12 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await evaluate('document.querySelector("[data-category=glossaries] .ref-category").getAttribute("aria-expanded")'),'true');
     await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
     await visit('', 'document.querySelectorAll(".ref-category").length === 5');
+    await checkCardActions(1);
     assert.equal(await evaluate(`(()=>{document.querySelector('[data-category="coso"] .ref-category').click();
       return document.querySelector('[data-category="coso"] .ref-category').getAttribute('aria-expanded')})()`),'true');
     assert.equal(await evaluate(`(()=>{document.querySelector('#navToggle').click();
       return document.querySelector('.nav').classList.contains('open')})()`),true);
-    console.log('PASS: reference category dropdowns, subitem links, active item, sidebar search and mobile toggle');
+    console.log('PASS: reference card actions aligned at desktop/mobile widths, category dropdowns, subitem links, active item, sidebar search and mobile toggle');
   }finally{
     await send('Emulation.clearDeviceMetricsOverride');
     socket.close();

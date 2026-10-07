@@ -88,7 +88,7 @@ button{font:inherit;cursor:pointer}
 .dom-h::after{content:"";flex:1;height:1px;background:rgba(201,162,39,.25)}
 
 .pr{border-bottom:1px solid rgba(255,255,255,.05)}
-.pr-h{width:100%;display:flex;align-items:flex-start;gap:10px;padding:9px 16px;
+.pr-h{width:100%;display:flex;align-items:flex-start;gap:10px;padding:10px 16px;
   background:none;border:0;color:rgba(255,255,255,.88);text-align:left;
   font-size:12.8px;line-height:1.4;transition:background .14s}
 .pr-h:hover{background:rgba(255,255,255,.07);color:#fff}
@@ -96,15 +96,15 @@ button{font:inherit;cursor:pointer}
   background:transparent;color:var(--gold);border:1px solid var(--gold);
   font-size:10px;font-weight:700;font-family:ui-monospace,monospace;margin-top:1px}
 .pr-h .tx{flex:1;min-width:0}
-.pr-h .ch{flex:none;width:12px;height:12px;stroke:rgba(255,255,255,.5);fill:none;
-  stroke-width:2.4;margin-top:5px;transition:transform .18s}
+.pr-h .ch{flex:none;width:14px;height:14px;stroke:rgba(255,255,255,.5);fill:none;
+  stroke-width:2.4;margin-top:3px;transition:transform .18s}
 .pr.open .pr-h{background:rgba(255,255,255,.06);color:#fff}
 .pr.open .pr-h .n{background:transparent;color:var(--gold)}
 .pr.open .pr-h .ch{transform:rotate(90deg);stroke:var(--gold)}
 .pr-body{display:none;padding:0 0 6px}
 .pr.open .pr-body{display:block}
 .pr-body a{display:grid;grid-template-columns:2.75rem minmax(0,1fr);column-gap:8px;
-  align-items:start;text-align:left;padding:7px 14px 7px 36px;font-size:12.2px;
+  align-items:start;text-align:left;padding:8px 16px 8px 36px;font-size:12.2px;
   color:rgba(255,255,255,.78);line-height:1.35;transition:.14s;position:relative}
 .pr-body a:hover{background:rgba(255,255,255,.07);color:#fff}
 .pr-body a.on{background:rgba(224,197,106,.16);color:#fff;font-weight:600}
@@ -123,11 +123,11 @@ button{font:inherit;cursor:pointer}
 .side-link.on .ic{stroke:#1A1403}
 .nav-all:hover,.side-link:hover,.purpose:hover{background:rgba(255,255,255,.08);color:#fff}
 .side-link,.purpose{margin:0;border-radius:0;padding:10px 16px;font-weight:500;font-size:12.8px}
-.dom-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;
+.dom-btn{width:100%;display:flex;align-items:flex-start;gap:10px;padding:10px 16px;
   background:none;border:0;color:rgba(255,255,255,.9);text-align:left;font-size:12.6px;line-height:1.35}
 .dom-btn:hover{background:rgba(255,255,255,.06)}
 .dom-btn > span:nth-child(2){flex:1;min-width:0}
-.dom-ico{flex:none;width:22px;height:22px;display:grid;place-items:center}
+.dom-ico{flex:none;width:22px;height:22px;display:grid;place-items:center;margin-top:3px}
 .nav-img{display:block;width:18px;height:18px;object-fit:contain}
 .nav .dom-ico .ic,.nav-all .ic{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:1.7}
 .nav .ic{stroke:currentColor;fill:none;stroke-width:1.8}
@@ -137,8 +137,8 @@ button{font:inherit;cursor:pointer}
 .dom-btn .dn{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--gold);font-weight:700;margin-bottom:2px}
 .dom-btn .dx{display:block;flex:1}
-.dom-btn .ch{flex:none;width:12px;height:12px;stroke:rgba(255,255,255,.5);fill:none;
-  stroke-width:2.4;margin-top:0;transition:transform .18s}
+.dom-btn .ch{flex:none;width:14px;height:14px;stroke:rgba(255,255,255,.5);fill:none;
+  stroke-width:2.4;margin-top:6px;transition:transform .18s}
 .dom.open > .dom-btn .ch{transform:rotate(-90deg);stroke:var(--gold)}
 .dom-body{display:none}
 .dom.open > .dom-body{display:block}
@@ -406,8 +406,9 @@ body.domain-i-page .catalog{padding-top:4px}
 .ref-grid{align-items:stretch}
 .ref-card{flex-direction:row;align-items:flex-start;gap:12px;min-height:168px}
 .ref-card .ref-ico{width:26px;height:26px;flex:none;margin-top:2px;stroke:var(--gold-2);fill:none;stroke-width:1.6}
-.ref-card .tmain{display:flex;flex-direction:column;flex:1;min-width:0}
+.ref-card .tmain{display:flex;flex-direction:column;flex:1;min-width:0;align-self:stretch}
 .ref-card .tmain p{flex:1}
+.ref-card .go{display:inline-flex;align-items:center;min-height:40px}
 .badge.hist{margin:10px 0 0;background:#F3E4E2;color:var(--crit);border-color:rgba(163,58,46,.25)}
 .alpha{display:flex;flex-wrap:wrap;gap:2px;margin-top:16px;max-width:760px}
 .alpha a{min-width:26px;text-align:center;font-size:12px;font-weight:700;color:var(--navy);padding:4px 2px;border-radius:4px}
