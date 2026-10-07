@@ -32,12 +32,15 @@ const {pathToFileURL}=require('node:url');
     ? new URL('references.html',process.env.REF_SIDEBAR_BASE).href
     : pathToFileURL(path.resolve(__dirname,'..','references.html')).href;
   async function visit(suffix,ready){
-    await send('Page.navigate',{url:base+suffix});
+    const url=new URL(base+suffix);
+    if(process.env.REF_SIDEBAR_BASE)url.searchParams.set('release','fad5a3b');
+    await send('Page.navigate',{url:url.href});
     for(let i=0;i<100;i++){
       if(await evaluate(ready))return;
       await new Promise(resolve=>setTimeout(resolve,100));
     }
-    throw Error('Reference page did not load: '+suffix);
+    throw Error('Reference page did not load: '+url.href+'; state '+JSON.stringify(await evaluate(
+      `({url:location.href,categories:document.querySelectorAll('.ref-category').length,title:document.title})`)));
   }
   try{
     await visit('','document.querySelectorAll(".ref-category").length === 5');
@@ -83,10 +86,10 @@ const {pathToFileURL}=require('node:url');
     await evaluate(`document.querySelector('[data-category="coso"] .ref-category').click()`);
     await evaluate(`document.querySelector('a[href="references.html?ref=coso&item=17"]').click()`);
     for(let i=0;i<100;i++){
-      if(await evaluate('location.search==="?ref=coso&item=17" && document.querySelector(".ref-item.on")?.getAttribute("href")==="references.html?ref=coso&item=17"'))break;
+      if(await evaluate('new URLSearchParams(location.search).get("ref")==="coso" && new URLSearchParams(location.search).get("item")==="17" && document.querySelector(".ref-item.on")?.getAttribute("href")==="references.html?ref=coso&item=17"'))break;
       await new Promise(resolve=>setTimeout(resolve,100));
     }
-    assert.equal(await evaluate('location.search'),'?ref=coso&item=17');
+    assert.equal(await evaluate('new URLSearchParams(location.search).get("item")'),'17');
     assert.equal(await evaluate('document.querySelector("[data-category=coso] .ref-category").getAttribute("aria-expanded")'),'true');
     assert.equal(await evaluate('document.querySelector(".ref-h").textContent'),'Evaluates and Communicates Deficiencies');
     await visit('?ref=risk-glossary&item='+encodeURIComponent('appetite'),
