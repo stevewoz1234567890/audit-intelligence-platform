@@ -323,7 +323,11 @@ function mount(opts){
   if (top) top.innerHTML = renderTop(opts.active);
   if (nav) nav.innerHTML = opts.side || renderNav(opts.ref);
   if (ft)  ft.innerHTML  = renderFooter();
-  if (opts.side) wireSide();
+  if (opts.side && opts.sideFilter !== false) wireSide();
+  else if (opts.side){
+    const tog = document.getElementById('navToggle');
+    if (tog) tog.addEventListener('click', () => nav.classList.toggle('open'));
+  }
   else wireNav();
   const on = document.querySelector('.pr-body a.on');
   if (on) on.scrollIntoView({ block:'center' });

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Supporting References — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=9">
+<link rel="stylesheet" href="assets/iia.css?v=10">
 </head>
 <body>
 <header class="top"></header>
@@ -48,7 +48,7 @@
 <script src="data/supplied-standards.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
-<script src="assets/iia.js?v=9"></script>
+<script src="assets/iia.js?v=10"></script>
 <script>
 (function(){
   const chips = [
@@ -61,41 +61,99 @@
   let chip = 'all';
   const input = document.getElementById('q');
   const out = document.getElementById('out');
+  const categories = [
+    { id:'coso', label:'COSO Principles', pages:['coso'] },
+    { id:'ippf', label:'IPPF Reference Material', pages:['ippf'] },
+    { id:'ethics', label:'Code of Ethics', pages:['ethics'] },
+    { id:'glossaries', label:'Glossaries', pages:['glossary','risk-glossary'] },
+    { id:'historical', label:'Historical Standards', pages:['2017'] }
+  ];
+  let expandedCategory = categories.find(c => c.pages.includes(qs('ref')))?.id || null;
 
-  function sideLibrary(){
-    const items = [
-      { href:'references.html', label:'All References', on:!qs('ref') },
-      { href:'references.html?ref=coso', label:'COSO Principles', on:qs('ref')==='coso' },
-      { href:'references.html?ref=ippf', label:'IPPF Reference Material', on:qs('ref')==='ippf' },
-      { href:'references.html?ref=ethics', label:'Code of Ethics', on:qs('ref')==='ethics' },
-      { href:'references.html?chip=glossaries', label:'Glossaries', on:!qs('ref') && chip==='glossaries' },
-      { href:'references.html?ref=2017', label:'Historical Standards', on:qs('ref')==='2017' }
-    ];
-    return renderSide({
-      title:'Reference Library',
-      placeholder:'Find a Reference',
-      note:'Historical material. Legacy references are clearly labelled.',
-      items:items
-    });
-  }
-
-  function sideDetail(page, activeId){
-    let h = '<div class="nav-h"><div class="t">' + esc(page.title) + '</div>' +
+  function referenceSidebar(activePage, activeId){
+    let h = '<div class="nav-h"><div class="t">Reference Library</div>' +
       '<label class="nav-find">' + icon('search') +
       '<input type="search" id="sideFind" placeholder="Find a Reference" aria-label="Find a Reference">' +
-      '</label></div><div class="nav-body" id="sideBody">';
-    page.groups.forEach(g => {
-      h += '<div class="side-group" data-label="' + esc(g.title) + '">' + esc(g.title) + '</div>';
-      g.items.forEach(item => {
-        const on = item.id === activeId;
-        h += '<a class="side-link ref-item' + (on ? ' on' : '') + '" data-label="' + esc(item.title) +
-          '" href="references.html?ref=' + encodeURIComponent(page.id) + '&item=' + encodeURIComponent(item.id) + '">' +
-          (item.num ? '<span class="ref-num">' + esc(item.num) + '</span>' : '') +
-          esc(item.title) + '</a>';
+      '</label></div><div class="nav-body" id="sideBody">' +
+      '<a class="side-link ref-all' + (!activePage ? ' on' : '') +
+      '" href="references.html" data-label="All References">All References</a>';
+    categories.forEach(category => {
+      const active = category.pages.includes(activePage);
+      const open = expandedCategory === category.id;
+      h += '<div class="ref-category-block" data-category="' + category.id + '">' +
+        '<button class="side-link ref-category' + (active ? ' on' : '') +
+        '" type="button" aria-expanded="' + open + '" aria-controls="ref-menu-' + category.id +
+        '" data-label="' + esc(category.label) + '">' + esc(category.label) + icon('chev','ch') + '</button>' +
+        '<div class="ref-submenu" id="ref-menu-' + category.id + '"' + (open ? '' : ' hidden') + '>';
+      category.pages.forEach(id => {
+        const page = refPage(id);
+        if (category.pages.length > 1)
+          h += '<div class="ref-subgroup-title" data-page="' + esc(page.id) + '" data-label="' + esc(page.title) + '">' + esc(page.title) + '</div>';
+        page.groups.forEach(group => {
+          if (page.groups.length > 1)
+            h += '<div class="side-group" data-label="' + esc(group.title) + '">' + esc(group.title) + '</div>';
+          group.items.forEach(item => {
+            const on = page.id === activePage && item.id === activeId;
+            h += '<a class="side-link ref-item' + (on ? ' on' : '') + '" data-page="' + esc(page.id) + '" data-label="' +
+              esc((item.num ? item.num + ' ' : '') + item.title) + '" href="references.html?ref=' +
+              encodeURIComponent(page.id) + '&item=' + encodeURIComponent(item.id) + '">' +
+              (item.num ? '<span class="ref-num">' + esc(item.num) + '</span>' : '') +
+              esc(item.title) + '</a>';
+          });
+        });
       });
+      h += '</div></div>';
     });
-    h += '</div><a class="side-back" href="references.html">← Back to Reference Library</a>';
+    h += '</div><div class="nav-note">Historical material. Legacy references are clearly labelled.</div>';
     return h;
+  }
+
+  function wireReferenceSidebar(){
+    const body = document.getElementById('sideBody');
+    const find = document.getElementById('sideFind');
+    const update = () => {
+      const q = find.value.trim().toLowerCase();
+      body.querySelectorAll('.ref-category-block').forEach(block => {
+        const button = block.querySelector('.ref-category');
+        const categoryMatch = button.dataset.label.toLowerCase().includes(q);
+        const matchingPages = [...block.querySelectorAll('.ref-subgroup-title')]
+          .filter(heading => heading.dataset.label.toLowerCase().includes(q))
+          .map(heading => heading.dataset.page);
+        let any = false;
+        block.querySelectorAll('.ref-item').forEach(link => {
+          const show = !q || categoryMatch || matchingPages.includes(link.dataset.page) ||
+            link.dataset.label.toLowerCase().includes(q);
+          link.hidden = !show;
+          if (show) any = true;
+        });
+        block.querySelectorAll('.side-group').forEach(heading => {
+          let sibling = heading.nextElementSibling;
+          let visible = false;
+          while (sibling && !sibling.matches('.side-group,.ref-subgroup-title')){
+            if (sibling.matches('.ref-item:not([hidden])')) visible = true;
+            sibling = sibling.nextElementSibling;
+          }
+          heading.hidden = !!q && !visible;
+        });
+        block.querySelectorAll('.ref-subgroup-title').forEach(heading => {
+          heading.hidden = !!q && ![...block.querySelectorAll('.ref-item:not([hidden])')]
+            .some(link => link.dataset.page === heading.dataset.page);
+        });
+        block.hidden = !!q && !categoryMatch && !any;
+        const open = q ? (categoryMatch || any) : expandedCategory === block.dataset.category;
+        block.querySelector('.ref-submenu').hidden = !open;
+        button.setAttribute('aria-expanded', String(open));
+      });
+      body.querySelector('.ref-all').hidden = !!q && !'all references'.includes(q);
+    };
+    body.addEventListener('click', e => {
+      const button = e.target.closest('.ref-category');
+      if (!button) return;
+      expandedCategory = expandedCategory === button.closest('.ref-category-block').dataset.category
+        ? null : button.closest('.ref-category-block').dataset.category;
+      update();
+    });
+    find.addEventListener('input', update);
   }
 
   function paintChips(){
@@ -317,31 +375,10 @@
     });
   }
 
-  function wireSideFilter(){
-    const find = document.getElementById('sideFind');
-    const body = document.getElementById('sideBody');
-    if (!find || !body) return;
-    find.addEventListener('input', () => {
-      const q = find.value.trim().toLowerCase();
-      body.querySelectorAll('.ref-item').forEach(a => {
-        a.style.display = !q || a.dataset.label.toLowerCase().includes(q) ? '' : 'none';
-      });
-      body.querySelectorAll('.side-group').forEach(g => {
-        const next = [];
-        let el = g.nextElementSibling;
-        while (el && !el.classList.contains('side-group')){
-          if (el.classList.contains('ref-item')) next.push(el);
-          el = el.nextElementSibling;
-        }
-        const any = next.some(a => a.style.display !== 'none');
-        g.style.display = !q || any || g.dataset.label.toLowerCase().includes(q) ? '' : 'none';
-      });
-    });
-  }
-
   function detail(id){
     const page = refPage(id);
-    if (!page){ list(); mount({ active:'references', side:sideLibrary() }); return; }
+    if (!page){ list(); mount({ active:'references', side:referenceSidebar(), sideFilter:false }); wireReferenceSidebar(); return; }
+    expandedCategory = categories.find(c => c.pages.includes(page.id)).id;
     let items = refItems(page);
     const letter = (qs('letter') || '').toUpperCase();
     if (letter && page.chip === 'glossaries'){
@@ -353,8 +390,8 @@
     if (index < 0) index = 0;
     const item = items[index].item;
     showDetail(page, item, items, index);
-    mount({ active:'references', side:sideDetail(page, item.id) });
-    wireSideFilter();
+    mount({ active:'references', side:referenceSidebar(page.id, item.id), sideFilter:false });
+    wireReferenceSidebar();
     const on = document.querySelector('.ref-item.on');
     if (on) on.scrollIntoView({ block:'nearest' });
   }
@@ -363,7 +400,7 @@
     const id = qs('ref');
     const q = input.value.trim();
     if (id && !q) detail(id);
-    else { list(); mount({ active:'references', side:sideLibrary() }); }
+    else { list(); mount({ active:'references', side:referenceSidebar(), sideFilter:false }); wireReferenceSidebar(); }
   }
 
   document.getElementById('chips').addEventListener('click', e => {
