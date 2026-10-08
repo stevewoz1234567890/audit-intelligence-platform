@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Standard — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=13">
+<link rel="stylesheet" href="assets/iia.css?v=14">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=11"></script>
-<script src="assets/source-format.js"></script>
+<script src="assets/source-format.js?v=3"></script>
 <script>
 (function(){
   const ref = qs('ref') || '1.1';
@@ -186,13 +186,13 @@
       h += sect('risks','Risks','alert','<div class="card">' + rec.risks.map(x =>
         '<div class="row"><div class="tx"><b>' + esc(x.r) + '</b>' +
         (x.d ? '<span>' + esc(x.d) + '</span>' : '') + '</div>' +
-        '<span class="bdg ' + esc(x.i) + '">' + esc(x.i) + '</span></div>').join('') +
+        classificationBadges(x.i, 'risk') + '</div>').join('') +
         '</div>', rec.risks.length);
 
     if (rec.controls && rec.controls.length)
       h += sect('controls','Controls','shield','<div class="card">' + rec.controls.map(x =>
         '<div class="row"><div class="tx"><b>' + esc(x.c) + '</b></div>' +
-        '<span class="bdg ' + esc(x.t) + '">' + esc(x.t) + '</span></div>').join('') +
+        classificationBadges(x.t, 'control') + '</div>').join('') +
         '</div>', rec.controls.length);
 
     if (rec.procedureTable && rec.procedureTable.length)

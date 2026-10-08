@@ -1,4 +1,19 @@
 /* Presentation only: retain the supplied wording while restoring readable structure. */
+function classificationBadges(value, type){
+  const escape = text => String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const names = type === 'risk' ? ['High','Medium','Low'] :
+    type === 'control' ? ['Preventive','Detective','Corrective'] : [];
+  const range = type === 'risk' && /[–—-]/.test(value);
+  const parts = String(value || '').split(range ? /\s*[–—-]\s*/ : /\s*\/\s*/).map(part => part.trim());
+  if (!parts.length || parts.some(part => !names.some(name => name.toLowerCase() === part.toLowerCase()) &&
+    !(type === 'control' && /^defective$/i.test(part)))) return escape(value);
+  return '<span class="classification-badges">' + parts.map(part => {
+    const name = /^defective$/i.test(part) ? 'Detective' : names.find(n => n.toLowerCase() === part.toLowerCase());
+    return '<span class="bdg ' + name + '">' + name + '</span>';
+  }).join(range ? '<span class="classification-separator">' +
+    escape(String(value).match(/[–—-]/)[0]) + '</span>' : '') + '</span>';
+}
 function sourceFormat(text, sectionTitle, kind, structured, appendix){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -13,12 +28,16 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
     (main ? ' source-main-table' : '') + '"><table><thead><tr><th scope="col">' +
     labels.map(escape).join('</th><th scope="col">') + '</th></tr></thead><tbody>' +
     rows.map(row=>'<tr><td><b>'+escape(row[0])+'</b></td><td class="ev" data-label="'+escape(labels[1])+'">'+
-      escape(row[1])+'</td></tr>').join('')+'</tbody></table></div>';
+      (main && sectionTitle === 'Risks' && labels[1] === 'Indicative rating' ? classificationBadges(row[1], 'risk') :
+        main && /^(?:Suggested )?Controls$/.test(sectionTitle) ? classificationBadges(row[1], 'control') : escape(row[1])) +
+      '</td></tr>').join('')+'</tbody></table></div>';
   if (kind === 'table'){
     if (structured && structured.rows && structured.rows.length){
       const headers={Risks:['Risk',structured.headers.some(x=>/rating|indicative/i.test(x)) ? 'Indicative rating' : 'Potential consequence'],
         Controls:['Suggested control','Control type'],
-        'Audit Procedures':['Suggested audit procedure','Evidence to examine']};
+        'Suggested Controls':['Suggested control','Control type'],
+        'Audit Procedures':['Suggested audit procedure','Evidence to examine'],
+        'Suggested Audit Procedures':['Suggested audit procedure','Evidence to examine']};
       const labels=headers[sectionTitle] || ['Description','Details'];
       return renderRows(labels,structured.rows.map(row=>[row.left,row.right]),true);
     }

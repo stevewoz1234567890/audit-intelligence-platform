@@ -513,6 +513,11 @@ body.domain-i-page .catalog{padding-top:4px}
 .bdg.Preventive{background:var(--info-bg);color:var(--info);border-color:rgba(30,76,119,.22)}
 .bdg.Detective{background:var(--warn-bg);color:var(--warn);border-color:var(--gold-line)}
 .bdg.Corrective{background:#F0EBFA;color:#5E4896;border-color:rgba(94,72,150,.22)}
+.classification-badges{display:inline-flex;flex-wrap:wrap;align-items:center;align-content:center;gap:6px;vertical-align:middle}
+.row > .classification-badges{flex:none;max-width:50%;justify-content:flex-end;margin-top:1px}
+.source-main-table td.ev .classification-badges{vertical-align:top}
+.classification-badges .bdg{display:inline-block;margin-top:0;line-height:1.6}
+.classification-separator{color:var(--ink-2);font-size:12px}
 
 /* procedure / evidence table */
 .tbl-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);
