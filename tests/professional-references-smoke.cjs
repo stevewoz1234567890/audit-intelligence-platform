@@ -92,9 +92,13 @@ function get(url){
       return links.every(a=>a && a.closest('li')) &&
         links[0].closest('li')!==links[1].closest('li') &&
         links[1].closest('li').getBoundingClientRect().top>links[0].closest('li').getBoundingClientRect().top &&
-        links[0].textContent==='6.1 — Internal Audit Mandate' &&
-        links[1].textContent==='6.2 — Internal Audit Charter';
-    })()`),true,'6.3 related standards must be separate linked list lines');
+        links[0].textContent==='Standard 6.1 — Internal Audit Mandate' &&
+        links[1].textContent==='Standard 6.2 — Internal Audit Charter' &&
+        [...document.querySelectorAll('#source .source-content li')].slice(0,4)
+          .every(li=>li.textContent.startsWith('Standard ') &&
+            li.querySelector('a.professional-standard-link')?.textContent.includes(' — ') &&
+            li.textContent.endsWith('.') && !li.textContent.includes('Related standards:'));
+    })()`),true,'6.3 must display four consistently formatted standard links on separate lines');
     await evaluate(`document.querySelector('#source a[href="standard.html?ref=6.1"]').click()`);
     for(let i=0;i<150;i++){
       if(await evaluate(`location.search==='?ref=6.1' && document.querySelector('.std-h h1')?.textContent===${JSON.stringify(titles.get('6.1'))}`))break;

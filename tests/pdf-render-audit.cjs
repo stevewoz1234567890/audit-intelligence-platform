@@ -58,7 +58,15 @@ for(const rec of context.records){
       : ref==='15.2' && title==='Practical Application'
         ? expected.replace(/\n\s*Status\s+Meaning\s*\n(?=Alternative Action Under Review)/,'\n')
         : expected;
-    check(ref,title,sourceWithoutRepeatedHeader,html);
+    // Only Standard 6.3 combines two references in one PDF bullet. Its display
+    // normalizes the labels to "Standard N.N — title" like the other bullets;
+    // the stored PDF extraction remains untouched.
+    const displayWording=ref==='6.3' && title==='Professional References'
+      ? sourceWithoutRepeatedHeader.replace(
+          'Related standards: 6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.',
+          'Standard 6.1 — Internal Audit Mandate. Standard 6.2 — Internal Audit Charter.')
+      : sourceWithoutRepeatedHeader;
+    check(ref,title,displayWording,html);
     count++;
   }
 }

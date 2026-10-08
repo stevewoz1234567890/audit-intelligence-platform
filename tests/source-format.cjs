@@ -30,7 +30,16 @@ function verify(ref,text,title,kind){
   if (first.toLowerCase() === title.toLowerCase()) lines.shift();
   else if (first.toLowerCase().startsWith(title.toLowerCase()+' — '))
     lines[0]=first.slice(title.length+3);
-  const expected=words(lines.map(line => line.replace(/^\s*\d+[.)]\s+/,'')).join(' '));
+  let expected=words(lines.map(line => line.replace(/^\s*\d+[.)]\s+/,'')).join(' '));
+  if(ref==='Standard 6.3' && title==='Professional References'){
+    // The combined PDF reference is split into two consistently labelled UI entries.
+    const original=words('Related standards: 6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.');
+    const displayed=words('Standard 6.1 — Internal Audit Mandate. Standard 6.2 — Internal Audit Charter.');
+    const at=expected.findIndex((w,i)=>w===original[0] &&
+      original.every((part,j)=>expected[i+j]===part));
+    assert(at>=0,'6.3 source reference must still match the known supplied wording');
+    expected=[...expected.slice(0,at),...displayed,...expected.slice(at+original.length)];
+  }
   const actual=words(renderedText(rendered));
   const at=expected.findIndex((w,i) => actual[i] !== w);
   assert.equal(at,-1,`${ref} ${title}: wording differs at token ${at}: ${expected.slice(Math.max(0,at-3),at+8).join(' ')} vs ${actual.slice(Math.max(0,at-3),at+8).join(' ')}`);
@@ -98,7 +107,11 @@ for (const rec of context.records){
     .map(m=>m[1]||m[2]);
   const hrefs=[...html.matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]);
   assert.deepEqual(hrefs,refs,`${rec.ref}: every numbered reference must link to its own standard`);
-  assert.deepEqual(words(renderedText(html)),words(text.replace(/^\s*[•●▪◦]\s*/gm,'')),
+  const expectedWords=rec.ref==='Standard 6.3' ? words(text.replace(/^\s*[•●▪◦]\s*/gm,'')
+    .replace('Related standards: 6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.',
+      'Standard 6.1 — Internal Audit Mandate. Standard 6.2 — Internal Audit Charter.')) :
+    words(text.replace(/^\s*[•●▪◦]\s*/gm,''));
+  assert.deepEqual(words(renderedText(html)),expectedWords,
     `${rec.ref}: links must preserve Professional References wording`);
   linked+=hrefs.length;
 }
@@ -107,10 +120,8 @@ assert.deepEqual([...context.render(context.records.find(r=>r.ref==='Standard 7.
   .matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]),
   ['7.1','6.2','2.3','11.3','11.4']);
 const boardReferences=context.render(boardSupport.sourceSections.find(s=>s.number===8).text,'Professional References');
-assert(boardReferences.includes('<li><span>Related standards: <a class="professional-standard-link" href="standard.html?ref=6.1">6.1 — Internal Audit Mandate</a>;</span></li><li><span><a class="professional-standard-link" href="standard.html?ref=6.2">6.2 — Internal Audit Charter</a>.</span></li>'),
-  '6.3 related standards must be individually linked on separate lines without changing punctuation');
-assert.equal(context.referenceLinks('6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.',standards,true),
-  '<a class="professional-standard-link" href="standard.html?ref=6.1">6.1 — Internal Audit Mandate</a>; <a class="professional-standard-link" href="standard.html?ref=6.2">6.2 — Internal Audit Charter</a>.');
+assert(boardReferences.includes('<li><span><a class="professional-standard-link" href="standard.html?ref=6.1">Standard 6.1 — Internal Audit Mandate</a>.</span></li><li><span><a class="professional-standard-link" href="standard.html?ref=6.2">Standard 6.2 — Internal Audit Charter</a>.</span></li>'),
+  '6.3 related standards must be identically formatted and individually linked');
 assert.equal(context.referenceLinks('Standard 7.1 — Organizational Independence.',standards),
   '<a class="professional-standard-link" href="standard.html?ref=7.1">Standard 7.1 — Organizational Independence</a>.');
 assert.equal(context.referenceLinks('Standard 99.9 — Unknown & <unsafe>',standards),

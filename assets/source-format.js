@@ -15,12 +15,11 @@ function classificationBadges(value, type){
     escape(String(value).match(/[–—-]/)[0]) + '</span>' : '') + '</span>';
 }
 /* Link only numbered standards that exist in the platform; retain the supplied wording. */
-function professionalReferenceLinks(text, standards, related){
+function professionalReferenceLinks(text, standards){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const available = new Set(standards.map(s => s.ref));
-  const pattern = related ? /\b(?:Standard\s+)?(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?;]+))?/gi :
-    /\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?/gi;
+  const pattern = /\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?/gi;
   let html='', last=0;
   for (const match of String(text).matchAll(pattern)){
     html += escape(text.slice(last,match.index));
@@ -114,18 +113,21 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   }
   let html='', paragraph='', list='', items=[];
   const implementation = sectionTitle === 'Considerations for Implementation';
-  const referenceText = (value,related) => sectionTitle === 'Professional References' && typeof allStandards === 'function' ?
-    professionalReferenceLinks(value,allStandards(),related) : escape(value);
+  const referenceText = value => sectionTitle === 'Professional References' && typeof allStandards === 'function' ?
+    professionalReferenceLinks(value,allStandards()) : escape(value);
   const flushList = () => {
     if (items.length){
       const bulletStyle = sectionTitle === 'Red Flags' ? 'flag' :
         /^(?:Required Evidence|Examples of Evidence of Conformance)$/.test(sectionTitle) ? 'tick' : 'dot';
       html += '<' + list + ' class="rq ' + (list === 'ul' ? bulletStyle : '') + '">' +
-        items.flatMap(item => sectionTitle === 'Professional References' &&
-          /^Related standards:\s*\d+\.\d+\s*[—–:-]/i.test(item) ?
-          item.split(/(?<=;)\s+(?=\d+\.\d+\s*[—–:-])/).map(part =>
-            '<li><span>' + referenceText(part,true) + '</span></li>') :
-          ['<li><span>' + referenceText(item) + '</span></li>']).join('') +
+        items.flatMap(item => {
+          // The supplied 6.3 PDF combines two related standards in one bullet.
+          // Present them like the other references without modifying the source record.
+          const related = sectionTitle === 'Professional References' &&
+            item.match(/^Related standards:\s*(6\.1\s*[—–:-]\s*Internal Audit Mandate);\s*(6\.2\s*[—–:-]\s*Internal Audit Charter)\.$/i);
+          return (related ? [related[1],related[2]].map(part => 'Standard ' + part + '.') : [item])
+            .map(part => '<li><span>' + referenceText(part) + '</span></li>');
+        }).join('') +
         '</' + list + '>';
       items=[];
     }
