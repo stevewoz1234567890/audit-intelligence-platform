@@ -320,7 +320,9 @@ body.tools-page .chip.on:hover{background:var(--navy-2);color:#fff}
 .source-content p:last-child,.source-content .rq:last-child{margin-bottom:0}
 .source-content .rq{margin:8px 0 14px;gap:8px}
 .source-content .rq li{font-size:13.8px;line-height:1.65}
-/* The whole standard number and supplied title form one discoverable link. */
+/* All professional references use a single link-only, gold-dot list. */
+#source .professional-references{margin-bottom:13px}
+#source .professional-references .rq{margin:0;gap:11px}
 #source .professional-standard-link{color:var(--navy-3);font-weight:600;
   text-decoration:underline;text-decoration-color:var(--gold-2);text-underline-offset:3px;
   cursor:pointer}

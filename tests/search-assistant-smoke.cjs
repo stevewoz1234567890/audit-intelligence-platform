@@ -78,7 +78,7 @@ const pages=()=>new Promise((resolve,reject)=>http.get('http://127.0.0.1:9339/js
     await go('standard.html?ref=1.3&match='+encodeURIComponent(oldHit.match)+'#controls',
       `document.querySelector('#controls .row.search-target')?.textContent.includes('Confidentiality')`);
     for(const major of [1,2]){
-      await go(`standard.html?ref=${major}.1`, `!!document.querySelector('#source a[href="assets/standards/standard-${major}.pdf"]')`);
+      await go(`standard.html?ref=${major}.1`, `!!document.querySelector('#provenance a[href="assets/standards/standard-${major}.pdf"]')`);
     }
     await go('standards.html?domain=public-sector',
       `!!document.querySelector('a[href="assets/standards/public-sector.pdf"]')`);

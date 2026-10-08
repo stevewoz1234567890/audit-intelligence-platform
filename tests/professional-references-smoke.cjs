@@ -27,6 +27,8 @@ function get(url){
     const next=++id;pending.set(next,[resolve,reject]);
     ws.send(JSON.stringify({id:next,method,params}));
   });
+  await send('Network.enable');
+  await send('Network.setCacheDisabled',{cacheDisabled:true});
   async function evaluate(expression){
     const result=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
     if(result.exceptionDetails)throw Error(result.exceptionDetails.text);
@@ -36,7 +38,9 @@ function get(url){
     const url=new URL('standard.html?ref='+encodeURIComponent(ref),base).href;
     await send('Page.navigate',{url});
     for(let i=0;i<150;i++){
-      if(await evaluate(`location.href===${JSON.stringify(url)} && !!document.querySelector('#source .srcbox') && typeof allStandards==='function'`))return;
+      if(await evaluate(`location.href===${JSON.stringify(url)} && !!document.querySelector('#provenance .srcbox') &&
+        (!${JSON.stringify(!!process.env.PROFESSIONAL_REFS_BASE)} || !!document.querySelector('script[src="assets/source-format.js?v=10"]')) &&
+        typeof allStandards==='function'`))return;
       await new Promise(resolve=>setTimeout(resolve,100));
     }
     throw Error('Standard did not load: '+url);
@@ -44,7 +48,8 @@ function get(url){
   try{
     await visit('7.1');
     const standards=await evaluate('allStandards().map(({ref,title})=>({ref,title}))');
-    const principles=await evaluate('DOMAINS.flatMap(d=>d.principles.map(p=>({num:p.num,domain:d.id})))');
+    const principles=await evaluate('DOMAINS.flatMap(d=>d.principles.map(p=>({num:p.num,title:p.title,domain:d.id})))');
+    const domains=await evaluate('DOMAINS.map(d=>({id:d.id,name:d.name}))');
     assert.equal(standards.length,52);
     const titles=new Map(standards.map(s=>[s.ref,s.title]));
     const seen=new Set(),otherDestinations=new Set();let count=0,otherCount=0;
@@ -52,36 +57,47 @@ function get(url){
       await visit(standard.ref);
       const state=await evaluate(`(()=>{
         const source=document.querySelector('#source');
-        const items=[...source.querySelectorAll('.source-content p, .source-content li > span, .card > ul.rq > li > span')];
+        const card=source.querySelector('.professional-references');
+        const items=[...source.querySelectorAll('.professional-references li')];
         const links=[...source.querySelectorAll('.professional-standard-link')];
-        return {title:document.title,items:items.map(item=>item.textContent),
+        return {title:document.title,hasCard:!!card,cardClass:card?.className,
+          sourceDetailsInside:!!source.querySelector('.srcbox'),
+          items:items.map(li=>({text:li.textContent,links:li.querySelectorAll('a').length,
+            marker:getComputedStyle(li,'::before').backgroundColor})),
           links:links.map(a=>({href:a.getAttribute('href'),text:a.textContent,
             cursor:getComputedStyle(a).cursor,decoration:getComputedStyle(a).textDecorationLine,
             visible:a.getBoundingClientRect().width>0})),
           unresolved:!!source.querySelector('.empty')};})()`);
       assert(state.title.startsWith(`Standard ${standard.ref} — ${standard.title} —`),standard.ref);
       assert(!state.unresolved,`${standard.ref} did not render`);
-      const expected=state.items.flatMap(item=>{
-        const matches=[...item.matchAll(/\bStandards?\s+(\d+\.\d+)(?:\s+(?:and|&)\s+(\d+\.\d+))?|\b(\d+\.\d+)\b|\bPrinciple\s+(\d+)\b|\bDomain\s+([IVX]+)\b|Applying the Global Internal Audit Standards in the Public Sector/gi)];
-        return matches.flatMap(m=>m[1]?[m[1],...(m[2]?[m[2]]:[])].map(n=>'standard.html?ref='+n):
-          m[3]?['standard.html?ref='+m[3]]:m[4]?[`principle:${m[4]}`]:
-          m[5]?['standards.html?domain='+m[5].toUpperCase()]:['standards.html?domain=public-sector']);
-      }).map(dest=>dest.startsWith('principle:')?(()=>{
-        const num=Number(dest.slice(10));const principle=principles.find(p=>p.num===num);
-        return principle?'standards.html?domain='+principle.domain+'#principle-'+num:dest;
-      })():dest);
-      assert(expected.length,`${standard.ref} has no professional references with platform destinations: ${JSON.stringify(state.items)}`);
-      assert.equal(state.links.length,expected.length,`${standard.ref} missing reference links`);
-      for(let i=0;i<expected.length;i++){
-        const link=state.links[i],dest=expected[i];
-        assert.equal(link.href,dest,`${standard.ref} points to wrong destination`);
+      if(standard.ref==='2.4')continue; // No record or professional references on this page.
+      assert(state.hasCard && state.cardClass==='card professional-references',
+        `${standard.ref}: ${JSON.stringify(state)}`);
+      assert(!state.sourceDetailsInside,`${standard.ref} provenance belongs outside Professional References`);
+      assert(state.links.length,`${standard.ref} has no reference links`);
+      assert.equal(state.items.length,state.links.length,`${standard.ref} has non-link text`);
+      assert.equal(new Set(state.links.map(a=>a.href)).size,state.links.length,
+        `${standard.ref} duplicates a destination`);
+      for(let i=0;i<state.links.length;i++){
+        const link=state.links[i],dest=link.href,item=state.items[i];
+        assert.equal(item.links,1,`${standard.ref} item must have exactly one link`);
+        assert.equal(item.text,link.text,`${standard.ref} has extra text outside a link`);
+        assert.equal(item.marker,'rgb(224, 197, 106)',`${standard.ref} gold bullet missing`);
         if(dest.startsWith('standard.html?ref=')){
           const ref=dest.slice('standard.html?ref='.length);
           assert(titles.has(ref),`${standard.ref} references missing destination ${ref}`);
-          assert(new RegExp(`\\b${ref.replace('.','\\.')}\\b`).test(link.text),
-            `${standard.ref} number not clickable`);
+          assert.equal(link.text,`Standard ${ref} — ${titles.get(ref)}`,`${standard.ref} inconsistent title`);
           seen.add(ref);
-        }else {otherCount++;otherDestinations.add(dest);}
+        }else {
+          const principle=principles.find(p=>dest===`standards.html?domain=${p.domain}#principle-${p.num}`);
+          const domain=domains.find(d=>dest===`standards.html?domain=${d.id}`);
+          const label=principle ? `Principle ${principle.num} — ${principle.title}` :
+            domain ? `Domain ${domain.id} — ${domain.name}` :
+            dest==='standards.html?domain=public-sector' ?
+              'Applying the Global Internal Audit Standards in the Public Sector' : null;
+          assert.equal(link.text,label,`${standard.ref} unknown or mislabeled destination ${dest}`);
+          otherCount++;otherDestinations.add(dest);
+        }
         assert(link.visible && link.cursor==='pointer' && link.decoration.includes('underline'),
           `${standard.ref} link is not visually identifiable`);
         count++;
@@ -113,10 +129,10 @@ function get(url){
         links[1].closest('li').getBoundingClientRect().top>links[0].closest('li').getBoundingClientRect().top &&
         links[0].textContent==='Standard 6.1 — Internal Audit Mandate' &&
         links[1].textContent==='Standard 6.2 — Internal Audit Charter' &&
-        [...document.querySelectorAll('#source .source-content li')].slice(0,4)
+        [...document.querySelectorAll('#source .professional-references li')].slice(0,4)
           .every(li=>li.textContent.startsWith('Standard ') &&
             li.querySelector('a.professional-standard-link')?.textContent.includes(' — ') &&
-            li.textContent.endsWith('.') && !li.textContent.includes('Related standards:'));
+            li.textContent===li.querySelector('a.professional-standard-link').textContent);
     })()`),true,'6.3 must display four consistently formatted standard links on separate lines');
     await evaluate(`document.querySelector('#source a[href="standard.html?ref=6.1"]').click()`);
     for(let i=0;i<150;i++){

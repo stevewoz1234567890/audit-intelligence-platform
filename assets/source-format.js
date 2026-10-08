@@ -1,4 +1,4 @@
-/* Presentation only: retain the supplied wording while restoring readable structure. */
+/* Presentation only: keep source records untouched while formatting their display. */
 function classificationBadges(value, type){
   const escape = text => String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -14,42 +14,43 @@ function classificationBadges(value, type){
   }).join(range ? '<span class="classification-separator">' +
     escape(String(value).match(/[–—-]/)[0]) + '</span>' : '') + '</span>';
 }
-/* Link references with an exact platform destination; retain the supplied wording. */
-function professionalReferenceLinks(text, standards){
+/* A uniform navigation list, derived from (but never written back to) supplied references. */
+function professionalReferenceList(text, standards){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  const available = new Set(standards.map(s => s.ref));
-  const principles = typeof DOMAINS === 'undefined' ? [] : DOMAINS.flatMap(d => d.principles.map(p => ({number:String(p.num),domain:d.id})));
-  const domains = typeof DOMAINS === 'undefined' ? [] : DOMAINS.map(d => d.id);
-  const link = (label,href) => '<a class="professional-standard-link" href="' + escape(href) + '">' + escape(label) + '</a>';
-  // Match plural references before singular ones so both numbers get distinct destinations.
-  const pattern = /\bStandards\s+(\d+\.\d+)\s+(and|&)\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?|\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?|\bPrinciple\s+(\d+)(?:\s*[—–:-]\s*([^.!?,]+))?|\bDomain\s+([IVX]+)(?:\s*[—–:-]\s*([^.!?,]+))?|Applying the Global Internal Audit Standards in the Public Sector|\b(\d+\.\d+)\b/gi;
-  let html='', last=0;
-  for (const match of String(text).matchAll(pattern)){
-    html += escape(text.slice(last,match.index));
-    const label=match[0].replace(/\s+$/,'');
-    if (match[1]){
-      // Shared plural title is not attributed to either individual standard.
-      const first=match[1], second=match[3];
-      html += escape('Standards ') + (available.has(first) ? link(first,'standard.html?ref='+encodeURIComponent(first)) : escape(first)) +
-        escape(' '+match[2]+' ') + (available.has(second) ? link(second,'standard.html?ref='+encodeURIComponent(second)) : escape(second)) +
-        escape(label.slice(match[0].indexOf(second)+second.length));
-    } else if (match[5] && available.has(match[5]))
-      html += link(label,'standard.html?ref='+encodeURIComponent(match[5]));
-    else if (match[7] && principles.some(p => p.number === match[7])){
-      const principle=principles.find(p => p.number === match[7]);
-      html += link(label,'standards.html?domain='+encodeURIComponent(principle.domain)+'#principle-'+encodeURIComponent(principle.number));
-    } else if (match[9] && domains.includes(match[9].toUpperCase()))
-      html += link(label,'standards.html?domain='+encodeURIComponent(match[9].toUpperCase()));
-    else if (/^Applying the Global Internal Audit Standards in the Public Sector$/i.test(label))
-      html += link(label,'standards.html?domain=public-sector');
-    else if (match[11] && available.has(match[11]))
-      html += link(label,'standard.html?ref='+encodeURIComponent(match[11]));
-    else html += escape(label);
-    last=match.index+match[0].length;
-    html += escape(match[0].slice(label.length));
+  const available = new Map(standards.map(s => [s.ref,s.title]));
+  const principles = typeof DOMAINS === 'undefined' ? [] :
+    DOMAINS.flatMap(d => d.principles.map(p => ({number:String(p.num),title:p.title,domain:d.id})));
+  const domains = typeof DOMAINS === 'undefined' ? [] : DOMAINS;
+  const entries=[],seen=new Set();
+  const add = (href,label) => {
+    if (!href || seen.has(href)) return;
+    seen.add(href);
+    entries.push('<li><span><a class="professional-standard-link" href="'+escape(href)+'">'+
+      escape(label)+'</a></span></li>');
+  };
+  // Platform/editorial notes are not citations; their incidental numbers are not references.
+  const content=String(text).split(/^\s*Platform(?: implementation)? note\s*:/im)[0];
+  const pattern=/\bStandards?\s+(\d+\.\d+)(?:\s+(?:and|&)\s+(\d+\.\d+))?|\bPrinciple\s+(\d+)\b|\bDomain\s+([IVX]+)\b|Applying the Global Internal Audit Standards in the Public Sector|\b(\d+\.\d+)\b/gi;
+  for(const match of content.matchAll(pattern)){
+    if(match[1] || match[5]){
+      for(const ref of [match[1],match[2],match[5]].filter(Boolean))
+        if(available.has(ref)) add('standard.html?ref='+encodeURIComponent(ref),
+          'Standard '+ref+' — '+available.get(ref));
+    }else if(match[3]){
+      const principle=principles.find(p=>p.number===match[3]);
+      if(principle) add('standards.html?domain='+encodeURIComponent(principle.domain)+
+        '#principle-'+encodeURIComponent(principle.number),
+        'Principle '+principle.number+' — '+principle.title);
+    }else if(match[4]){
+      const domain=domains.find(d=>d.id===match[4].toUpperCase());
+      if(domain) add('standards.html?domain='+encodeURIComponent(domain.id),
+        'Domain '+domain.id+' — '+domain.name);
+    }else add('standards.html?domain=public-sector',
+      'Applying the Global Internal Audit Standards in the Public Sector');
   }
-  return html + escape(text.slice(last));
+  return entries.length ? '<div class="card professional-references"><ul class="rq dot">'+
+    entries.join('')+'</ul></div>' : '';
 }
 function sourceFormat(text, sectionTitle, kind, structured, appendix){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -61,6 +62,8 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   while (lines.length && !lines[0].trim()) lines.shift();
   const first = lines[0] && lines[0].trim().match(headingPrefix);
   if (first){ lines.shift(); if (first[1]) lines.unshift(first[1]); }
+  if(sectionTitle === 'Professional References')
+    return professionalReferenceList(lines.join('\n'),typeof allStandards === 'function' ? allStandards() : []);
   const renderRows = (labels,rows,main) => '<div class="tbl-wrap source-data-table' +
     (main ? ' source-main-table' : '') + '"><table><thead><tr><th scope="col">' +
     labels.map(escape).join('</th><th scope="col">') + '</th></tr></thead><tbody>' +
@@ -131,21 +134,12 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   }
   let html='', paragraph='', list='', items=[];
   const implementation = sectionTitle === 'Considerations for Implementation';
-  const referenceText = value => sectionTitle === 'Professional References' && typeof allStandards === 'function' ?
-    professionalReferenceLinks(value,allStandards()) : escape(value);
   const flushList = () => {
     if (items.length){
       const bulletStyle = sectionTitle === 'Red Flags' ? 'flag' :
         /^(?:Required Evidence|Examples of Evidence of Conformance)$/.test(sectionTitle) ? 'tick' : 'dot';
       html += '<' + list + ' class="rq ' + (list === 'ul' ? bulletStyle : '') + '">' +
-        items.flatMap(item => {
-          // The supplied 6.3 PDF combines two related standards in one bullet.
-          // Present them like the other references without modifying the source record.
-          const related = sectionTitle === 'Professional References' &&
-            item.match(/^Related standards:\s*(6\.1\s*[—–:-]\s*Internal Audit Mandate);\s*(6\.2\s*[—–:-]\s*Internal Audit Charter)\.$/i);
-          return (related ? [related[1],related[2]].map(part => 'Standard ' + part + '.') : [item])
-            .map(part => '<li><span>' + referenceText(part) + '</span></li>');
-        }).join('') +
+        items.map(item => '<li><span>' + escape(item) + '</span></li>').join('') +
         '</' + list + '>';
       items=[];
     }
@@ -157,7 +151,7 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
       items.push(paragraph);
     } else {
       flushList();
-      html += '<p>' + referenceText(paragraph) + '</p>';
+      html += '<p>' + escape(paragraph) + '</p>';
     }
     paragraph='';
   };

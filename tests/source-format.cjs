@@ -9,7 +9,7 @@ vm.runInContext(fs.readFileSync(path.join(root,'data/supplied-standards.js'),'ut
   '\nthis.records=SUPPLIED_RECORDS',context);
 vm.runInContext(fs.readFileSync(path.join(root,'data/iia.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/source-format.js'),'utf8') +
-  '\nthis.render=sourceFormat;this.referenceLinks=professionalReferenceLinks',context);
+  '\nthis.render=sourceFormat;this.referenceList=professionalReferenceList',context);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/iia.js'),'utf8') +
   '\nthis.clean=cleanSummary',context);
 
@@ -31,15 +31,6 @@ function verify(ref,text,title,kind){
   else if (first.toLowerCase().startsWith(title.toLowerCase()+' — '))
     lines[0]=first.slice(title.length+3);
   let expected=words(lines.map(line => line.replace(/^\s*\d+[.)]\s+/,'')).join(' '));
-  if(ref==='Standard 6.3' && title==='Professional References'){
-    // The combined PDF reference is split into two consistently labelled UI entries.
-    const original=words('Related standards: 6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.');
-    const displayed=words('Standard 6.1 — Internal Audit Mandate. Standard 6.2 — Internal Audit Charter.');
-    const at=expected.findIndex((w,i)=>w===original[0] &&
-      original.every((part,j)=>expected[i+j]===part));
-    assert(at>=0,'6.3 source reference must still match the known supplied wording');
-    expected=[...expected.slice(0,at),...displayed,...expected.slice(at+original.length)];
-  }
   const actual=words(renderedText(rendered));
   const at=expected.findIndex((w,i) => actual[i] !== w);
   assert.equal(at,-1,`${ref} ${title}: wording differs at token ${at}: ${expected.slice(Math.max(0,at-3),at+8).join(' ')} vs ${actual.slice(Math.max(0,at-3),at+8).join(' ')}`);
@@ -50,7 +41,7 @@ for (const r of context.records){
   verify(r.ref,r.requirement,'Requirements');
   verify(r.ref,r.implementation[0],'Considerations for Implementation');
   verify(r.ref,r.conformance[0],'Examples of Evidence of Conformance');
-  for (const s of r.sourceSections.filter(x => x.number >= 2))
+  for (const s of r.sourceSections.filter(x => x.number >= 2 && x.number !== 8))
     verify(r.ref,s.text,s.title,[3,4,5].includes(s.number) ? 'table' : 'list');
   if (r.practicalApplication) verify(r.ref,r.practicalApplication,'Practical Application','practical');
 }
@@ -103,41 +94,35 @@ let linked=0;
 for (const rec of context.records){
   const text=rec.sourceSections.find(s=>s.number===8).text;
   const html=context.render(text,'Professional References');
-  const refs=[...text.matchAll(/\bStandards?\s+(\d+\.\d+)(?:\s+(?:and|&)\s+(\d+\.\d+))?\b|\b(\d+\.\d+)\b/gi)]
-    .flatMap(m=>[m[1],m[2],m[3]].filter(Boolean));
-  const hrefs=[...html.matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]);
-  assert.deepEqual(hrefs,refs,`${rec.ref}: every numbered reference must link to its own standard`);
-  const expectedWords=rec.ref==='Standard 6.3' ? words(text.replace(/^\s*[•●▪◦]\s*/gm,'')
-    .replace('Related standards: 6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.',
-      'Standard 6.1 — Internal Audit Mandate. Standard 6.2 — Internal Audit Charter.')) :
-    words(text.replace(/^\s*[•●▪◦]\s*/gm,''));
-  assert.deepEqual(words(renderedText(html)),expectedWords,
-    `${rec.ref}: links must preserve Professional References wording`);
-  linked+=hrefs.length;
+  assert(!html || /^<div class="card professional-references"><ul class="rq dot">/.test(html),rec.ref);
+  const entries=[...html.matchAll(/<li><span><a class="professional-standard-link" href="([^"]+)">([^<]+)<\/a><\/span><\/li>/g)];
+  assert.equal((html.match(/<li>/g)||[]).length,entries.length,`${rec.ref}: every item is exactly one link`);
+  assert.equal(new Set(entries.map(m=>m[1])).size,entries.length,`${rec.ref}: duplicate destination`);
+  for(const [,href,label] of entries){
+    if(href.startsWith('standard.html?ref=')){
+      const ref=href.slice('standard.html?ref='.length),standard=standards.find(s=>s.ref===ref);
+      assert(standard && label===`Standard ${ref} — ${standard.title}`,`${rec.ref}: inconsistent standard label`);
+    }else assert(/^standards\.html\?domain=(?:[IVX]+(?:#principle-\d+)?|public-sector)$/.test(href),href);
+  }
+  linked+=entries.length;
 }
 assert.deepEqual([...context.render(context.records.find(r=>r.ref==='Standard 7.1')
   .sourceSections.find(s=>s.number===8).text,'Professional References')
   .matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]),
   ['7.1','6.2','2.3','11.3','11.4']);
 const boardReferences=context.render(boardSupport.sourceSections.find(s=>s.number===8).text,'Professional References');
-assert(boardReferences.includes('<li><span><a class="professional-standard-link" href="standard.html?ref=6.1">Standard 6.1 — Internal Audit Mandate</a>.</span></li><li><span><a class="professional-standard-link" href="standard.html?ref=6.2">Standard 6.2 — Internal Audit Charter</a>.</span></li>'),
+assert(boardReferences.includes('<li><span><a class="professional-standard-link" href="standard.html?ref=6.1">Standard 6.1 — Internal Audit Mandate</a></span></li><li><span><a class="professional-standard-link" href="standard.html?ref=6.2">Standard 6.2 — Internal Audit Charter</a></span></li>'),
   '6.3 related standards must be identically formatted and individually linked');
-assert.equal(context.referenceLinks('Standard 7.1 — Organizational Independence.',standards),
-  '<a class="professional-standard-link" href="standard.html?ref=7.1">Standard 7.1 — Organizational Independence</a>.');
-assert.equal(context.referenceLinks('Standard 99.9 — Unknown & <unsafe>',standards),
-  'Standard 99.9 — Unknown &amp; &lt;unsafe&gt;');
-assert.equal(context.referenceLinks('Standards 8.3 and 8.4 — Quality and External Quality Assessment.',standards),
-  'Standards <a class="professional-standard-link" href="standard.html?ref=8.3">8.3</a> and <a class="professional-standard-link" href="standard.html?ref=8.4">8.4</a> — Quality and External Quality Assessment.');
-assert.equal(context.referenceLinks('Principle 12 — Enhance Quality and its standards.',standards),
-  '<a class="professional-standard-link" href="standards.html?domain=IV#principle-12">Principle 12 — Enhance Quality and its standards</a>.');
-assert.equal(context.referenceLinks('Domain V — Performing Internal Audit Services.',standards),
-  '<a class="professional-standard-link" href="standards.html?domain=V">Domain V — Performing Internal Audit Services</a>.');
-assert.equal(context.referenceLinks('Applying the Global Internal Audit Standards in the Public Sector.',standards),
-  '<a class="professional-standard-link" href="standards.html?domain=public-sector">Applying the Global Internal Audit Standards in the Public Sector</a>.');
-assert.equal(context.referenceLinks('Platform note: retain the distinction between 5.1 and 5.2.',standards),
-  'Platform note: retain the distinction between <a class="professional-standard-link" href="standard.html?ref=5.1">5.1</a> and <a class="professional-standard-link" href="standard.html?ref=5.2">5.2</a>.');
-assert.equal(context.referenceLinks('Applicable certification body policies.',standards),
-  'Applicable certification body policies.');
+assert.equal(context.referenceList('Standard 99.9 — Unknown & <unsafe>',standards),'');
+assert.equal(context.referenceList('Applicable certification body policies.',standards),'');
+assert.equal(context.referenceList('Platform note: distinguish 5.1 and 5.2.',standards),'');
+assert(context.referenceList('Standards 8.3 and 8.4 — Quality. Standard 8.3',standards)
+  .includes('Standard 8.4 — External Quality Assessment'));
+assert.equal((context.referenceList('Standards 8.3 and 8.4 — Quality. Standard 8.3',standards)
+  .match(/<li>/g)||[]).length,2);
+assert.deepEqual([...context.referenceList('Principle 12 — Enhance Quality. Domain V — Performing Internal Audit Services. Applying the Global Internal Audit Standards in the Public Sector.',standards)
+  .matchAll(/href="([^"]+)"/g)].map(m=>m[1]),
+  ['standards.html?domain=IV#principle-12','standards.html?domain=V','standards.html?domain=public-sector']);
 assert(linked>150,`Expected broad Professional References coverage; found ${linked}`);
-console.log(`PASS: ${count} PDF sections retain their wording after formatting`);
-console.log(`PASS: ${linked} numbered references across 46 PDF-backed standards link to their exact pages`);
+console.log(`PASS: ${count} non-reference PDF sections retain their wording after formatting`);
+console.log(`PASS: ${linked} PDF-backed reference links use one-link-per-item styling across 46 standards`);
