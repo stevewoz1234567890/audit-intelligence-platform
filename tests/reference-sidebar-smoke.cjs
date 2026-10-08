@@ -67,7 +67,7 @@ const {pathToFileURL}=require('node:url');
     await checkCardActions(3);
     assert.equal(await evaluate('document.querySelectorAll(".ref-submenu:not([hidden])").length'),0);
     assert.equal(await evaluate('document.querySelector(".ref-all").classList.contains("on")'),true);
-    const categories=[['coso','coso','17'],['ippf','ippf','9'],['ethics','ethics','4'],
+    const categories=[['coso','coso','17'],['ippf','ippf','10'],['ethics','ethics','4'],
       ['glossaries','glossary','32'],['historical','2017','12']];
     for(const [category,pageId,count] of categories){
       const state=await evaluate(`(()=>{document.querySelector('[data-category="${category}"] .ref-category').click();

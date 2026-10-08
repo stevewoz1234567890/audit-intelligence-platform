@@ -219,15 +219,15 @@ const REF_PAGES = [
     group:'Professional Framework', chip:'frameworks',
     title:'IPPF Reference Material',
     blurb:'Understand the framework and its supporting references.',
-    keywords:'ippf mandate charter board quality strategy plan supervision',
+    keywords:'ippf mandate charter board quality strategy plan performance measurement supervision',
     status:'Current', eyebrow:'Practical Implementation Guidance',
-    lede:'Guidance for applying the standards in a working internal audit function.',
+    lede:'Guidance for Small Internal Audit Functions',
     badge:'',
     official:'https://www.theiia.org/en/standards/', officialLabel:'theiia.org/standards',
     note:'These are platform notes for using the standards. They are not a reprint of IIA mandatory guidance.',
     groups:[
       { title:'Mandate & Foundations', items:[
-        { id:'mandate', num:'1', title:'Internal Audit Mandate & Charter',
+        { id:'mandate', num:'1', title:'Internal Audit Mandate & Charter', sidebarTitle:'Mandate & Charter', challengeLevel:'Low',
           summary:'A written charter sets out internal audit’s purpose, authority, scope, and reporting lines.',
           challenge:'Low capacity, or a charter that was approved once and never revisited.',
           overview:'The charter is the board’s statement of what internal audit is authorised to do. It should be specific enough that management and the board can see the scope and the right of access.',
@@ -301,7 +301,17 @@ const REF_PAGES = [
           standards:'Standard 9.4' }
       ]},
       { title:'Performing the Work', items:[
-        { id:'supervision', num:'8', title:'Engagement Supervision',
+        { id:'performance', num:'8', title:'Performance Measurement',
+          summary:'The function measures progress toward its objectives and uses the results to improve.',
+          challenge:'Measures may focus only on completed engagements rather than the function’s objectives, quality, and stakeholder expectations.',
+          overview:'Performance objectives should reflect the Standards, charter, and strategy, with input from the board and senior management.',
+          guidance:[
+            'Set measures and targets linked to the function’s objectives.',
+            'Balance coverage, quality, stakeholder feedback, capability, and delivery measures.',
+            'Check reported measures for accuracy and track improvement actions.'
+          ],
+          standards:'Standard 12.2' },
+        { id:'supervision', num:'9', title:'Engagement Supervision',
           summary:'Engagements are supervised so that the work supports the conclusion.',
           challenge:'Review that happens after the report has already been issued.',
           overview:'Supervision covers planning, fieldwork, and the conclusion, with evidence of the review.',
@@ -311,7 +321,7 @@ const REF_PAGES = [
             'Record the review, including points raised and how they were resolved.'
           ],
           standards:'Standard 12.3' },
-        { id:'communication', num:'9', title:'Scope & Final Communication',
+        { id:'communication', num:'10', title:'Scope & Final Communication',
           summary:'The final communication says what was done, what was found, and what conclusion the work supports.',
           challenge:'Reports that describe activity without a conclusion.',
           overview:'Scope, criteria, findings, and the conclusion should be consistent with each other.',

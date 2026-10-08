@@ -792,3 +792,63 @@ body.domain-i-page:has(.public-sector) .askbar .btn-gold:hover{background:rgba(2
 .coso-detail .ref-note{margin:0}
 .coso-detail .ref-pager{margin-top:12px}
 @media(max-width:680px){.coso-page .page-h,.coso-page .catalog{padding-left:18px;padding-right:18px}.coso-page #askWrap{padding-left:18px!important;padding-right:18px!important}.coso-detail .ref-panel{padding:18px 20px}.coso-detail .ref-pager a{min-width:0;flex:1}}
+
+/* IPPF guidance: compact, consistent topic navigation and content. */
+.ippf-page{background:#f8f6f2}
+.ippf-page .nav-h{padding:18px 18px 14px}
+.ippf-page .nav-h .t{font:600 21px/1.3 "Playfair Display",Georgia,serif;color:#fff;letter-spacing:0;text-transform:none}
+.ippf-page .nav-find input{background:#102e48;border-color:rgba(255,255,255,.23)}
+.ippf-side-body{padding:12px 10px 16px}
+.ippf-side-body .side-group{margin:2px 8px 8px;padding:12px 2px 4px;border-top:1px solid rgba(255,255,255,.16);color:#b8c7d2;letter-spacing:.17em}
+.ippf-side-body .ref-item{display:flex;align-items:center;gap:12px;padding:8px 9px;border-radius:5px;color:#f2f4f6;font-size:12.5px;line-height:1.35}
+.ippf-side-body .ref-item:hover{background:rgba(255,255,255,.1)}
+.ippf-side-body .ref-item.on{background:#a88b53;color:#fff;box-shadow:none}
+.ippf-side-body .ref-num{min-width:25px;height:25px;display:grid;place-items:center;border-radius:4px;background:#a88b53;color:#fff;font:700 12px "Inter",sans-serif}
+.ippf-side-body .ref-item.on .ref-num{background:rgba(255,255,255,.24);color:#fff}
+.ippf-side-body .ref-item[hidden]{display:none}
+.ippf-page .coso-back{margin-top:auto}
+.ippf-page .page-h{padding:14px 28px 6px}
+.ippf-page .page-h h1{color:var(--navy);font-size:clamp(28px,3vw,40px);line-height:1.2}
+.ippf-page .page-h > p{margin:3px 0 0}
+.ippf-page #badgeSlot{margin-top:9px}
+.ippf-badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e8e3d6;border-radius:6px;padding:6px 10px;color:#876b36;font-size:12px}
+.ippf-badge .ic{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+.ippf-page .catalog{padding:4px 28px 0}
+.ippf-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.ippf-feature{display:flex;align-items:center;gap:15px;padding:14px 17px;border:1px solid #e8e3d6;border-radius:8px;background:#fff;min-width:0}
+.ippf-feature > .ic{width:31px;height:31px;flex:none;stroke:#a88b53;fill:none;stroke-width:1.6}
+.ippf-feature h3{font:600 16px/1.35 "Playfair Display",Georgia,serif;margin:0 0 3px}
+.ippf-feature p{font-size:12.5px;line-height:1.5;margin:0}
+.ippf-detail h2.ref-h{font-size:clamp(23px,2.5vw,31px);line-height:1.3;margin:0 0 7px;color:var(--navy)}
+.ippf-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ippf-challenge,.ippf-standard{display:inline-flex;gap:7px;align-items:center;border-radius:5px;padding:6px 11px;font-size:12px;line-height:1.4}
+.ippf-challenge{background:#fff;border:1px solid #c9b790;color:var(--navy)}
+.ippf-challenge .ic{width:15px;height:15px;stroke:#a88b53;fill:none;stroke-width:1.8}
+.ippf-standard{background:var(--navy);color:#fff;border:1px solid var(--navy);text-decoration:none}
+.ippf-standard:hover{background:var(--navy-2);color:#fff}
+.ippf-standard .ic{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+.ippf-content{padding:0 18px 12px;background:#fff;border:1px solid #e8e3d6;border-radius:9px}
+.ippf-content .ref-tabs{margin:0 0 12px;gap:4px;overflow-x:auto;flex-wrap:nowrap}
+.ippf-content .ref-tab{padding:12px 13px;white-space:nowrap;font-size:12.5px;flex:none}
+.ippf-content .ref-tab.on{border-bottom-color:#a88b53;color:var(--navy)}
+.ippf-content .ref-panel{min-height:110px;padding:2px 4px 10px}
+.ippf-content .ref-panel[hidden]{display:none}
+.ippf-content .ref-panel h3{font:600 18px/1.4 "Playfair Display",Georgia,serif;margin:2px 0 8px}
+.ippf-content .ref-panel p{margin:0 0 9px}
+.ippf-guidance{list-style:none;padding:0;margin:4px 0}
+.ippf-guidance li{display:flex;align-items:flex-start;gap:10px;padding:6px 0;color:var(--ink-2);font-size:14px;line-height:1.55}
+.ippf-guidance .ic{width:20px;height:20px;flex:none;padding:3px;border-radius:50%;background:#a88b53;stroke:#fff;fill:none;stroke-width:2.4}
+.ippf-content .ref-note{display:flex;align-items:flex-start;gap:8px;border-top:1px solid var(--line);padding:10px 4px 0;margin:4px 0 0;font-size:12px;line-height:1.5}
+.ippf-content .ref-note .ic{width:17px;height:17px;flex:none;stroke:var(--ink-3);fill:none;stroke-width:1.7}
+.ippf-detail .ref-pager{margin:10px 0 0}
+.ippf-page #askWrap{padding:10px 28px 16px!important}
+.ippf-page .askbar{margin:0;border-radius:8px}
+.ippf-page .askbar .btn-gold{background:transparent;color:var(--gold-3);border:1px solid var(--gold-2)}
+.ippf-page .askbar .btn-gold:hover{background:rgba(255,255,255,.1)}
+@media(max-width:680px){
+  .ippf-page .page-h,.ippf-page .catalog{padding-left:18px;padding-right:18px}
+  .ippf-page #askWrap{padding-left:18px!important;padding-right:18px!important}
+  .ippf-feature-grid{grid-template-columns:1fr}
+  .ippf-content{padding:0 12px 12px}
+  .ippf-detail .ref-pager a{min-width:0;flex:1}
+}

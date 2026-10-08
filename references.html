@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Supporting References — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=14">
+<link rel="stylesheet" href="assets/iia.css?v=15">
 </head>
 <body>
 <header class="top"></header>
@@ -47,7 +47,7 @@
 <script src="data/library.js"></script>
 <script src="data/supplied-standards.js"></script>
 <script src="data/iia.js?v=9"></script>
-<script src="data/references.js"></script>
+<script src="data/references.js?v=2"></script>
 <script src="assets/iia.js?v=12"></script>
 <script>
 (function(){
@@ -72,6 +72,18 @@
 
   function referenceSidebar(activePage, activeId){
     const coso = activePage === 'coso';
+    const ippf = activePage === 'ippf';
+    if(ippf){
+      const page=refPage('ippf');
+      let nav='<div class="nav-h"><div class="t">IPPF Reference Material</div>'+
+        '<label class="nav-find">'+icon('search')+'<input type="search" id="sideFind" placeholder="Find guidance…" aria-label="Find guidance"></label></div>'+
+        '<div class="nav-body ippf-side-body" id="sideBody"><div class="side-group">Small Audit Functions</div>';
+      refItems(page).forEach(({item})=>{
+        nav+='<a class="side-link ref-item'+(item.id===activeId?' on':'')+'" data-label="'+esc(item.num+' '+item.title)+'" href="references.html?ref=ippf&item='+encodeURIComponent(item.id)+'">'+
+          '<span class="ref-num">'+esc(item.num)+'</span><span>'+esc(item.sidebarTitle || item.title)+'</span></a>';
+      });
+      return nav+'</div><a class="coso-back" href="references.html">'+icon('back')+'Back to Reference Library</a>';
+    }
     let h = '<div class="nav-h"><div class="t">' + (coso ? 'COSO Principles' : 'Reference Library') + '</div>' +
       '<label class="nav-find">' + icon('search') +
       '<input type="search" id="sideFind" placeholder="' + (coso ? 'Find a principle' : 'Find a Reference') + '" aria-label="' + (coso ? 'Find a principle' : 'Find a Reference') + '">' +
@@ -128,6 +140,15 @@
   function wireReferenceSidebar(){
     const body = document.getElementById('sideBody');
     const find = document.getElementById('sideFind');
+    if(document.body.classList.contains('ippf-page')){
+      find.addEventListener('input',()=>{
+        const query=find.value.trim().toLowerCase();
+        body.querySelectorAll('.ref-item').forEach(link=>{
+          link.hidden=!!query&&!link.dataset.label.toLowerCase().includes(query);
+        });
+      });
+      return;
+    }
     const update = () => {
       const q = find.value.trim().toLowerCase();
       body.querySelectorAll('.ref-category-block').forEach(block => {
@@ -276,6 +297,7 @@
 
   function showDetail(page, item, items, index){
     document.body.classList.toggle('coso-page',page.id==='coso');
+    document.body.classList.toggle('ippf-page',page.id==='ippf');
     document.getElementById('eyebrow').textContent = page.eyebrow || page.group;
     document.getElementById('title').textContent = page.title;
     document.getElementById('lede').textContent = page.lede;
@@ -283,13 +305,14 @@
     document.getElementById('mid').hidden = false;
     document.getElementById('extraSep').hidden = false;
     document.getElementById('chips').hidden = true;
-    document.getElementById('searchForm').hidden = page.chip === 'glossaries' || page.id === 'coso';
-    document.getElementById('badgeSlot').innerHTML = page.id === 'coso'
+    document.getElementById('searchForm').hidden = page.chip === 'glossaries' || page.id === 'coso' || page.id === 'ippf';
+    document.getElementById('badgeSlot').innerHTML = page.id === 'ippf'
+      ? '<span class="ippf-badge">'+icon('doc')+'Supporting reference</span>' : page.id === 'coso'
       ? '<span class="coso-stat">'+icon('layer')+'5 Components</span><span class="coso-stat">'+icon('doc')+'17 Principles</span>' : page.badge
       ? '<span class="badge hist">' + esc(page.badge) + '</span>' : '';
     const qText = encodeURIComponent(page.title + ' ' + item.title);
-    setAsk(page.id==='coso' ? 'Ask about this principle' : 'Ask about this ' + (page.chip === 'glossaries' ? 'term' : page.id === '2017' ? 'standard' : 'topic') + '.',
-      page.id==='coso' ? 'Get guidance, related content, and practical insights from the AI Assistant.' : page.note, 'assistant.html?q=' + qText);
+    setAsk(page.id==='ippf' ? 'Ask about this guidance' : page.id==='coso' ? 'Ask about this principle' : 'Ask about this ' + (page.chip === 'glossaries' ? 'term' : page.id === '2017' ? 'standard' : 'topic') + '.',
+      page.id==='ippf' ? 'Get a plain-language explanation, practical examples or implementation tips.' : page.id==='coso' ? 'Get guidance, related content, and practical insights from the AI Assistant.' : page.note, 'assistant.html?q=' + qText);
 
     if (page.chip === 'glossaries') renderGlossary(page, item, items, index);
     else if (page.id === 'ethics') renderEthics(page, item, items, index);
@@ -324,15 +347,24 @@
   }
 
   function renderIppf(page, item, items, index){
-    let h = '<div class="catalog ref-detail">';
-    h += '<div class="ref-kicker">' + esc(item.num) + ' · ' + esc(item.standards || '') + '</div>';
-    h += '<h2 class="ref-h">' + esc(item.title) + '</h2>';
-    if (item.challenge) h += '<p class="ref-challenge"><b>Challenge level.</b> ' + esc(item.challenge) + '</p>';
-    h += tabs(['Overview','Implementation Challenges','Practical Guidance'], 0);
-    h += panel(0, 0, '<h3>Overview</h3><p>' + esc(item.overview || item.summary) + '</p>');
-    h += panel(1, 0, '<h3>Implementation Challenges</h3><p>' + esc(item.challenge || '') + '</p><p>' + esc(item.summary) + '</p>');
-    h += panel(2, 0, '<h3>Practical Guidance</h3>' + bullets(item.guidance || []));
-    h += '<p class="ref-note">' + esc(page.note) + '</p>';
+    const refs=[...new Set((item.standards || '').match(/\b\d+\.\d+\b/g) || [])];
+    let h = '<div class="catalog ref-detail ippf-detail">';
+    h += '<div class="ippf-feature-grid"><div class="ippf-feature">'+icon('users')+
+      '<div><h3>Resource Constraints</h3><p>Limited budgets, specialist skills and review capacity.</p></div></div>'+
+      '<div class="ippf-feature">'+icon('shield')+
+      '<div><h3>Organisational Independence</h3><p>Clear reporting lines and safeguards for additional roles.</p></div></div></div>';
+    h += '<h2 class="ref-h">' + esc(item.num) + '. ' + esc(item.title) + '</h2>';
+    h += '<div class="ippf-meta">'+(item.challengeLevel ? '<span class="ippf-challenge">'+icon('grid')+'Challenge Level: '+esc(item.challengeLevel)+'</span>' : '')+
+      refs.map(ref=>'<a class="ippf-standard" href="standard.html?ref='+encodeURIComponent(ref)+'">Standard '+esc(ref)+icon('arrow')+'</a>').join('')+'</div>';
+    h += '<div class="ippf-content"><div class="ref-tabs" role="tablist" aria-label="Guidance sections">'+
+      ['Overview','Implementation Challenges','Practical Guidance'].map((name,i)=>
+        '<button type="button" class="ref-tab'+(i?'':' on')+'" role="tab" aria-selected="'+(!i)+'" aria-controls="ippf-panel-'+i+'" id="ippf-tab-'+i+'" data-tab="'+i+'">'+name+'</button>').join('')+'</div>';
+    h += '<section class="ref-panel on" role="tabpanel" aria-labelledby="ippf-tab-0" id="ippf-panel-0" data-panel="0"><h3>Overview</h3><p>'+esc(item.summary)+'</p>'+
+      (item.overview && item.overview !== item.summary ? '<p>'+esc(item.overview)+'</p>' : '')+'</section>';
+    h += '<section class="ref-panel" role="tabpanel" aria-labelledby="ippf-tab-1" id="ippf-panel-1" data-panel="1" hidden><h3>Implementation Challenges</h3><p>'+esc(item.challenge || '')+'</p></section>';
+    h += '<section class="ref-panel" role="tabpanel" aria-labelledby="ippf-tab-2" id="ippf-panel-2" data-panel="2" hidden><h3>Practical Guidance</h3><ul class="ippf-guidance">'+
+      (item.guidance || []).map(text=>'<li>'+icon('check')+'<span>'+esc(text)+'</span></li>').join('')+'</ul></section>';
+    h += '<p class="ref-note">'+icon('doc')+esc(page.note)+'</p></div>';
     h += pager(page, items, index);
     out.innerHTML = h + '</div>';
   }
@@ -441,6 +473,7 @@
 
   function draw(){
     document.body.classList.remove('coso-page');
+    document.body.classList.remove('ippf-page');
     const id = qs('ref');
     const q = input.value.trim();
     if (id && !q) detail(id);
