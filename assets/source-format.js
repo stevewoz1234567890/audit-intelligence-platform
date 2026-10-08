@@ -93,9 +93,7 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
     }
   }
   let html='', paragraph='', list='', items=[];
-  const flushParagraph = () => {
-    if (paragraph){ html += '<p>' + escape(paragraph) + '</p>'; paragraph=''; }
-  };
+  const implementation = sectionTitle === 'Considerations for Implementation';
   const flushList = () => {
     if (items.length){
       const bulletStyle = sectionTitle === 'Red Flags' ? 'flag' :
@@ -105,6 +103,17 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
         '</' + list + '>';
       items=[];
     }
+  };
+  const flushParagraph = () => {
+    if (!paragraph) return;
+    if (implementation && !/:$/.test(paragraph)){
+      if (list !== 'ul'){ flushList(); list='ul'; }
+      items.push(paragraph);
+    } else {
+      flushList();
+      html += '<p>' + escape(paragraph) + '</p>';
+    }
+    paragraph='';
   };
   function heading(line, index){
     const next = lines.slice(index + 1).find(x => x.trim());
@@ -116,7 +125,7 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   }
   lines.forEach((raw,index) => {
     let line=raw.trim();
-    if (!line){ flushList(); flushParagraph(); return; }
+    if (!line){ flushParagraph(); flushList(); return; }
     if (isBullet(raw) || isNumber(raw)){
       flushParagraph();
       const type=isBullet(raw) ? 'ul' : 'ol';
@@ -127,16 +136,16 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
       // Indented PDF line wrapping belongs to the preceding list item.
       items[items.length - 1] += ' ' + line;
     } else if (heading(line,index)){
-      flushList();
       flushParagraph();
+      flushList();
       html += '<h3 class="source-subhead">' + escape(line) + '</h3>';
     } else {
-      flushList();
+      if (!implementation) flushList();
       if (paragraph && (/[.!?;:]$/.test(paragraph) || /^\s*$/.test(lines[index - 1] || '')))
         flushParagraph();
       paragraph += (paragraph ? ' ' : '') + line;
     }
   });
-  flushList(); flushParagraph();
+  flushParagraph(); flushList();
   return '<div class="card source-content">' + html + '</div>';
 }

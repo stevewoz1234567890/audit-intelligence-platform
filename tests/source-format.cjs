@@ -58,7 +58,23 @@ for (const rec of context.records){
   const cleaned=context.clean(rec.summary);
   assert(!bullet.test(cleaned),`${rec.ref} summary contains a PDF bullet`);
   assert.deepEqual(words(cleaned),words(rec.summary),`${rec.ref} summary wording changed`);
+  assert(context.render(rec.implementation[0],'Considerations for Implementation').includes('<ul class="rq dot">'),
+    `${rec.ref} implementation considerations need gold-dot list items`);
 }
+const boardSupport=context.records.find(r=>r.ref==='Standard 6.3');
+const boardImplementation=context.render(boardSupport.implementation[0],'Considerations for Implementation');
+assert.equal((boardImplementation.match(/<li>/g)||[]).length,8,
+  'Standard 6.3 must have one bullet per distinct consideration');
+assert(!boardImplementation.includes('<p>The supplied guidance recommends'),
+  'Standard 6.3 considerations must not remain separate paragraphs');
+assert(boardImplementation.includes('management at least annually; quarterly private sessions'),
+  'Wrapped PDF lines must stay with the same consideration');
+assert.equal(renderedText(boardImplementation).replace(/\s+/g,' ').trim(),
+  boardSupport.implementation[0].replace(/^Considerations for Implementation\s*/, '').replace(/\s+/g,' ').trim(),
+  'Standard 6.3 must preserve the complete text and punctuation');
+const mixedImplementation=context.render('Considerations for Implementation\nBefore starting:\n     Review the plan.\n     Inform the board.\nNext, confirm delivery.','Considerations for Implementation');
+assert(mixedImplementation.includes('<p>Before starting:</p><ul class="rq dot">'));
+assert(mixedImplementation.includes('<li><span>Next, confirm delivery.</span></li>'));
 const useOfInformation=context.records.find(r=>r.ref==='Standard 5.1');
 assert(context.clean(useOfInformation.summary).includes(
   'using information. Information must not be used for personal gain.'));
