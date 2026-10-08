@@ -54,7 +54,8 @@ function get(url){
         const items=[...source.querySelectorAll('.source-content p, .source-content li > span, .card > ul.rq > li > span')];
         const links=[...source.querySelectorAll('.professional-standard-link')];
         return {title:document.title,items:items.map(item=>({text:item.textContent,
-          refs:[...item.textContent.matchAll(/\\bStandard\\s+(\\d+\\.\\d+)\\b/gi)].map(match=>match[1])})),
+          refs:[...item.textContent.matchAll(/\\bStandard\\s+(\\d+\\.\\d+)\\b|^\\s*(?:Related standards:\\s*)?(\\d+\\.\\d+)\\s*[—–:-]/gi)]
+            .map(match=>match[1]||match[2])})),
           links:links.map(a=>({href:a.getAttribute('href'),text:a.textContent,
             cursor:getComputedStyle(a).cursor,decoration:getComputedStyle(a).textDecorationLine,
             visible:a.getBoundingClientRect().width>0})),
@@ -68,7 +69,8 @@ function get(url){
         const link=state.links[i],ref=expected[i];
         assert(titles.has(ref),`${standard.ref} references missing destination ${ref}`);
         assert.equal(link.href,`standard.html?ref=${ref}`,`${standard.ref} points to wrong destination`);
-        assert(link.text.includes(`Standard ${ref}`),`${standard.ref} number not clickable`);
+        assert(new RegExp(`\\b${ref.replace('.','\\.')}\\b`).test(link.text),
+          `${standard.ref} number not clickable`);
         if(state.items.some(item=>item.text.includes(link.text+' — ') ||
           item.text.includes(link.text+': ')) && !link.text.includes(' — ') && !link.text.includes(': '))
           assert.fail(`${standard.ref} supplied title is outside the reference link`);
@@ -83,6 +85,28 @@ function get(url){
     for(const ref of seen){
       await visit(ref);
       assert.equal(await evaluate('document.querySelector(".std-h h1").textContent'),titles.get(ref),ref);
+    }
+    await visit('6.3');
+    assert.equal(await evaluate(`(()=>{
+      const links=['6.1','6.2'].map(ref=>document.querySelector('#source a[href="standard.html?ref='+ref+'"]'));
+      return links.every(a=>a && a.closest('li')) &&
+        links[0].closest('li')!==links[1].closest('li') &&
+        links[1].closest('li').getBoundingClientRect().top>links[0].closest('li').getBoundingClientRect().top &&
+        links[0].textContent==='6.1 — Internal Audit Mandate' &&
+        links[1].textContent==='6.2 — Internal Audit Charter';
+    })()`),true,'6.3 related standards must be separate linked list lines');
+    await evaluate(`document.querySelector('#source a[href="standard.html?ref=6.1"]').click()`);
+    for(let i=0;i<150;i++){
+      if(await evaluate(`location.search==='?ref=6.1' && document.querySelector('.std-h h1')?.textContent===${JSON.stringify(titles.get('6.1'))}`))break;
+      if(i===149)throw Error('Clicking 6.3 related 6.1 did not open 6.1');
+      await new Promise(resolve=>setTimeout(resolve,100));
+    }
+    await visit('6.3');
+    await evaluate(`document.querySelector('#source a[href="standard.html?ref=6.2"]').click()`);
+    for(let i=0;i<150;i++){
+      if(await evaluate(`location.search==='?ref=6.2' && document.querySelector('.std-h h1')?.textContent===${JSON.stringify(titles.get('6.2'))}`))break;
+      if(i===149)throw Error('Clicking 6.3 related 6.2 did not open 6.2');
+      await new Promise(resolve=>setTimeout(resolve,100));
     }
     await visit('7.1');
     assert.deepEqual((await evaluate(`[...document.querySelectorAll('#source .professional-standard-link')]

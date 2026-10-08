@@ -94,7 +94,8 @@ let linked=0;
 for (const rec of context.records){
   const text=rec.sourceSections.find(s=>s.number===8).text;
   const html=context.render(text,'Professional References');
-  const refs=[...text.matchAll(/\bStandard\s+(\d+\.\d+)\b/gi)].map(m=>m[1]);
+  const refs=[...text.matchAll(/\bStandard\s+(\d+\.\d+)\b|\b(?<=[;:]\s)(\d+\.\d+)\s*[—–:-]/gi)]
+    .map(m=>m[1]||m[2]);
   const hrefs=[...html.matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]);
   assert.deepEqual(hrefs,refs,`${rec.ref}: every numbered reference must link to its own standard`);
   assert.deepEqual(words(renderedText(html)),words(text.replace(/^\s*[•●▪◦]\s*/gm,'')),
@@ -105,6 +106,11 @@ assert.deepEqual([...context.render(context.records.find(r=>r.ref==='Standard 7.
   .sourceSections.find(s=>s.number===8).text,'Professional References')
   .matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]),
   ['7.1','6.2','2.3','11.3','11.4']);
+const boardReferences=context.render(boardSupport.sourceSections.find(s=>s.number===8).text,'Professional References');
+assert(boardReferences.includes('<li><span>Related standards: <a class="professional-standard-link" href="standard.html?ref=6.1">6.1 — Internal Audit Mandate</a>;</span></li><li><span><a class="professional-standard-link" href="standard.html?ref=6.2">6.2 — Internal Audit Charter</a>.</span></li>'),
+  '6.3 related standards must be individually linked on separate lines without changing punctuation');
+assert.equal(context.referenceLinks('6.1 — Internal Audit Mandate; 6.2 — Internal Audit Charter.',standards,true),
+  '<a class="professional-standard-link" href="standard.html?ref=6.1">6.1 — Internal Audit Mandate</a>; <a class="professional-standard-link" href="standard.html?ref=6.2">6.2 — Internal Audit Charter</a>.');
 assert.equal(context.referenceLinks('Standard 7.1 — Organizational Independence.',standards),
   '<a class="professional-standard-link" href="standard.html?ref=7.1">Standard 7.1 — Organizational Independence</a>.');
 assert.equal(context.referenceLinks('Standard 99.9 — Unknown & <unsafe>',standards),
