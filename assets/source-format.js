@@ -98,7 +98,9 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   };
   const flushList = () => {
     if (items.length){
-      html += '<' + list + ' class="rq ' + (list === 'ul' ? 'dot' : '') + '">' +
+      const bulletStyle = sectionTitle === 'Red Flags' ? 'flag' :
+        /^(?:Required Evidence|Examples of Evidence of Conformance)$/.test(sectionTitle) ? 'tick' : 'dot';
+      html += '<' + list + ' class="rq ' + (list === 'ul' ? bulletStyle : '') + '">' +
         items.map(item => '<li><span>' + escape(item) + '</span></li>').join('') +
         '</' + list + '>';
       items=[];

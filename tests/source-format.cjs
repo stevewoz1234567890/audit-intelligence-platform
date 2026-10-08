@@ -46,6 +46,11 @@ assert.equal(context.records.length,46);
 const recommendations=context.records.find(r => r.ref === 'Standard 14.4');
 const requirements=context.render(recommendations.requirement,'Requirements');
 assert(requirements.includes('<ul class="rq dot">'));
+assert(context.render(' Evidence A\n Evidence B','Examples of Evidence of Conformance')
+  .includes('<ul class="rq tick"><li><span>Evidence A</span></li><li><span>Evidence B</span></li></ul>'));
+assert(context.render(' Flag A\n Flag B','Red Flags')
+  .includes('<ul class="rq flag"><li><span>Flag A</span></li><li><span>Flag B</span></li></ul>'));
+assert(context.render(' Other item','Audit Focus Areas').includes('<ul class="rq dot">'));
 assert(requirements.includes('<p>When auditors and management disagree'));
 assert(!requirements.includes('<p>Requirements</p>'));
 const development=context.records.find(r => r.ref === 'Standard 10.2');
