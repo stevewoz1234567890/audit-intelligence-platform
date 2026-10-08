@@ -9,6 +9,8 @@ vm.runInContext(fs.readFileSync(path.join(root,'data/supplied-standards.js'),'ut
   '\nthis.records=SUPPLIED_RECORDS',context);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/source-format.js'),'utf8') +
   '\nthis.render=sourceFormat',context);
+vm.runInContext(fs.readFileSync(path.join(root,'assets/iia.js'),'utf8') +
+  '\nthis.clean=cleanSummary',context);
 
 function words(text){
   return (text.match(/[\p{L}\p{N}]+/gu) || []).map(w => w.toLowerCase());
@@ -51,6 +53,17 @@ assert(context.render(' Evidence A\n Evidence B','Examples of Evidence of 
 assert(context.render(' Flag A\n Flag B','Red Flags')
   .includes('<ul class="rq flag"><li><span>Flag A</span></li><li><span>Flag B</span></li></ul>'));
 assert(context.render(' Other item','Audit Focus Areas').includes('<ul class="rq dot">'));
+const bullet=/[•●▪◦]/u;
+for (const rec of context.records){
+  const cleaned=context.clean(rec.summary);
+  assert(!bullet.test(cleaned),`${rec.ref} summary contains a PDF bullet`);
+  assert.deepEqual(words(cleaned),words(rec.summary),`${rec.ref} summary wording changed`);
+}
+const useOfInformation=context.records.find(r=>r.ref==='Standard 5.1');
+assert(context.clean(useOfInformation.summary).includes(
+  'using information. Information must not be used for personal gain.'));
+assert.equal(context.clean(' One.  Two.'),'One. Two.');
+assert.equal(context.clean('  Plain prose with a ✓ check.  '),'Plain prose with a ✓ check.');
 assert(requirements.includes('<p>When auditors and management disagree'));
 assert(!requirements.includes('<p>Requirements</p>'));
 const development=context.records.find(r => r.ref === 'Standard 10.2');

@@ -100,7 +100,7 @@
 <script src="data/supplied-tables.js"></script>
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
-<script src="assets/iia.js?v=11"></script>
+<script src="assets/iia.js?v=12"></script>
 <script>
 (function(){
   const conv = document.getElementById('conv');
@@ -249,9 +249,9 @@
       const body=(label,values)=>'<p><span class="kind">'+esc(label)+'</span></p>'+ul(values);
       const blocks=[];
       const add=(label,anchor,values)=>{if(values.length)blocks.push({label,anchor,html:body(label,values)});};
-      if(kind==='requirements'||kind==='checklist')add('Requirements (supplied summary)','requirements',[rec.requirement]);
-      if(kind==='implementation')add('Considerations for Implementation','implementation',rec.implementation||[]);
-      if(kind==='conformance')add('Examples of Evidence of Conformance','conformance',rec.conformance||[]);
+      if(kind==='requirements'||kind==='checklist')add('Requirements (supplied summary)','requirements',[cleanSummary(rec.requirement)]);
+      if(kind==='implementation')add('Considerations for Implementation','implementation',(rec.implementation||[]).map(cleanSummary));
+      if(kind==='conformance')add('Examples of Evidence of Conformance','conformance',(rec.conformance||[]).map(cleanSummary));
       if(kind==='focus')add('Audit Focus Areas','focus',bullet(2));
       if(kind==='risks'||kind==='both')add('Suggested risks and potential consequences','risks',cells(3));
       if(kind==='controls'||kind==='both')add('Suggested controls and control types','controls',cells(4));

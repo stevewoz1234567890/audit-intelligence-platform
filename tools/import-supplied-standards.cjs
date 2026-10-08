@@ -101,8 +101,10 @@ for (let number=3; number<=15; number++){
       source:`Client-supplied Standard ${number} PDF (summary and suggested applications)`,
       sourcePdf:`assets/standards/standard-${number}.pdf`,
       summary: guidance.requirement.replace(/^Requirements(?:\s*[—–-][^\n]*)?\s*/i,'')
-        .replace(/\s+/g,' ').match(/^.{0,220}(?:\.|:|;)(?=\s|$)/)?.[0] ||
-        guidance.requirement.replace(/\s+/g,' ').slice(0,220).replace(/\s+\S*$/,'') + '…',
+        .replace(/\s*[•●▪◦]\s*/g,' ').replace(/\s+/g,' ').trim()
+        .match(/^.{0,220}(?:\.|:|;)(?=\s|$)/)?.[0] ||
+        guidance.requirement.replace(/\s*[•●▪◦]\s*/g,' ').replace(/\s+/g,' ')
+          .slice(0,220).replace(/\s+\S*$/,'').trim() + '…',
       requirement: guidance.requirement,
       implementation:guidance.implementation ? [guidance.implementation] : [],
       conformance:guidance.conformance ? [guidance.conformance] : [],

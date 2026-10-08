@@ -121,7 +121,9 @@ function get(url){
       assert(state.sourceNotes<=2,`${ref} unexpected unstructured tables`);
       assert(state.bullets>0,`${ref} contains no formatted source bullets`);
       assert(!state.rawBullets,`${ref} has PDF bullet glyphs in paragraphs`);
-      assert(!/^[•●▪◦]/.test(state.summary),`${ref} summary starts with a PDF bullet glyph`);
+      assert(!/[•●▪◦\uFFFD\uFFFC]/.test(state.summary),`${ref} summary contains a PDF or broken glyph`);
+      if (ref === '5.1') assert(state.summary.includes('using information. Information must not be used for personal gain.'),
+        'Standard 5.1 introductory sentences must be separated by a normal space');
       assert(!state.repeatedHeading,`${ref} repeats its section heading`);
       assert.equal(state.pdf,`assets/standards/standard-${ref.split('.')[0]}.pdf`,ref);
       for (const key of ['requirements','implementation','conformance','focus','risks','controls','procedures','redflags','findings','source'])

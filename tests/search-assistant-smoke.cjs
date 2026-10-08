@@ -104,6 +104,11 @@ const pages=()=>new Promise((resolve,reject)=>http.get('http://127.0.0.1:9339/js
     const mixed=await ask('What does Standard 14.6 require for insight?');
     assert(mixed.links.some(x=>x.includes('ref=14.6#requirements')) &&
       !mixed.links.some(x=>x.includes('domain=I')),JSON.stringify(mixed));
+    const useOfInformation=await ask('What does Standard 5.1 require?');
+    assert(useOfInformation.text.includes('using information. Information must not be used for personal gain.'),
+      'Standard 5.1 assistant summary should separate sentences with a normal space');
+    assert(!/[•●▪◦\uFFFD\uFFFC]/.test(useOfInformation.text),
+      'Assistant requirements must not show raw PDF or broken glyphs');
     const procedures=await ask('Which audit procedures and evidence relate to Standard 14.6?');
     assert(procedures.text.includes('evidence') && procedures.links.some(x=>x.includes('14.6#procedures')),JSON.stringify(procedures));
     const checklist=await ask('Create an audit checklist based on Standard 9.4.');

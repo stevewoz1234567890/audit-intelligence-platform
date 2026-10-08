@@ -51,7 +51,8 @@ function esc(s){
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function cleanSummary(text){
-  return String(text == null ? '' : text).replace(/^\s*[•●▪◦]\s*/, '').trim();
+  // PDF list markers are layout, not prose; keep every word and its punctuation.
+  return String(text == null ? '' : text).replace(/\s*[•●▪◦]\s*/g, ' ').trim();
 }
 function qs(name){ return new URLSearchParams(location.search).get(name) || ''; }
 function fmtDate(iso){
