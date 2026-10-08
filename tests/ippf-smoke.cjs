@@ -40,7 +40,7 @@ const get=url=>new Promise((resolve,reject)=>http.get(url,res=>{
   }
   try{
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false});
-    await visit('?ref=ippf','document.querySelectorAll(".ippf-side-body .ref-item").length===10');
+    await visit('?ref=ippf','document.querySelectorAll("[data-category=ippf] .ref-item").length===10');
     const data=await evaluate(`REF_PAGES.find(page=>page.id==='ippf').groups.flatMap(g=>g.items)
       .map(item=>({id:item.id,num:item.num,title:item.title,sidebarTitle:item.sidebarTitle,summary:item.summary,
         overview:item.overview,challenge:item.challenge,guidance:item.guidance,
@@ -54,10 +54,12 @@ const get=url=>new Promise((resolve,reject)=>http.get(url,res=>{
       const state=await evaluate(`(()=>({
         sideTitle:document.querySelector('.nav-h .t')?.textContent,
         search:document.querySelector('#sideFind')?.placeholder,
-        group:document.querySelector('.ippf-side-body .side-group')?.textContent,
-        nums:[...document.querySelectorAll('.ippf-side-body .ref-num')].map(el=>el.textContent),
-        active:document.querySelector('.ippf-side-body .ref-item.on')?.textContent.trim(),
-        back:document.querySelector('.coso-back')?.getAttribute('href'),
+        categories:document.querySelectorAll('.ref-category').length,
+        expanded:document.querySelector('[data-category=ippf] .ref-category')?.getAttribute('aria-expanded'),
+        otherOpen:[...document.querySelectorAll('.ref-category-block:not([data-category=ippf]) .ref-submenu')].some(menu=>!menu.hidden),
+        group:document.querySelector('[data-category=ippf] .side-group')?.textContent,
+        nums:[...document.querySelectorAll('[data-category=ippf] .ref-num')].map(el=>el.textContent),
+        active:document.querySelector('[data-category=ippf] .ref-item.on')?.getAttribute('href'),
         notice:!!document.querySelector('.nav-note'),
         subtitle:document.querySelector('#lede')?.textContent,
         badge:document.querySelector('.ippf-badge')?.textContent.trim(),
@@ -77,13 +79,15 @@ const get=url=>new Promise((resolve,reject)=>http.get(url,res=>{
         next:document.querySelector('.ref-pager a.nx')?.getAttribute('href')||null,
         overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth
       }))()`);
-      assert.equal(state.sideTitle,'IPPF Reference Material');
-      assert.equal(state.search,'Find guidance…');
-      assert.equal(state.group,'Small Audit Functions');
+      assert.equal(state.sideTitle,'Reference Library');
+      assert.equal(state.search,'Find a Reference');
+      assert.equal(state.categories,5);
+      assert.equal(state.expanded,'true');
+      assert.equal(state.otherOpen,false);
+      assert.equal(state.group,'Mandate & Foundations');
       assert.deepEqual(state.nums,Array.from({length:10},(_,n)=>String(n+1)));
-      assert(state.active.includes(item.sidebarTitle || item.title));
-      assert.equal(state.back,'references.html');
-      assert(!state.notice);
+      assert.equal(state.active,'references.html?ref=ippf&item='+item.id);
+      assert(state.notice);
       assert.equal(state.subtitle,'Guidance for Small Internal Audit Functions');
       assert.equal(state.badge,'Supporting reference');
       assert.deepEqual(state.features,['Resource Constraints','Organisational Independence']);
@@ -126,8 +130,11 @@ const get=url=>new Promise((resolve,reject)=>http.get(url,res=>{
       if(index===0){
         const filtered=await evaluate(`(()=>{let input=document.querySelector('#sideFind');
           input.value='Performance';input.dispatchEvent(new Event('input',{bubbles:true}));
-          return [...document.querySelectorAll('.ippf-side-body .ref-item:not([hidden])')].map(x=>x.textContent.trim())})()`);
+          return [...document.querySelectorAll('[data-category=ippf] .ref-item:not([hidden])')].map(x=>x.textContent.trim())})()`);
         assert.equal(filtered.length,1);assert(filtered[0].includes('Performance Measurement'));
+        const searchState=await evaluate(`(()=>({categories:[...document.querySelectorAll('.ref-category-block:not([hidden])')].map(x=>x.dataset.category),
+          open:document.querySelector('[data-category=ippf] .ref-category').getAttribute('aria-expanded')}))()`);
+        assert.deepEqual(searchState,{categories:['ippf'],open:'true'});
       }
     }
     const refs=[...new Set(data.flatMap(item=>item.refs))];
@@ -145,6 +152,8 @@ const get=url=>new Promise((resolve,reject)=>http.get(url,res=>{
       await visit('?ref=ippf&item='+item.id,
         `!!document.querySelector('.ippf-detail') && document.querySelector('.ref-h')?.textContent===${JSON.stringify(item.num+'. '+item.title)}`);
       assert.equal(await evaluate('document.documentElement.scrollWidth<=document.documentElement.clientWidth'),true,item.id+' mobile overflow');
+      assert.equal(await evaluate(`document.querySelector('[data-category=ippf] .ref-item.on')?.getAttribute('href')`),
+        'references.html?ref=ippf&item='+item.id);
     }
     console.log(`PASS: 10 IPPF topics, 30 tabs, ${refs.length} standard destinations, search, pager, desktop and mobile`);
   }finally{await send('Emulation.clearDeviceMetricsOverride');ws.close();}

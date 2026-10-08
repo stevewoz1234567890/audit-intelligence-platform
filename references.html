@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Supporting References — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=15">
+<link rel="stylesheet" href="assets/iia.css?v=16">
 </head>
 <body>
 <header class="top"></header>
@@ -72,18 +72,6 @@
 
   function referenceSidebar(activePage, activeId){
     const coso = activePage === 'coso';
-    const ippf = activePage === 'ippf';
-    if(ippf){
-      const page=refPage('ippf');
-      let nav='<div class="nav-h"><div class="t">IPPF Reference Material</div>'+
-        '<label class="nav-find">'+icon('search')+'<input type="search" id="sideFind" placeholder="Find guidance…" aria-label="Find guidance"></label></div>'+
-        '<div class="nav-body ippf-side-body" id="sideBody"><div class="side-group">Small Audit Functions</div>';
-      refItems(page).forEach(({item})=>{
-        nav+='<a class="side-link ref-item'+(item.id===activeId?' on':'')+'" data-label="'+esc(item.num+' '+item.title)+'" href="references.html?ref=ippf&item='+encodeURIComponent(item.id)+'">'+
-          '<span class="ref-num">'+esc(item.num)+'</span><span>'+esc(item.sidebarTitle || item.title)+'</span></a>';
-      });
-      return nav+'</div><a class="coso-back" href="references.html">'+icon('back')+'Back to Reference Library</a>';
-    }
     let h = '<div class="nav-h"><div class="t">' + (coso ? 'COSO Principles' : 'Reference Library') + '</div>' +
       '<label class="nav-find">' + icon('search') +
       '<input type="search" id="sideFind" placeholder="' + (coso ? 'Find a principle' : 'Find a Reference') + '" aria-label="' + (coso ? 'Find a principle' : 'Find a Reference') + '">' +
@@ -140,15 +128,6 @@
   function wireReferenceSidebar(){
     const body = document.getElementById('sideBody');
     const find = document.getElementById('sideFind');
-    if(document.body.classList.contains('ippf-page')){
-      find.addEventListener('input',()=>{
-        const query=find.value.trim().toLowerCase();
-        body.querySelectorAll('.ref-item').forEach(link=>{
-          link.hidden=!!query&&!link.dataset.label.toLowerCase().includes(query);
-        });
-      });
-      return;
-    }
     const update = () => {
       const q = find.value.trim().toLowerCase();
       body.querySelectorAll('.ref-category-block').forEach(block => {

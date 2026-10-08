@@ -793,20 +793,8 @@ body.domain-i-page:has(.public-sector) .askbar .btn-gold:hover{background:rgba(2
 .coso-detail .ref-pager{margin-top:12px}
 @media(max-width:680px){.coso-page .page-h,.coso-page .catalog{padding-left:18px;padding-right:18px}.coso-page #askWrap{padding-left:18px!important;padding-right:18px!important}.coso-detail .ref-panel{padding:18px 20px}.coso-detail .ref-pager a{min-width:0;flex:1}}
 
-/* IPPF guidance: compact, consistent topic navigation and content. */
+/* IPPF guidance: compact topic content; sidebar stays in the Reference Library. */
 .ippf-page{background:#f8f6f2}
-.ippf-page .nav-h{padding:18px 18px 14px}
-.ippf-page .nav-h .t{font:600 21px/1.3 "Playfair Display",Georgia,serif;color:#fff;letter-spacing:0;text-transform:none}
-.ippf-page .nav-find input{background:#102e48;border-color:rgba(255,255,255,.23)}
-.ippf-side-body{padding:12px 10px 16px}
-.ippf-side-body .side-group{margin:2px 8px 8px;padding:12px 2px 4px;border-top:1px solid rgba(255,255,255,.16);color:#b8c7d2;letter-spacing:.17em}
-.ippf-side-body .ref-item{display:flex;align-items:center;gap:12px;padding:8px 9px;border-radius:5px;color:#f2f4f6;font-size:12.5px;line-height:1.35}
-.ippf-side-body .ref-item:hover{background:rgba(255,255,255,.1)}
-.ippf-side-body .ref-item.on{background:#a88b53;color:#fff;box-shadow:none}
-.ippf-side-body .ref-num{min-width:25px;height:25px;display:grid;place-items:center;border-radius:4px;background:#a88b53;color:#fff;font:700 12px "Inter",sans-serif}
-.ippf-side-body .ref-item.on .ref-num{background:rgba(255,255,255,.24);color:#fff}
-.ippf-side-body .ref-item[hidden]{display:none}
-.ippf-page .coso-back{margin-top:auto}
 .ippf-page .page-h{padding:14px 28px 6px}
 .ippf-page .page-h h1{color:var(--navy);font-size:clamp(28px,3vw,40px);line-height:1.2}
 .ippf-page .page-h > p{margin:3px 0 0}

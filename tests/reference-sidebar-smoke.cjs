@@ -115,6 +115,22 @@ const {pathToFileURL}=require('node:url');
     assert.equal(await evaluate('document.querySelectorAll(".coso-group-toggle").length'),5);
     assert.equal(await evaluate('document.querySelector(".ref-item.on")?.getAttribute("href")'),'references.html?ref=coso&item=17');
     assert.equal(await evaluate('document.querySelectorAll(".ref-tab").length'),6);
+    await visit('', 'document.querySelectorAll(".ref-category").length === 5');
+    await evaluate(`document.querySelector('[data-category="ippf"] .ref-category').click()`);
+    await evaluate(`document.querySelector('a[href="references.html?ref=ippf&item=board"]').click()`);
+    for(let i=0;i<100;i++){
+      if(await evaluate(`new URLSearchParams(location.search).get('item')==='board' &&
+        document.querySelector('[data-category=ippf] .ref-item.on')?.getAttribute('href')==='references.html?ref=ippf&item=board'`))break;
+      await new Promise(resolve=>setTimeout(resolve,100));
+    }
+    assert.deepEqual(await evaluate(`(()=>({
+      sideTitle:document.querySelector('.nav-h .t')?.textContent,
+      categories:document.querySelectorAll('.ref-category').length,
+      ippfOpen:document.querySelector('[data-category=ippf] .ref-category')?.getAttribute('aria-expanded'),
+      others:[...document.querySelectorAll('.ref-category-block:not([data-category=ippf]) .ref-submenu')].filter(x=>!x.hidden).length,
+      heading:document.querySelector('.ippf-detail h2')?.textContent
+    }))()`),{sideTitle:'Reference Library',categories:5,ippfOpen:'true',others:0,heading:'2. Board Interaction'});
+    await visit('?ref=coso&item=17',`document.querySelector('.ref-item.on .ref-num')?.textContent==='17'`);
     for(let i=0;i<6;i++){
       const panel=await evaluate(`(()=>{document.querySelector('[data-tab="${i}"]').click();return {open:document.querySelectorAll('.ref-panel:not([hidden])').length,selected:document.querySelector('[data-tab="${i}"]').getAttribute('aria-selected'),content:document.querySelector('.ref-panel:not([hidden])').textContent.trim().length}})()`);
       assert.equal(panel.open,1);assert.equal(panel.selected,'true');assert(panel.content>0);
