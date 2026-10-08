@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Standard — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=16">
+<link rel="stylesheet" href="assets/iia.css?v=17">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
 <script src="data/iia.js?v=9"></script>
 <script src="data/references.js"></script>
 <script src="assets/iia.js?v=12"></script>
-<script src="assets/source-format.js?v=5"></script>
+<script src="assets/source-format.js?v=6"></script>
 <script>
 (function(){
   const ref = qs('ref') || '1.1';
@@ -257,7 +257,7 @@
       '</dl></div>' +
       (rec.references && rec.references.length
         ? '<div class="card" style="margin-top:13px"><ul class="rq dot">' +
-          rec.references.map(x => '<li><span>' + esc(x.t) +
+          rec.references.map(x => '<li><span>' + professionalReferenceLinks(x.t,all) +
             (x.u ? ' — <a href="' + esc(x.u) + '" target="_blank" rel="noopener noreferrer" ' +
               'style="color:var(--navy-3);font-weight:600">official source &#8599;</a>' : '') +
             '</span></li>').join('') + '</ul></div>'

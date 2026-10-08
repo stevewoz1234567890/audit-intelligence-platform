@@ -7,8 +7,9 @@ const root = path.resolve(__dirname,'..');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(root,'data/supplied-standards.js'),'utf8') +
   '\nthis.records=SUPPLIED_RECORDS',context);
+vm.runInContext(fs.readFileSync(path.join(root,'data/iia.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/source-format.js'),'utf8') +
-  '\nthis.render=sourceFormat',context);
+  '\nthis.render=sourceFormat;this.referenceLinks=professionalReferenceLinks',context);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/iia.js'),'utf8') +
   '\nthis.clean=cleanSummary',context);
 
@@ -87,4 +88,27 @@ assert(context.render(development.implementation[0],'Considerations for Implemen
   .includes('Considerations for Implementation — Recruitment'));
 const risks=context.render(recommendations.sourceSections[2].text,'Risks','table');
 assert(risks.includes('class="source-table"') && risks.includes('tabindex="0"'));
+const standards=vm.runInContext('allStandards()',context);
+assert.equal(standards.length,52);
+let linked=0;
+for (const rec of context.records){
+  const text=rec.sourceSections.find(s=>s.number===8).text;
+  const html=context.render(text,'Professional References');
+  const refs=[...text.matchAll(/\bStandard\s+(\d+\.\d+)\b/gi)].map(m=>m[1]);
+  const hrefs=[...html.matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]);
+  assert.deepEqual(hrefs,refs,`${rec.ref}: every numbered reference must link to its own standard`);
+  assert.deepEqual(words(renderedText(html)),words(text.replace(/^\s*[•●▪◦]\s*/gm,'')),
+    `${rec.ref}: links must preserve Professional References wording`);
+  linked+=hrefs.length;
+}
+assert.deepEqual([...context.render(context.records.find(r=>r.ref==='Standard 7.1')
+  .sourceSections.find(s=>s.number===8).text,'Professional References')
+  .matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]),
+  ['7.1','6.2','2.3','11.3','11.4']);
+assert.equal(context.referenceLinks('Standard 7.1 — Organizational Independence.',standards),
+  '<a class="professional-standard-link" href="standard.html?ref=7.1">Standard 7.1 — Organizational Independence</a>.');
+assert.equal(context.referenceLinks('Standard 99.9 — Unknown & <unsafe>',standards),
+  'Standard 99.9 — Unknown &amp; &lt;unsafe&gt;');
+assert(linked>150,`Expected broad Professional References coverage; found ${linked}`);
 console.log(`PASS: ${count} PDF sections retain their wording after formatting`);
+console.log(`PASS: ${linked} numbered references across 46 PDF-backed standards link to their exact pages`);

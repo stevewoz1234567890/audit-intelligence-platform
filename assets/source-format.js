@@ -14,6 +14,25 @@ function classificationBadges(value, type){
   }).join(range ? '<span class="classification-separator">' +
     escape(String(value).match(/[–—-]/)[0]) + '</span>' : '') + '</span>';
 }
+/* Link only numbered standards that exist in the platform; retain the supplied wording. */
+function professionalReferenceLinks(text, standards){
+  const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const available = new Set(standards.map(s => s.ref));
+  const pattern = /\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?/gi;
+  let html='', last=0;
+  for (const match of String(text).matchAll(pattern)){
+    html += escape(text.slice(last,match.index));
+    const label=match[0].replace(/\s+$/,'');
+    if (available.has(match[1]))
+      html += '<a class="professional-standard-link" href="standard.html?ref=' +
+        encodeURIComponent(match[1]) + '">' + escape(label) + '</a>';
+    else html += escape(label);
+    last=match.index+match[0].length;
+    html += escape(match[0].slice(label.length));
+  }
+  return html + escape(text.slice(last));
+}
 function sourceFormat(text, sectionTitle, kind, structured, appendix){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -94,12 +113,14 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
   }
   let html='', paragraph='', list='', items=[];
   const implementation = sectionTitle === 'Considerations for Implementation';
+  const referenceText = value => sectionTitle === 'Professional References' && typeof allStandards === 'function' ?
+    professionalReferenceLinks(value,allStandards()) : escape(value);
   const flushList = () => {
     if (items.length){
       const bulletStyle = sectionTitle === 'Red Flags' ? 'flag' :
         /^(?:Required Evidence|Examples of Evidence of Conformance)$/.test(sectionTitle) ? 'tick' : 'dot';
       html += '<' + list + ' class="rq ' + (list === 'ul' ? bulletStyle : '') + '">' +
-        items.map(item => '<li><span>' + escape(item) + '</span></li>').join('') +
+        items.map(item => '<li><span>' + referenceText(item) + '</span></li>').join('') +
         '</' + list + '>';
       items=[];
     }
@@ -111,7 +132,7 @@ function sourceFormat(text, sectionTitle, kind, structured, appendix){
       items.push(paragraph);
     } else {
       flushList();
-      html += '<p>' + escape(paragraph) + '</p>';
+      html += '<p>' + referenceText(paragraph) + '</p>';
     }
     paragraph='';
   };
