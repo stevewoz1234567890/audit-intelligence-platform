@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Global Internal Audit Standards — Audit Intelligence</title>
-<link rel="stylesheet" href="assets/iia.css?v=13">
+<link rel="stylesheet" href="assets/iia.css?v=14">
 </head>
 <body>
 
@@ -86,22 +86,33 @@
     return '<div class="di-item-list">' + items.map(x => '<div class="di-item">' + icon(symbol) +
       '<div><b>' + esc(x.title) + '</b><span>' + esc(x.text) + '</span></div></div>').join('') + '</div>';
   }
+  function psTopics(items, symbol){
+    return '<div class="ps-topic-grid">' + items.map(x =>
+      '<article class="ps-panel ps-topic"><div class="ps-topic-title">' + icon(symbol) +
+      '<h4>' + esc(x.title) + '</h4></div><p>' + esc(x.text) + '</p></article>').join('') + '</div>';
+  }
+  function psFlags(items){
+    return '<ul class="ps-flags">' + items.map(x => '<li><span class="ps-flag-icon" aria-hidden="true">!</span><span>' + esc(x) + '</span></li>').join('') + '</ul>';
+  }
   function psPanel(title, content, cls){
     return '<section class="ps-panel' + (cls ? ' ' + cls : '') + '"><h4>' + esc(title) + '</h4>' + content + '</section>';
   }
   function psArea(id, title, data, symbol){
-    const parts = [psPanel('Application Considerations', data.text.map(x => '<p>' + esc(x) + '</p>').join('') +
-      psItems(data.subtopics, symbol) + (data.arrangements ? '<h5>Examples of Governance Arrangements</h5>' + psItems(data.arrangements, 'users') : '')),
-      psPanel('Audit Focus Areas', psList(data.focus)),
-      psPanel('Risks', psItems(data.risks, 'alert')),
+    const evidence = data.evidence && data.evidence.length
+      ? '<ul class="ps-evidence">' + data.evidence.map(x => '<li>' + icon('check') + '<span>' + esc(x) + '</span></li>').join('') + '</ul>'
+      : '<p class="ps-support-note">Document the records examined and conclusions reached for each audit procedure. The supplied content combines suggested audit procedures and required evidence; it does not provide a separate evidence list for this area.</p>';
+    const first = [psPanel('Audit Focus Areas', psList(data.focus)),
       psPanel('Suggested Controls', psList(data.controls)),
+      psPanel('Evidence', evidence), psPanel('Illustrative Findings', psList(data.findings))];
+    const second = [psPanel('Risks', psItems(data.risks, 'alert')),
       psPanel('Audit Procedures', psList(data.procedures)),
-      psPanel('Evidence', data.evidence && data.evidence.length ? psList(data.evidence) :
-        '<p>Document the records examined and conclusions reached for each audit procedure. The supplied content combines suggested audit procedures and required evidence; it does not provide a separate evidence list for this area.</p>'),
-      psPanel('Red Flags', psList(data.redFlags)),
-      psPanel('Illustrative Findings', psList(data.findings))];
+      psPanel('Red Flags', psFlags(data.redFlags))];
     return '<section class="ps-view" id="' + id + '" role="tabpanel" aria-labelledby="tab-' + id + '" hidden>' +
-      '<h2 class="ps-area-title">' + icon(symbol) + esc(title) + '</h2><div class="ps-area-grid">' + parts.join('') + '</div></section>';
+      '<h2 class="ps-area-title">' + icon(symbol) + esc(title) + '</h2>' +
+      psPanel('Application Considerations', psList(data.text), 'ps-considerations') +
+      psTopics(data.subtopics, symbol) +
+      (data.arrangements ? psPanel('Examples of Governance Arrangements', psItems(data.arrangements, 'users'), 'ps-arrangements') : '') +
+      '<div class="ps-area-grid"><div class="ps-column">' + first.join('') + '</div><div class="ps-column">' + second.join('') + '</div></div></section>';
   }
   function publicSectorPanel(){
     const o = PUBLIC_SECTOR.overview;

@@ -14,19 +14,37 @@ function classificationBadges(value, type){
   }).join(range ? '<span class="classification-separator">' +
     escape(String(value).match(/[–—-]/)[0]) + '</span>' : '') + '</span>';
 }
-/* Link only numbered standards that exist in the platform; retain the supplied wording. */
+/* Link references with an exact platform destination; retain the supplied wording. */
 function professionalReferenceLinks(text, standards){
   const escape = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const available = new Set(standards.map(s => s.ref));
-  const pattern = /\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?/gi;
+  const principles = typeof DOMAINS === 'undefined' ? [] : DOMAINS.flatMap(d => d.principles.map(p => ({number:String(p.num),domain:d.id})));
+  const domains = typeof DOMAINS === 'undefined' ? [] : DOMAINS.map(d => d.id);
+  const link = (label,href) => '<a class="professional-standard-link" href="' + escape(href) + '">' + escape(label) + '</a>';
+  // Match plural references before singular ones so both numbers get distinct destinations.
+  const pattern = /\bStandards\s+(\d+\.\d+)\s+(and|&)\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?|\bStandard\s+(\d+\.\d+)(?:\s*[—–:-]\s*([^.!?]+))?|\bPrinciple\s+(\d+)(?:\s*[—–:-]\s*([^.!?,]+))?|\bDomain\s+([IVX]+)(?:\s*[—–:-]\s*([^.!?,]+))?|Applying the Global Internal Audit Standards in the Public Sector|\b(\d+\.\d+)\b/gi;
   let html='', last=0;
   for (const match of String(text).matchAll(pattern)){
     html += escape(text.slice(last,match.index));
     const label=match[0].replace(/\s+$/,'');
-    if (available.has(match[1]))
-      html += '<a class="professional-standard-link" href="standard.html?ref=' +
-        encodeURIComponent(match[1]) + '">' + escape(label) + '</a>';
+    if (match[1]){
+      // Shared plural title is not attributed to either individual standard.
+      const first=match[1], second=match[3];
+      html += escape('Standards ') + (available.has(first) ? link(first,'standard.html?ref='+encodeURIComponent(first)) : escape(first)) +
+        escape(' '+match[2]+' ') + (available.has(second) ? link(second,'standard.html?ref='+encodeURIComponent(second)) : escape(second)) +
+        escape(label.slice(match[0].indexOf(second)+second.length));
+    } else if (match[5] && available.has(match[5]))
+      html += link(label,'standard.html?ref='+encodeURIComponent(match[5]));
+    else if (match[7] && principles.some(p => p.number === match[7])){
+      const principle=principles.find(p => p.number === match[7]);
+      html += link(label,'standards.html?domain='+encodeURIComponent(principle.domain)+'#principle-'+encodeURIComponent(principle.number));
+    } else if (match[9] && domains.includes(match[9].toUpperCase()))
+      html += link(label,'standards.html?domain='+encodeURIComponent(match[9].toUpperCase()));
+    else if (/^Applying the Global Internal Audit Standards in the Public Sector$/i.test(label))
+      html += link(label,'standards.html?domain=public-sector');
+    else if (match[11] && available.has(match[11]))
+      html += link(label,'standard.html?ref='+encodeURIComponent(match[11]));
     else html += escape(label);
     last=match.index+match[0].length;
     html += escape(match[0].slice(label.length));

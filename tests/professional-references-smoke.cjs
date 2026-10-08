@@ -44,47 +44,66 @@ function get(url){
   try{
     await visit('7.1');
     const standards=await evaluate('allStandards().map(({ref,title})=>({ref,title}))');
+    const principles=await evaluate('DOMAINS.flatMap(d=>d.principles.map(p=>({num:p.num,domain:d.id})))');
     assert.equal(standards.length,52);
     const titles=new Map(standards.map(s=>[s.ref,s.title]));
-    const seen=new Set();let count=0;
+    const seen=new Set(),otherDestinations=new Set();let count=0,otherCount=0;
     for(const standard of standards){
       await visit(standard.ref);
       const state=await evaluate(`(()=>{
         const source=document.querySelector('#source');
         const items=[...source.querySelectorAll('.source-content p, .source-content li > span, .card > ul.rq > li > span')];
         const links=[...source.querySelectorAll('.professional-standard-link')];
-        return {title:document.title,items:items.map(item=>({text:item.textContent,
-          refs:[...item.textContent.matchAll(/\\bStandard\\s+(\\d+\\.\\d+)\\b|^\\s*(?:Related standards:\\s*)?(\\d+\\.\\d+)\\s*[—–:-]/gi)]
-            .map(match=>match[1]||match[2])})),
+        return {title:document.title,items:items.map(item=>item.textContent),
           links:links.map(a=>({href:a.getAttribute('href'),text:a.textContent,
             cursor:getComputedStyle(a).cursor,decoration:getComputedStyle(a).textDecorationLine,
             visible:a.getBoundingClientRect().width>0})),
           unresolved:!!source.querySelector('.empty')};})()`);
       assert(state.title.startsWith(`Standard ${standard.ref} — ${standard.title} —`),standard.ref);
       assert(!state.unresolved,`${standard.ref} did not render`);
-      const expected=state.items.flatMap(item=>item.refs);
-      assert(expected.length,`${standard.ref} has no numbered professional references`);
+      const expected=state.items.flatMap(item=>{
+        const matches=[...item.matchAll(/\bStandards?\s+(\d+\.\d+)(?:\s+(?:and|&)\s+(\d+\.\d+))?|\b(\d+\.\d+)\b|\bPrinciple\s+(\d+)\b|\bDomain\s+([IVX]+)\b|Applying the Global Internal Audit Standards in the Public Sector/gi)];
+        return matches.flatMap(m=>m[1]?[m[1],...(m[2]?[m[2]]:[])].map(n=>'standard.html?ref='+n):
+          m[3]?['standard.html?ref='+m[3]]:m[4]?[`principle:${m[4]}`]:
+          m[5]?['standards.html?domain='+m[5].toUpperCase()]:['standards.html?domain=public-sector']);
+      }).map(dest=>dest.startsWith('principle:')?(()=>{
+        const num=Number(dest.slice(10));const principle=principles.find(p=>p.num===num);
+        return principle?'standards.html?domain='+principle.domain+'#principle-'+num:dest;
+      })():dest);
+      assert(expected.length,`${standard.ref} has no professional references with platform destinations: ${JSON.stringify(state.items)}`);
       assert.equal(state.links.length,expected.length,`${standard.ref} missing reference links`);
       for(let i=0;i<expected.length;i++){
-        const link=state.links[i],ref=expected[i];
-        assert(titles.has(ref),`${standard.ref} references missing destination ${ref}`);
-        assert.equal(link.href,`standard.html?ref=${ref}`,`${standard.ref} points to wrong destination`);
-        assert(new RegExp(`\\b${ref.replace('.','\\.')}\\b`).test(link.text),
-          `${standard.ref} number not clickable`);
-        if(state.items.some(item=>item.text.includes(link.text+' — ') ||
-          item.text.includes(link.text+': ')) && !link.text.includes(' — ') && !link.text.includes(': '))
-          assert.fail(`${standard.ref} supplied title is outside the reference link`);
-        if(link.text.includes(' — ') || link.text.includes(': '))
-          assert(link.text.length>`Standard ${ref}`.length,`${standard.ref} title not clickable`);
+        const link=state.links[i],dest=expected[i];
+        assert.equal(link.href,dest,`${standard.ref} points to wrong destination`);
+        if(dest.startsWith('standard.html?ref=')){
+          const ref=dest.slice('standard.html?ref='.length);
+          assert(titles.has(ref),`${standard.ref} references missing destination ${ref}`);
+          assert(new RegExp(`\\b${ref.replace('.','\\.')}\\b`).test(link.text),
+            `${standard.ref} number not clickable`);
+          seen.add(ref);
+        }else {otherCount++;otherDestinations.add(dest);}
         assert(link.visible && link.cursor==='pointer' && link.decoration.includes('underline'),
           `${standard.ref} link is not visually identifiable`);
-        seen.add(ref);count++;
+        count++;
       }
     }
     // Every linked destination is loaded and verified, not just inspected as an href.
     for(const ref of seen){
       await visit(ref);
       assert.equal(await evaluate('document.querySelector(".std-h h1").textContent'),titles.get(ref),ref);
+    }
+    for(const dest of otherDestinations){
+      const url=new URL(dest,base).href;
+      await send('Page.navigate',{url});
+      for(let i=0;i<150;i++){
+        if(await evaluate(`location.href===${JSON.stringify(url)} && !!document.querySelector('#out .catalog')`))break;
+        if(i===149)throw Error('Professional Reference destination did not load: '+url);
+        await new Promise(resolve=>setTimeout(resolve,100));
+      }
+      const section=dest.match(/#principle-(\d+)$/);
+      if(section) assert.equal(await evaluate('document.querySelector(".page-h h1").textContent.startsWith("Principle '+section[1]+' —")'),true,dest);
+      else if(dest.endsWith('public-sector'))assert.equal(await evaluate('!!document.querySelector("#ps-overview")'),true,dest);
+      else assert.equal(await evaluate('!!document.querySelector("#out .group-label")'),true,dest);
     }
     await visit('6.3');
     assert.equal(await evaluate(`(()=>{
@@ -131,6 +150,6 @@ function get(url){
       if(i===149)throw Error('Clicking 7.1 reference did not open 11.4');
       await new Promise(resolve=>setTimeout(resolve,100));
     }
-    console.log(`PASS: ${count} Professional References links across 52 pages; ${seen.size} destinations loaded and verified; 7.1 click works`);
+    console.log(`PASS: ${count} Professional References links across 52 pages (${otherCount} principle/domain/public-sector links); ${seen.size} standard and ${otherDestinations.size} other destinations loaded and verified; 7.1 click works`);
   }finally{ws.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

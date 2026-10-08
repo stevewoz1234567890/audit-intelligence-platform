@@ -103,8 +103,8 @@ let linked=0;
 for (const rec of context.records){
   const text=rec.sourceSections.find(s=>s.number===8).text;
   const html=context.render(text,'Professional References');
-  const refs=[...text.matchAll(/\bStandard\s+(\d+\.\d+)\b|\b(?<=[;:]\s)(\d+\.\d+)\s*[—–:-]/gi)]
-    .map(m=>m[1]||m[2]);
+  const refs=[...text.matchAll(/\bStandards?\s+(\d+\.\d+)(?:\s+(?:and|&)\s+(\d+\.\d+))?\b|\b(\d+\.\d+)\b/gi)]
+    .flatMap(m=>[m[1],m[2],m[3]].filter(Boolean));
   const hrefs=[...html.matchAll(/class="professional-standard-link" href="standard\.html\?ref=(\d+\.\d+)"/g)].map(m=>m[1]);
   assert.deepEqual(hrefs,refs,`${rec.ref}: every numbered reference must link to its own standard`);
   const expectedWords=rec.ref==='Standard 6.3' ? words(text.replace(/^\s*[•●▪◦]\s*/gm,'')
@@ -126,6 +126,18 @@ assert.equal(context.referenceLinks('Standard 7.1 — Organizational Independenc
   '<a class="professional-standard-link" href="standard.html?ref=7.1">Standard 7.1 — Organizational Independence</a>.');
 assert.equal(context.referenceLinks('Standard 99.9 — Unknown & <unsafe>',standards),
   'Standard 99.9 — Unknown &amp; &lt;unsafe&gt;');
+assert.equal(context.referenceLinks('Standards 8.3 and 8.4 — Quality and External Quality Assessment.',standards),
+  'Standards <a class="professional-standard-link" href="standard.html?ref=8.3">8.3</a> and <a class="professional-standard-link" href="standard.html?ref=8.4">8.4</a> — Quality and External Quality Assessment.');
+assert.equal(context.referenceLinks('Principle 12 — Enhance Quality and its standards.',standards),
+  '<a class="professional-standard-link" href="standards.html?domain=IV#principle-12">Principle 12 — Enhance Quality and its standards</a>.');
+assert.equal(context.referenceLinks('Domain V — Performing Internal Audit Services.',standards),
+  '<a class="professional-standard-link" href="standards.html?domain=V">Domain V — Performing Internal Audit Services</a>.');
+assert.equal(context.referenceLinks('Applying the Global Internal Audit Standards in the Public Sector.',standards),
+  '<a class="professional-standard-link" href="standards.html?domain=public-sector">Applying the Global Internal Audit Standards in the Public Sector</a>.');
+assert.equal(context.referenceLinks('Platform note: retain the distinction between 5.1 and 5.2.',standards),
+  'Platform note: retain the distinction between <a class="professional-standard-link" href="standard.html?ref=5.1">5.1</a> and <a class="professional-standard-link" href="standard.html?ref=5.2">5.2</a>.');
+assert.equal(context.referenceLinks('Applicable certification body policies.',standards),
+  'Applicable certification body policies.');
 assert(linked>150,`Expected broad Professional References coverage; found ${linked}`);
 console.log(`PASS: ${count} PDF sections retain their wording after formatting`);
 console.log(`PASS: ${linked} numbered references across 46 PDF-backed standards link to their exact pages`);

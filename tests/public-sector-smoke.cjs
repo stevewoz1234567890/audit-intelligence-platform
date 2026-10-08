@@ -52,6 +52,7 @@ function get(path){
   assert.equal(await evalJS('document.querySelectorAll(".public-sector [role=tabpanel]:not([hidden])").length'), 1);
   assert.equal(await evalJS('document.querySelector(".public-sector [role=tabpanel]:not([hidden])").id'), 'ps-overview');
   assert.equal(await evalJS('document.querySelectorAll(".ps-cards .ps-card").length'), 3);
+  assert.equal(await evalJS('document.querySelectorAll(".ps-lower > .ps-panel").length'), 2);
   assert.equal(await evalJS('document.body.classList.contains("public-sector-page")'), true);
   assert.equal(await evalJS('document.querySelector(".ps-page-note").textContent === PUBLIC_SECTOR.classification'), true);
   assert.equal(await evalJS('Array.from(document.querySelectorAll(".ps-cards .ps-card")).every(card => card.querySelector(":scope > .ic") && card.querySelector(".ps-card-content .ps-explore"))'), true);
@@ -67,6 +68,26 @@ function get(path){
     assert.equal(state.count, 1);
     assert.equal(state.selected, 'true');
     assert.equal(state.before, state.after, 'switching tabs must not scroll');
+  }
+  for(const [id,key] of [['ps-laws','laws'],['ps-governance','governance'],['ps-funding','funding']]){
+    await evalJS(`document.querySelector('#tab-${id}').click()`);
+    const check=await evalJS(`(()=>{const root=document.getElementById('${id}'),data=PUBLIC_SECTOR.${key};
+      const columns=[...root.querySelectorAll('.ps-column')];
+      return {topics:root.querySelectorAll('.ps-topic').length,expected:data.subtopics.length,
+        considerations:root.querySelector('.ps-considerations .rq').children.length,
+        arrangement:!!root.querySelector('.ps-arrangements'),flags:root.querySelectorAll('.ps-flags li').length,
+        cards:columns.map(c=>c.querySelectorAll('.ps-panel').length),
+        gaps:columns.flatMap(c=>[...c.children].slice(1).map((x,i)=>x.getBoundingClientRect().top-c.children[i].getBoundingClientRect().bottom)),
+        evidenceIsNote:!!root.querySelector('.ps-support-note'),
+        contents:[...data.text,...data.subtopics.map(x=>x.title),...(data.arrangements||[]).map(x=>x.title),...data.focus,...data.risks.map(x=>x.title),...data.controls,...data.procedures,...data.redFlags,...data.findings].every(x=>root.textContent.includes(x))};})()`);
+    assert.equal(check.topics,check.expected,id);
+    assert.equal(check.considerations,await evalJS(`PUBLIC_SECTOR.${key}.text.length`));
+    assert.equal(check.arrangement,id==='ps-governance');
+    assert.equal(check.flags,await evalJS(`PUBLIC_SECTOR.${key}.redFlags.length`));
+    assert.deepEqual(check.cards,[4,3]);
+    assert(check.gaps.every(g=>g>=16&&g<=20),JSON.stringify(check));
+    assert.equal(check.evidenceIsNote,true);
+    assert.equal(check.contents,true,'all supplied content must remain visible');
   }
   for (const id of sections.slice(0,3)) {
     assert.equal(await evalJS(`(() => { document.querySelector('.ps-explore[data-ps-tab=${id}]').click(); return document.querySelector('.public-sector [role=tabpanel]:not([hidden])').id })()`), id);

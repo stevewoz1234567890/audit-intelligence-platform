@@ -25,7 +25,7 @@ const {pathToFileURL}=require('node:url');
   });
   const evaluate=async expression=>{
     const response=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
-    if(response.exceptionDetails)throw Error(response.exceptionDetails.text);
+    if(response.exceptionDetails)throw Error(JSON.stringify(response.exceptionDetails));
     return response.result.value;
   };
   const base=process.env.REF_SIDEBAR_BASE
@@ -111,7 +111,36 @@ const {pathToFileURL}=require('node:url');
       await new Promise(resolve=>setTimeout(resolve,100));
     }
     assert.equal(await evaluate('new URLSearchParams(location.search).get("item")'),'17');
-    assert.equal(await evaluate('document.querySelector("[data-category=coso] .ref-category").getAttribute("aria-expanded")'),'true');
+    assert.equal(await evaluate('document.querySelector(".coso-group-toggle").getAttribute("aria-expanded")'),'false');
+    assert.equal(await evaluate('document.querySelectorAll(".coso-group-toggle").length'),5);
+    assert.equal(await evaluate('document.querySelector(".ref-item.on")?.getAttribute("href")'),'references.html?ref=coso&item=17');
+    assert.equal(await evaluate('document.querySelectorAll(".ref-tab").length'),6);
+    for(let i=0;i<6;i++){
+      const panel=await evaluate(`(()=>{document.querySelector('[data-tab="${i}"]').click();return {open:document.querySelectorAll('.ref-panel:not([hidden])').length,selected:document.querySelector('[data-tab="${i}"]').getAttribute('aria-selected'),content:document.querySelector('.ref-panel:not([hidden])').textContent.trim().length}})()`);
+      assert.equal(panel.open,1);assert.equal(panel.selected,'true');assert(panel.content>0);
+    }
+    const cosoSearch=await evaluate(`(()=>{let input=document.querySelector('#sideFind');input.value='Accountability';input.dispatchEvent(new Event('input',{bubbles:true}));return [...document.querySelectorAll('.coso-group:not([hidden]) .ref-item:not([hidden])')].map(a=>a.textContent.trim())})()`);
+    assert(cosoSearch.length===1 && cosoSearch[0].includes('Accountability'));
+    for(let n=1;n<=17;n++){
+      await visit('?ref=coso&item='+n,`new URLSearchParams(location.search).get('item')==='${n}' && document.querySelector('.ref-item.on .ref-num')?.textContent==='${n}' && !!document.querySelector('#coso-panel-5')`);
+      const state=await evaluate(`(()=>({title:document.querySelector('.ref-h').textContent,
+        active:document.querySelector('.ref-item.on')?.querySelector('.ref-num')?.textContent,
+        counts:[...document.querySelectorAll('.coso-count')].map(x=>+x.textContent),
+        focus:document.querySelectorAll('.coso-points li').length,
+        tabs:document.querySelectorAll('.ref-tab').length,
+        prev:document.querySelector('.ref-pager a:not(.nx)')?.getAttribute('href')||null,
+        next:document.querySelector('.ref-pager a.nx')?.getAttribute('href')||null,
+        note:document.querySelector('#coso-panel-5').textContent.includes(REF_PAGES[0].note)}))()`);
+      assert.equal(state.title,await evaluate(`REF_PAGES[0].groups.flatMap(g=>g.items)[${n-1}].title`));
+      assert.equal(state.active,String(n));assert.deepEqual(state.counts,[5,4,3,3,2]);
+      assert(state.focus>0);assert.equal(state.tabs,6);assert(state.note);
+      assert.equal(state.prev,n>1?'references.html?ref=coso&item='+(n-1):null);
+      assert.equal(state.next,n<17?'references.html?ref=coso&item='+(n+1):null);
+      for(let tab=0;tab<6;tab++){
+        const opened=await evaluate(`(()=>{document.querySelector('#coso-tab-${tab}').click();return {count:document.querySelectorAll('.ref-panel:not([hidden])').length,id:document.querySelector('.ref-panel:not([hidden])')?.id,selected:document.querySelector('#coso-tab-${tab}').getAttribute('aria-selected')}})()`);
+        assert.deepEqual(opened,{count:1,id:'coso-panel-'+tab,selected:'true'});
+      }
+    }
     assert.equal(await evaluate('document.querySelector(".ref-h").textContent'),'Evaluates and Communicates Deficiencies');
     await visit('?ref=risk-glossary&item='+encodeURIComponent('appetite'),
       'document.querySelector("[data-category=glossaries] .ref-category") !== null');
@@ -119,8 +148,12 @@ const {pathToFileURL}=require('node:url');
     await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
     await visit('', 'document.querySelectorAll(".ref-category").length === 5');
     await checkCardActions(1);
-    assert.equal(await evaluate(`(()=>{document.querySelector('[data-category="coso"] .ref-category').click();
-      return document.querySelector('[data-category="coso"] .ref-category').getAttribute('aria-expanded')})()`),'true');
+    await visit('?ref=coso&item=1','document.querySelectorAll(".coso-group-toggle").length === 5');
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'),true,'COSO detail must not overflow on mobile');
+    assert.equal(await evaluate('document.querySelector("#pageAsk b").textContent'),'Ask about this principle');
+    assert.equal(await evaluate('document.querySelector(".coso-back").getAttribute("href")'),'references.html');
+    assert.equal(await evaluate(`(()=>{document.querySelectorAll('.coso-group-toggle')[1].click();
+      return document.querySelectorAll('.coso-group-toggle')[1].getAttribute('aria-expanded')})()`),'true');
     assert.equal(await evaluate(`(()=>{document.querySelector('#navToggle').click();
       return document.querySelector('.nav').classList.contains('open')})()`),true);
     console.log('PASS: reference card actions aligned at desktop/mobile widths, category dropdowns, subitem links, active item, sidebar search and mobile toggle');
