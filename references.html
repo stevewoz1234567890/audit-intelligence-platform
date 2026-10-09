@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supporting References — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css?v=16">
+</head>
+<body>
+<header class="top"></header>
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="references.html" id="mid" hidden>Reference Library</a><span class="sep" id="extraSep" hidden>/</span><b id="crumbHere">Reference Library</b>
+    </div>
+    <div class="page-h">
+      <div class="eyebrow" id="eyebrow">Supporting Material</div>
+      <h1 id="title">Supporting References</h1>
+      <p id="lede">Explore the resources that support your use of the IIA Standards.</p>
+      <div id="badgeSlot"></div>
+      <form class="searchline" id="searchForm">
+        <label class="search-wrap">
+          <svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M17 17l-4-4"/></svg>
+          <input type="search" id="q" placeholder="Search references, terms and guidance…" aria-label="Search references">
+        </label>
+        <button class="btn-gold" type="submit">Search</button>
+      </form>
+      <div class="chips" id="chips"></div>
+      <div class="alpha" id="alpha" hidden></div>
+    </div>
+    <div id="out"></div>
+    <div style="padding:8px 32px 28px" id="askWrap">
+      <div class="askbar" id="pageAsk" style="max-width:none;margin:0">
+        <div class="ai-i"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/></svg></div>
+        <div>
+          <b>Connect references to the Standards.</b>
+          <span>Ask the AI Assistant to locate relevant standards and sources.</span>
+        </div>
+        <a class="btn-gold" href="assistant.html">Ask AI Assistant</a>
+      </div>
+    </div>
+    <footer></footer>
+  </div>
+</div>
+<script src="data/library.js"></script>
+<script src="data/supplied-standards.js"></script>
+<script src="data/iia.js?v=9"></script>
+<script src="data/references.js?v=2"></script>
+<script src="assets/iia.js?v=12"></script>
+<script>
+(function(){
+  const chips = [
+    { id:'all', label:'All' },
+    { id:'frameworks', label:'Frameworks' },
+    { id:'ethics', label:'Ethics' },
+    { id:'glossaries', label:'Glossaries' },
+    { id:'historical', label:'Historical' }
+  ];
+  let chip = 'all';
+  const input = document.getElementById('q');
+  const out = document.getElementById('out');
+  const categories = [
+    { id:'coso', label:'COSO Principles', pages:['coso'] },
+    { id:'ippf', label:'IPPF Reference Material', pages:['ippf'] },
+    { id:'ethics', label:'Code of Ethics', pages:['ethics'] },
+    { id:'glossaries', label:'Glossaries', pages:['glossary','risk-glossary'] },
+    { id:'historical', label:'Historical Standards', pages:['2017'] }
+  ];
+  let expandedCategory = categories.find(c => c.pages.includes(qs('ref')))?.id || null;
+
+  function referenceSidebar(activePage, activeId){
+    const coso = activePage === 'coso';
+    let h = '<div class="nav-h"><div class="t">' + (coso ? 'COSO Principles' : 'Reference Library') + '</div>' +
+      '<label class="nav-find">' + icon('search') +
+      '<input type="search" id="sideFind" placeholder="' + (coso ? 'Find a principle' : 'Find a Reference') + '" aria-label="' + (coso ? 'Find a principle' : 'Find a Reference') + '">' +
+      '</label></div><div class="nav-body" id="sideBody">' +
+      (coso ? '' : '<a class="side-link ref-all' + (!activePage ? ' on' : '') +
+      '" href="references.html" data-label="All References">All References</a>');
+    if(coso){
+      const icons=['layer','alert','gear','doc','target'];
+      const page=refPage('coso');
+      page.groups.forEach((group,i)=>{
+        const open=group.items.some(item=>item.id===activeId);
+        h+='<div class="coso-group"><button type="button" class="coso-group-toggle" aria-expanded="'+open+'" aria-controls="coso-group-'+i+'">'+
+          icon(icons[i])+'<span>'+esc(group.title)+'</span><b class="coso-count">'+group.items.length+'</b>'+icon('chev','ch')+'</button>'+
+          '<div class="coso-group-items" id="coso-group-'+i+'"'+(open?'':' hidden')+'>';
+        group.items.forEach(item=>{
+          h+='<a class="side-link ref-item'+(item.id===activeId?' on':'')+'" data-label="'+esc(item.num+' '+item.title)+'" href="references.html?ref=coso&item='+encodeURIComponent(item.id)+'">'+
+            '<span class="ref-num">'+esc(item.num)+'</span><span>'+esc(item.title)+'</span></a>';
+        });
+        h+='</div></div>';
+      });
+      return h+'</div><a class="coso-back" href="references.html">'+icon('back')+'Back to Reference Library</a>';
+    }
+    categories.forEach(category => {
+      const active = category.pages.includes(activePage);
+      const open = expandedCategory === category.id;
+      h += '<div class="ref-category-block" data-category="' + category.id + '">' +
+        '<button class="side-link ref-category' + (active ? ' on' : '') +
+        '" type="button" aria-expanded="' + open + '" aria-controls="ref-menu-' + category.id +
+        '" data-label="' + esc(category.label) + '">' + esc(category.label) + icon('chev','ch') + '</button>' +
+        '<div class="ref-submenu" id="ref-menu-' + category.id + '"' + (open ? '' : ' hidden') + '>';
+      category.pages.forEach(id => {
+        const page = refPage(id);
+        if (category.pages.length > 1)
+          h += '<div class="ref-subgroup-title" data-page="' + esc(page.id) + '" data-label="' + esc(page.title) + '">' + esc(page.title) + '</div>';
+        page.groups.forEach(group => {
+          if (page.groups.length > 1)
+            h += '<div class="side-group" data-label="' + esc(group.title) + '">' + esc(group.title) + '</div>';
+          group.items.forEach(item => {
+            const on = page.id === activePage && item.id === activeId;
+            h += '<a class="side-link ref-item' + (on ? ' on' : '') + '" data-page="' + esc(page.id) + '" data-label="' +
+              esc((item.num ? item.num + ' ' : '') + item.title) + '" href="references.html?ref=' +
+              encodeURIComponent(page.id) + '&item=' + encodeURIComponent(item.id) + '">' +
+              (item.num ? '<span class="ref-num">' + esc(item.num) + '</span>' : '') +
+              esc(item.title) + '</a>';
+          });
+        });
+      });
+      h += '</div></div>';
+    });
+    h += '</div><div class="nav-note">Historical material. Legacy references are clearly labelled.</div>';
+    return h;
+  }
+
+  function wireReferenceSidebar(){
+    const body = document.getElementById('sideBody');
+    const find = document.getElementById('sideFind');
+    const update = () => {
+      const q = find.value.trim().toLowerCase();
+      body.querySelectorAll('.ref-category-block').forEach(block => {
+        const button = block.querySelector('.ref-category');
+        const categoryMatch = button.dataset.label.toLowerCase().includes(q);
+        const matchingPages = [...block.querySelectorAll('.ref-subgroup-title')]
+          .filter(heading => heading.dataset.label.toLowerCase().includes(q))
+          .map(heading => heading.dataset.page);
+        let any = false;
+        block.querySelectorAll('.ref-item').forEach(link => {
+          const show = !q || categoryMatch || matchingPages.includes(link.dataset.page) ||
+            link.dataset.label.toLowerCase().includes(q);
+          link.hidden = !show;
+          if (show) any = true;
+        });
+        block.querySelectorAll('.side-group').forEach(heading => {
+          let sibling = heading.nextElementSibling;
+          let visible = false;
+          while (sibling && !sibling.matches('.side-group,.ref-subgroup-title')){
+            if (sibling.matches('.ref-item:not([hidden])')) visible = true;
+            sibling = sibling.nextElementSibling;
+          }
+          heading.hidden = !!q && !visible;
+        });
+        block.querySelectorAll('.ref-subgroup-title').forEach(heading => {
+          heading.hidden = !!q && ![...block.querySelectorAll('.ref-item:not([hidden])')]
+            .some(link => link.dataset.page === heading.dataset.page);
+        });
+        block.hidden = !!q && !categoryMatch && !any;
+        const open = q ? (categoryMatch || any) : expandedCategory === block.dataset.category;
+        block.querySelector('.ref-submenu').hidden = !open;
+        button.setAttribute('aria-expanded', String(open));
+      });
+      const all=body.querySelector('.ref-all');
+      if(all)all.hidden = !!q && !'all references'.includes(q);
+    };
+    body.addEventListener('click', e => {
+      const button = e.target.closest('.ref-category');
+      if (!button) return;
+      expandedCategory = expandedCategory === button.closest('.ref-category-block').dataset.category
+        ? null : button.closest('.ref-category-block').dataset.category;
+      update();
+    });
+    find.addEventListener('input', update);
+    body.querySelectorAll('.coso-group-toggle').forEach(button=>button.addEventListener('click',()=>{
+      const items=document.getElementById(button.getAttribute('aria-controls'));
+      items.hidden=!items.hidden;
+      button.setAttribute('aria-expanded',String(!items.hidden));
+    }));
+    if(body.querySelector('.coso-group'))find.addEventListener('input',()=>{
+      const q=find.value.trim().toLowerCase();
+      body.querySelectorAll('.coso-group').forEach(group=>{
+        const links=[...group.querySelectorAll('.ref-item')];
+        const groupMatch=group.querySelector('.coso-group-toggle span').textContent.toLowerCase().includes(q);
+        links.forEach(link=>link.hidden=!!q&&!groupMatch&&!link.dataset.label.toLowerCase().includes(q));
+        group.hidden=!!q&&!links.some(link=>!link.hidden);
+        if(q){group.querySelector('.coso-group-items').hidden=false;group.querySelector('button').setAttribute('aria-expanded','true');}
+      });
+    });
+  }
+
+  function paintChips(){
+    document.getElementById('chips').innerHTML = chips.map(c =>
+      '<button type="button" class="chip' + (c.id===chip?' on':'') + '" data-c="' + c.id + '">' +
+      esc(c.label) + '</button>').join('');
+  }
+
+  function setAsk(title, text, href){
+    const ask = document.getElementById('pageAsk');
+    ask.querySelector('b').textContent = title;
+    ask.querySelector('span').textContent = text;
+    ask.querySelector('a').setAttribute('href', href);
+  }
+
+  function list(){
+    document.getElementById('eyebrow').textContent = 'Supporting Material';
+    document.getElementById('title').textContent = 'Supporting References';
+    document.getElementById('lede').textContent = 'Explore the resources that support your use of the IIA Standards.';
+    document.getElementById('crumbHere').textContent = 'Reference Library';
+    document.getElementById('mid').hidden = true;
+    document.getElementById('extraSep').hidden = true;
+    document.getElementById('chips').hidden = false;
+    document.getElementById('alpha').hidden = true;
+    document.getElementById('badgeSlot').innerHTML = '';
+    document.getElementById('searchForm').hidden = false;
+    setAsk('Connect references to the Standards.',
+      'Ask the AI Assistant to locate relevant standards and sources.', 'assistant.html');
+    paintChips();
+    const q = input.value.trim();
+    let rows = REF_PAGES.filter(r => chip === 'all' || r.chip === chip);
+    if(q){
+      const hits=searchReferences(q).filter(hit=>chip==='all'||hit.page.chip===chip);
+      if(!hits.length){
+        out.innerHTML='<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
+        return;
+      }
+      out.innerHTML='<div class="results">'+hits.slice(0,40).map(({page,item,text})=>
+        '<a class="hit" href="references.html?ref='+encodeURIComponent(page.id)+'&item='+encodeURIComponent(item.id)+'">'+
+        '<span class="sref">'+esc(page.title)+'</span><h3>'+esc(item.title)+'</h3><p>'+esc(preview(text,q))+'</p></a>').join('')+'</div>';
+      return;
+    }
+    if (!rows.length){
+      out.innerHTML = '<div class="empty"><b>No references match.</b><p>Try another word, or clear the filter. Search stays inside this library.</p></div>';
+      return;
+    }
+    let h = '<div class="catalog"><div class="cgrid ref-grid">';
+    rows.forEach(r => {
+      h += '<a class="tcard ref-card" href="references.html?ref=' + encodeURIComponent(r.id) + '">' +
+        icon(r.icon || 'book').replace('class="ic"', 'class="ic ref-ico"') +
+        '<div class="tmain"><div class="kicker">' + esc(r.group) +
+        (r.badge ? '<span class="badge">' + esc(r.badge) + '</span>' : '') + '</div>' +
+        '<h3>' + esc(r.title) + '</h3><p>' + esc(r.blurb) + '</p>' +
+        '<span class="go">' + esc(r.action || 'Open reference') + '</span></div></a>';
+    });
+    out.innerHTML = h + '</div></div>';
+  }
+
+  function tabs(names, active){
+    return '<div class="ref-tabs">' + names.map((n,i) =>
+      '<button type="button" class="ref-tab' + (i===active?' on':'') + '" data-tab="' + i + '">' + esc(n) + '</button>'
+    ).join('') + '</div>';
+  }
+
+  function panel(i, active, html){
+    return '<div class="ref-panel' + (i===active?' on':'') + '" data-panel="' + i + '">' + html + '</div>';
+  }
+
+  function points(list){
+    return '<ol class="ref-points">' + list.map(f =>
+      '<li><b>' + esc(f.t) + '</b><span>' + esc(f.d) + '</span></li>').join('') + '</ol>';
+  }
+
+  function bullets(list){
+    return '<ul class="ref-bullets">' + list.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+  }
+
+  function pager(page, items, index){
+    const prev = items[index - 1];
+    const next = items[index + 1];
+    let h = '<div class="ref-pager">';
+    h += prev ? '<a href="references.html?ref=' + encodeURIComponent(page.id) + '&item=' + encodeURIComponent(prev.item.id) + '"><span>Previous</span><b>' + esc(prev.item.title) + '</b></a>' : '<span></span>';
+    h += next ? '<a class="nx" href="references.html?ref=' + encodeURIComponent(page.id) + '&item=' + encodeURIComponent(next.item.id) + '"><span>Next</span><b>' + esc(next.item.title) + '</b></a>' : '';
+    h += '</div>';
+    return h;
+  }
+
+  function showDetail(page, item, items, index){
+    document.body.classList.toggle('coso-page',page.id==='coso');
+    document.body.classList.toggle('ippf-page',page.id==='ippf');
+    document.getElementById('eyebrow').textContent = page.eyebrow || page.group;
+    document.getElementById('title').textContent = page.title;
+    document.getElementById('lede').textContent = page.lede;
+    document.getElementById('crumbHere').textContent = page.title;
+    document.getElementById('mid').hidden = false;
+    document.getElementById('extraSep').hidden = false;
+    document.getElementById('chips').hidden = true;
+    document.getElementById('searchForm').hidden = page.chip === 'glossaries' || page.id === 'coso' || page.id === 'ippf';
+    document.getElementById('badgeSlot').innerHTML = page.id === 'ippf'
+      ? '<span class="ippf-badge">'+icon('doc')+'Supporting reference</span>' : page.id === 'coso'
+      ? '<span class="coso-stat">'+icon('layer')+'5 Components</span><span class="coso-stat">'+icon('doc')+'17 Principles</span>' : page.badge
+      ? '<span class="badge hist">' + esc(page.badge) + '</span>' : '';
+    const qText = encodeURIComponent(page.title + ' ' + item.title);
+    setAsk(page.id==='ippf' ? 'Ask about this guidance' : page.id==='coso' ? 'Ask about this principle' : 'Ask about this ' + (page.chip === 'glossaries' ? 'term' : page.id === '2017' ? 'standard' : 'topic') + '.',
+      page.id==='ippf' ? 'Get a plain-language explanation, practical examples or implementation tips.' : page.id==='coso' ? 'Get guidance, related content, and practical insights from the AI Assistant.' : page.note, 'assistant.html?q=' + qText);
+
+    if (page.chip === 'glossaries') renderGlossary(page, item, items, index);
+    else if (page.id === 'ethics') renderEthics(page, item, items, index);
+    else if (page.id === '2017') renderHistorical(page, item, items, index);
+    else if (page.id === 'ippf') renderIppf(page, item, items, index);
+    else renderCoso(page, item, items, index);
+    wireTabs();
+  }
+
+  function renderCoso(page, item, items, index){
+    const group=items[index].group;
+    const entries=(text,kind)=>'<div class="coso-entry '+kind+'">'+(kind==='evidence'?icon('check'):kind==='flags'?'<span class="ps-flag-icon" aria-hidden="true">!</span>':icon('doc'))+'<p>'+esc(text)+'</p></div>';
+    let h = '<div class="catalog ref-detail coso-detail">';
+    h += '<div class="ref-kicker">Principle ' + esc(item.num) + '</div>';
+    h += '<h2 class="ref-h">' + esc(item.title) + '</h2>';
+    h += '<div class="coso-component">'+icon('layer')+esc(group)+'</div>';
+    h += '<p class="ref-sum">' + esc(item.summary) + '</p>';
+    const names=['Points of Focus','Implementation & Evidence','Risks & Controls','Audit Procedures','Red Flags','References'];
+    const icons=['target','doc','shield','gear','flag','book'];
+    h += '<div class="ref-tabs" role="tablist" aria-label="Principle sections">'+names.map((name,i)=>
+      '<button type="button" role="tab" aria-selected="'+(!i)+'" aria-controls="coso-panel-'+i+'" id="coso-tab-'+i+'" class="ref-tab'+(i?'':' on')+'" data-tab="'+i+'">'+icon(icons[i])+esc(name)+'</button>').join('')+'</div>';
+    const card=(i,heading,iconName,body,intro)=>'<section class="ref-panel'+(i?'':' on')+'" id="coso-panel-'+i+'" role="tabpanel" aria-labelledby="coso-tab-'+i+'" data-panel="'+i+'"'+(i?' hidden':'')+'><div class="coso-panel-head">'+icon(iconName)+'<div><h3>'+heading+'</h3>'+(intro?'<p>'+intro+'</p>':'')+'</div></div>'+body+'</section>';
+    h+=card(0,'Points of Focus','target','<ol class="coso-points">'+(item.focus||[]).map((f,i)=>
+      '<li><span class="coso-number">'+(i+1)+'</span><div><b>'+esc(f.t)+'</b><p>'+esc(f.d)+'</p></div></li>').join('')+'</ol>','Key aspects to consider for this principle.');
+    h+=card(1,'Implementation & Evidence','doc',entries(item.evidence||'','evidence'));
+    h+=card(2,'Risks & Controls','shield',entries(item.risks||'','risks'));
+    h+=card(3,'Audit Procedures','gear',entries(item.procedures||'','procedures'));
+    h+=card(4,'Red Flags','flag',entries(item.flags||'','flags'));
+    h+=card(5,'References','book','<p class="ref-note">'+esc(page.note)+' <a href="'+esc(page.official)+'" target="_blank" rel="noopener noreferrer">'+esc(page.officialLabel)+'</a></p>');
+    h += pager(page, items, index);
+    out.innerHTML = h + '</div>';
+  }
+
+  function renderIppf(page, item, items, index){
+    const refs=[...new Set((item.standards || '').match(/\b\d+\.\d+\b/g) || [])];
+    let h = '<div class="catalog ref-detail ippf-detail">';
+    h += '<div class="ippf-feature-grid"><div class="ippf-feature">'+icon('users')+
+      '<div><h3>Resource Constraints</h3><p>Limited budgets, specialist skills and review capacity.</p></div></div>'+
+      '<div class="ippf-feature">'+icon('shield')+
+      '<div><h3>Organisational Independence</h3><p>Clear reporting lines and safeguards for additional roles.</p></div></div></div>';
+    h += '<h2 class="ref-h">' + esc(item.num) + '. ' + esc(item.title) + '</h2>';
+    h += '<div class="ippf-meta">'+(item.challengeLevel ? '<span class="ippf-challenge">'+icon('grid')+'Challenge Level: '+esc(item.challengeLevel)+'</span>' : '')+
+      refs.map(ref=>'<a class="ippf-standard" href="standard.html?ref='+encodeURIComponent(ref)+'">Standard '+esc(ref)+icon('arrow')+'</a>').join('')+'</div>';
+    h += '<div class="ippf-content"><div class="ref-tabs" role="tablist" aria-label="Guidance sections">'+
+      ['Overview','Implementation Challenges','Practical Guidance'].map((name,i)=>
+        '<button type="button" class="ref-tab'+(i?'':' on')+'" role="tab" aria-selected="'+(!i)+'" aria-controls="ippf-panel-'+i+'" id="ippf-tab-'+i+'" data-tab="'+i+'">'+name+'</button>').join('')+'</div>';
+    h += '<section class="ref-panel on" role="tabpanel" aria-labelledby="ippf-tab-0" id="ippf-panel-0" data-panel="0"><h3>Overview</h3><p>'+esc(item.summary)+'</p>'+
+      (item.overview && item.overview !== item.summary ? '<p>'+esc(item.overview)+'</p>' : '')+'</section>';
+    h += '<section class="ref-panel" role="tabpanel" aria-labelledby="ippf-tab-1" id="ippf-panel-1" data-panel="1" hidden><h3>Implementation Challenges</h3><p>'+esc(item.challenge || '')+'</p></section>';
+    h += '<section class="ref-panel" role="tabpanel" aria-labelledby="ippf-tab-2" id="ippf-panel-2" data-panel="2" hidden><h3>Practical Guidance</h3><ul class="ippf-guidance">'+
+      (item.guidance || []).map(text=>'<li>'+icon('check')+'<span>'+esc(text)+'</span></li>').join('')+'</ul></section>';
+    h += '<p class="ref-note">'+icon('doc')+esc(page.note)+'</p></div>';
+    h += pager(page, items, index);
+    out.innerHTML = h + '</div>';
+  }
+
+  function renderEthics(page, item, items, index){
+    let h = '<div class="catalog ref-detail">';
+    h += '<p class="ref-note">' + esc(page.note) + ' <a href="' + esc(page.link) + '">' + esc(page.linkLabel) + '</a></p>';
+    h += '<div class="ref-kicker">Principle ' + esc(item.num) + '</div>';
+    h += '<h2 class="ref-h">' + esc(item.num) + '. ' + esc(item.title) + '</h2>';
+    h += '<p class="ref-sum">' + esc(item.summary) + '</p>';
+    h += tabs(['Rules of Conduct','Overview'], 0);
+    h += panel(0, 0, '<h3>Rules of Conduct</h3><p class="ref-intro">Internal auditors:</p>' +
+      '<ol class="ref-points">' + (item.rules || []).map(r =>
+        '<li><b>' + esc(r.n) + '</b><span>' + esc(r.t) + '</span></li>').join('') + '</ol>');
+    h += panel(1, 0, '<h3>Where this sits now</h3><p>' + esc(item.now || '') + '</p>');
+    h += pager(page, items, index);
+    out.innerHTML = h + '</div>';
+  }
+
+  function renderHistorical(page, item, items, index){
+    let h = '<div class="catalog ref-detail">';
+    h += '<p class="ref-note">' + esc(page.note) + ' <a href="' + esc(page.link) + '">' + esc(page.linkLabel) + '</a></p>';
+    h += '<div class="ref-kicker">Standard ' + esc(item.num) + '</div>';
+    h += '<h2 class="ref-h">' + esc(item.title) + '</h2>';
+    h += tabs(['Standard','Interpretation','Consulting'], 0);
+    h += panel(0, 0, '<h3>Summary</h3><p>' + esc(item.summary) + '</p>' + bullets(item.points || []) +
+      '<p><b>Current equivalent.</b> ' + esc(item.now || '') + '</p>');
+    h += panel(1, 0, '<h3>Assurance</h3><p>' + esc(item.assurance || '') + '</p>');
+    h += panel(2, 0, '<h3>Consulting</h3><p>' + esc(item.consulting || '') + '</p>');
+    h += pager(page, items, index);
+    out.innerHTML = h + '</div>';
+  }
+
+  function letterBar(page, letter){
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const have = {};
+    refItems(page).forEach(x => { have[(x.item.letter || x.item.title.charAt(0)).toUpperCase()] = true; });
+    document.getElementById('alpha').hidden = false;
+    document.getElementById('alpha').innerHTML = letters.map(L =>
+      '<a class="' + (L===letter?'on':'') + (have[L]?'':' off') + '" href="references.html?ref=' +
+      encodeURIComponent(page.id) + '&letter=' + L + '">' + L + '</a>').join('');
+  }
+
+  function renderGlossary(page, item, items, index){
+    const letter = (item.letter || item.title.charAt(0)).toUpperCase();
+    letterBar(page, letter);
+    let h = '<div class="catalog ref-detail">';
+    h += '<div class="ref-kicker">' + esc(letter) + '</div>';
+    h += '<h2 class="ref-h">' + esc(item.title) + '</h2>';
+    h += '<h3>Definition</h3><p>' + esc(item.definition) + '</p>';
+    if (item.source) h += '<p class="ref-note">' + esc(item.source) + '</p>';
+    if (item.examples && item.examples.length){
+      h += '<h3>Examples</h3>' + bullets(item.examples);
+    }
+    if (item.distinction){
+      h += '<h3>Key Distinction</h3><div class="ref-split"><div><b>' + esc(item.distinction.left) +
+        '</b><span>' + esc(item.distinction.leftText) + '</span></div><div><b>' + esc(item.distinction.right) +
+        '</b><span>' + esc(item.distinction.rightText) + '</span></div></div>';
+    }
+    if (item.related && item.related.length){
+      h += '<h3>Related Terms</h3><div class="ref-related">';
+      item.related.forEach(id => {
+        const rel = items.find(x => x.item.id === id);
+        if (!rel) return;
+        h += '<a href="references.html?ref=' + encodeURIComponent(page.id) + '&item=' + encodeURIComponent(id) + '">' +
+          esc(rel.item.title) + '</a>';
+      });
+      h += '</div>';
+    }
+    h += '<p class="ref-note">' + esc(page.note) + '</p>';
+    h += pager(page, items, index);
+    out.innerHTML = h + '</div>';
+  }
+
+  function wireTabs(){
+    const root = out;
+    root.querySelectorAll('.ref-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = btn.getAttribute('data-tab');
+        root.querySelectorAll('.ref-tab').forEach(b => { b.classList.toggle('on', b === btn); if(b.hasAttribute('aria-selected'))b.setAttribute('aria-selected',String(b===btn)); });
+        root.querySelectorAll('.ref-panel').forEach(p => { p.classList.toggle('on', p.getAttribute('data-panel') === i); if(p.hasAttribute('role'))p.hidden=p.getAttribute('data-panel')!==i; });
+      });
+    });
+  }
+
+  function detail(id){
+    const page = refPage(id);
+    if (!page){ list(); mount({ active:'references', side:referenceSidebar(), sideFilter:false }); wireReferenceSidebar(); return; }
+    expandedCategory = categories.find(c => c.pages.includes(page.id)).id;
+    let items = refItems(page);
+    const letter = (qs('letter') || '').toUpperCase();
+    if (letter && page.chip === 'glossaries'){
+      const subset = items.filter(x => (x.item.letter || x.item.title.charAt(0)).toUpperCase() === letter);
+      if (subset.length) items = subset;
+    }
+    let itemId = qs('item');
+    let index = items.findIndex(x => x.item.id === itemId);
+    if (index < 0) index = 0;
+    const item = items[index].item;
+    showDetail(page, item, items, index);
+    mount({ active:'references', side:referenceSidebar(page.id, item.id), sideFilter:false });
+    wireReferenceSidebar();
+    const on = document.querySelector('.ref-item.on');
+    if (on) on.scrollIntoView({ block:'nearest' });
+  }
+
+  function draw(){
+    document.body.classList.remove('coso-page');
+    document.body.classList.remove('ippf-page');
+    const id = qs('ref');
+    const q = input.value.trim();
+    if (id && !q) detail(id);
+    else { list(); mount({ active:'references', side:referenceSidebar(), sideFilter:false }); wireReferenceSidebar(); }
+  }
+
+  document.getElementById('chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]');
+    if (!b) return;
+    chip = b.dataset.c;
+    history.replaceState(null, '', 'references.html');
+    draw();
+  });
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (qs('ref')) history.replaceState(null, '', 'references.html');
+      draw();
+    }, 120);
+  });
+  document.getElementById('searchForm').addEventListener('submit', e => { e.preventDefault(); draw(); });
+  const seedChip = qs('chip');
+  if (seedChip && chips.some(c => c.id === seedChip)) chip = seedChip;
+  const seed = qs('q');
+  if (seed) input.value = seed;
+  draw();
+})();
+</script>
+</body>
+</html>

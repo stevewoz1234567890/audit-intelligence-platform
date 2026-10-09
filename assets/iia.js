@@ -1,0 +1,678 @@
+/* ============================================================
+   AUDIT INTELLIGENCE — SHARED APPLICATION SCRIPT
+   Standards navigator, platform search, shared chrome.
+
+   Search covers platform content only. There is no network
+   call anywhere in this file.
+   ============================================================ */
+
+/* ---------- icons ---------- */
+const ICONS = {
+  'search' :'<circle cx="9" cy="9" r="6"/><path d="M17 17l-4-4"/>',
+  'book'   :'<path d="M3 4h5a2 2 0 012 2v10a2 2 0 00-2-2H3z"/><path d="M17 4h-5a2 2 0 00-2 2v10a2 2 0 012-2h5z"/>',
+  'doc'    :'<path d="M5 2.5h6l4 4V17a.5.5 0 01-.5.5h-9A.5.5 0 015 17z"/><path d="M11 2.5v4h4"/>',
+  'doclines':'<path d="M5.2 2.4h6.2l4.2 4.1V17.2a.6.6 0 01-.6.6H5.2a.6.6 0 01-.6-.6V3a.6.6 0 01.6-.6z"/><path d="M11.2 2.5V6.6h4.2"/><path d="M7 10h6M7 12.4h6M7 14.8h4.2"/>',
+  'board'  :'<circle cx="10" cy="4.5" r="1.9"/><circle cx="4.8" cy="6.4" r="1.55"/><circle cx="15.2" cy="6.4" r="1.55"/><path d="M7.2 8.7a3.1 3.1 0 015.6 0"/><path d="M2.6 10.5a2.3 2.3 0 013.2 1.3"/><path d="M17.4 10.5a2.3 2.3 0 01-3.2 1.3"/><path d="M2.4 15.7h15.2"/><path d="M5.6 15.7c.15-1.6 1.4-2.7 2.9-2.7h3c1.5 0 2.75 1.1 2.9 2.7"/>',
+  'gear'   :'<circle cx="10" cy="10" r="2.35"/><path d="M10 1.7v2.15M10 16.15V18.3M1.7 10h2.15M16.15 10H18.3M4.15 4.15l1.5 1.5M14.35 14.35l1.5 1.5M15.85 4.15l-1.5 1.5M5.65 14.35l-1.5 1.5"/><circle cx="10" cy="10" r="5.15"/>',
+  'target' :'<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/>',
+  'alert'  :'<path d="M10 2.5l7.5 13h-15z"/><path d="M10 8v3.5M10 13.5v.01"/>',
+  'shield' :'<path d="M10 2.5l6 2.5v5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z"/><path d="M7.5 10l1.8 1.8 3.4-3.6"/>',
+  'check'  :'<path d="M4 10.5l4 4 8-9"/>',
+  'flag'   :'<path d="M5 17V3.5h9l-2 3 2 3H5"/>',
+  'grid'   :'<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/>',
+  'link'   :'<path d="M8.5 11.5a3 3 0 004.2 0l2.5-2.5a3 3 0 00-4.2-4.2l-.9.9"/><path d="M11.5 8.5a3 3 0 00-4.2 0L4.8 11a3 3 0 004.2 4.2l.9-.9"/>',
+  'spark'  :'<path d="M10 2.5l1.7 4.3 4.3 1.7-4.3 1.7L10 14.5 8.3 10.2 4 8.5l4.3-1.7z"/>',
+  'chev'   :'<path d="M7.5 4l5 6-5 6"/>',
+  'arrow'  :'<path d="M4 10h11M11 6l4 4-4 4"/>',
+  'back'   :'<path d="M16 10H5M9 6l-4 4 4 4"/>',
+  'layer'  :'<path d="M10 3l7 3.5-7 3.5-7-3.5z"/><path d="M3 11l7 3.5 7-3.5"/>',
+  'scale'  :'<path d="M10 2v15M5 17h10M3 7l7-2 7 2M4 7l-2 5h4zM16 7l-2 5h4z"/>',
+  'coins'  :'<ellipse cx="7" cy="6" rx="4" ry="2"/><path d="M3 6v6c0 1.1 1.8 2 4 2 .7 0 1.4-.1 2-.3M3 9c0 1.1 1.8 2 4 2"/><ellipse cx="13" cy="11" rx="4" ry="2"/><path d="M9 11v5c0 1.1 1.8 2 4 2s4-.9 4-2v-5M9 14c0 1.1 1.8 2 4 2s4-.9 4-2"/>',
+  'building':'<path d="M2 17.5h16M3 7h14L10 3zM4 9h2v6H4zM9 9h2v6H9zM14 9h2v6h-2zM2 15.5h16"/>',
+  'menu'   :'<path d="M3 6h14M3 10h14M3 14h14"/>',
+  'star'   :'<path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 4.9L10 14.3 5.55 16.6l.85-4.9L2.8 8.2l5-.7z"/>',
+  'users'  :'<circle cx="7.5" cy="7" r="2.8"/><path d="M2.5 16c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5"/>',
+  'clock'  :'<circle cx="10" cy="10" r="7"/><path d="M10 6v4.2l2.8 1.6"/>',
+  'export' :'<path d="M10 3v9M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14v2.5h12V14"/>',
+  'list'   :'<path d="M8 4.5h9M8 10h9M8 15.5h6"/><path d="M3.2 4.6l1.1 1.1 2-2M3.2 10.1l1.1 1.1 2-2M3.2 15.6l1.1 1.1 2-2"/>',
+  'doccheck':'<path d="M5 2.5h6l4 4V17a.5.5 0 01-.5.5h-9A.5.5 0 015 17z"/><path d="M11 2.5v4h4"/><path d="M7.4 12.4l1.5 1.5 3.2-3.4"/>',
+  'circlecheck':'<circle cx="10" cy="10" r="6.5"/><path d="M6.6 10.2l2.1 2.1 4.5-4.8"/>',
+  'hierarchy':'<path d="M7.2 2.4h5.6v3.2H7.2zM10 5.6v1.6M3.2 7.2h13.6M3.2 7.2v1.8M10 7.2v1.8M16.8 7.2v1.8"/><path d="M1.4 9h3.8v3.2H1.4zM8.1 9h3.8v3.2H8.1zM14.8 9h3.8v3.2h-3.8z"/>',
+  'tools'  :'<path d="M13.8 3.2a2.1 2.1 0 01-2.2 3.1L6.4 11.5 4.6 15.2l3.2-1.4 5.2-5.2a2.1 2.1 0 013-2.2L13.6 8"/><path d="M6.2 3.4L3.4 6.2l1.5 1.5 2.8-2.8zM4.2 16.2l5.2-5.2"/>'
+};
+function icon(n, cls){
+  return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 20 20" aria-hidden="true">' +
+    (ICONS[n] || '') + '</svg>';
+}
+
+/* ---------- helpers ---------- */
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function cleanSummary(text){
+  // PDF list markers are layout, not prose; keep every word and its punctuation.
+  return String(text == null ? '' : text).replace(/\s*[•●▪◦]\s*/g, ' ').trim();
+}
+function qs(name){ return new URLSearchParams(location.search).get(name) || ''; }
+function fmtDate(iso){
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d + ' ' + M[+m - 1] + ' ' + y;
+}
+
+function navAsset(src, alt){
+  return '<img class="nav-img" src="' + esc(src) + '" alt="' + esc(alt) + '">';
+}
+
+function validatePlatformData(){
+  const issues = [];
+  try {
+    if (typeof DOMAINS === 'undefined' || !Array.isArray(DOMAINS) || !DOMAINS.length)
+      issues.push('DOMAINS is missing or empty.');
+    if (typeof DOMAIN_I === 'undefined' || !DOMAIN_I || !DOMAIN_I.title)
+      issues.push('DOMAIN_I is missing required content.');
+    if (typeof RECORDS === 'undefined' || !Array.isArray(RECORDS))
+      issues.push('RECORDS is missing or invalid.');
+
+    const standardRefs = new Set();
+    if (typeof allStandards === 'function'){
+      allStandards().forEach(s => {
+        if (!s.ref || standardRefs.has(s.ref)) issues.push('Duplicate or missing standard ref in DOMAINS: ' + (s.ref || '(blank)'));
+        standardRefs.add(s.ref);
+      });
+    }
+
+    if (Array.isArray(RECORDS)){
+      const recordRefs = new Set();
+      RECORDS.forEach(r => {
+        if (!r || r.fw !== 'iia') return;
+        if (!r.ref) issues.push('IIA record missing ref.');
+        if (recordRefs.has(r.ref)) issues.push('Duplicate IIA record ref: ' + r.ref);
+        recordRefs.add(r.ref);
+        if (!r.title) issues.push('IIA record missing title for ' + r.ref);
+        if (!r.summary) issues.push('IIA record missing summary for ' + r.ref);
+      });
+      standardRefs.forEach(ref => {
+        const full = 'Standard ' + ref;
+        if (!RECORDS.some(r => r && r.fw === 'iia' && r.ref === full)){
+          /* intentionally informational because partial population is allowed */
+        }
+      });
+    }
+    if (typeof SUPPLIED_RECORDS !== 'undefined'){
+      const suppliedRefs = new Set();
+      SUPPLIED_RECORDS.forEach(r => {
+        if (suppliedRefs.has(r.ref)) issues.push('Duplicate PDF record: ' + r.ref);
+        suppliedRefs.add(r.ref);
+        if (!standardRefs.has(r.ref.replace(/^Standard /,''))) issues.push('Unknown PDF standard: ' + r.ref);
+        if (!r.sourceSections || r.sourceSections.length !== 8) issues.push('Incomplete PDF sections for ' + r.ref);
+      });
+    }
+  } catch (e){
+    issues.push('Validation failed: ' + e.message);
+  }
+  if (issues.length) console.warn('[Audit Intelligence validation]', issues);
+  else console.info('[Audit Intelligence validation] OK');
+  return issues;
+}
+
+/* ---------- top bar ---------- */
+function renderTop(active){
+  const link = (id, href, label) =>
+    '<a href="' + href + '"' + (active===id?' class="on"':'') + '>' + label + '</a>';
+  return '<button class="nav-toggle" id="navToggle" aria-label="Open menu">' +
+      icon('menu') + '</button>' +
+    '<a class="brand" href="index.html">' +
+      '<div class="bm">A</div>' +
+      '<div><b>Audit Intelligence</b>' +
+      '<span>IIA Reference Platform</span></div>' +
+    '</a>' +
+    '<nav class="topnav">' +
+      link('home','index.html','Home') +
+      link('library','standards.html','IIA Standards') +
+      link('references','references.html','Reference Library') +
+      link('tools','tools.html','Audit Tools') +
+      '<a class="cta" href="assistant.html">' + icon('spark') + 'AI Assistant</a>' +
+    '</nav>';
+}
+
+function renderFooter(){
+  return '<span class="dev">Developed by Noora AlZaraa</span>';
+}
+
+/* ---------- standards navigator ---------- */
+function renderNav(currentRef){
+  const domainQ = qs('domain');
+  let h = '<div class="nav-h">' +
+    '<div class="t">IIA Standards</div>' +
+    '<label class="nav-find">' + icon('search') +
+      '<input type="search" id="navFind" placeholder="Find a standard..." ' +
+      'aria-label="Filter standards">' +
+    '</label></div><div class="nav-body" id="navBody">' +
+    '<a class="nav-all' + (!currentRef && !domainQ ? ' on' : '') + '" href="standards.html">' +
+    navAsset('assets/sidebar/all-standards.png', 'All Standards') + '<span>All Standards</span></a>';
+
+  DOMAINS.forEach(d => {
+    const hashPrinciple = ((location.hash || '').match(/^#principle-(\d+)$/) || [])[1];
+    const contains = d.principles.some(p => p.standards.some(s => s.ref === currentRef));
+    const hashInDomain = hashPrinciple && d.principles.some(p => String(p.num) === hashPrinciple);
+    const open = currentRef ? contains : (domainQ ? d.id === domainQ : !!hashInDomain);
+    const here = d.id === 'I' && !currentRef && domainQ === 'I';
+    h += '<div class="dom' + (open ? ' open' : '') + (here ? ' here' : '') + '" data-dom="' + esc(d.id) + '">';
+    const domainIcon = {
+      I:{ src:'assets/sidebar/domain-1-book.png', alt:'Domain I' },
+      II:{ src:'assets/sidebar/domain-2-shield.png', alt:'Domain II' },
+      III:{ src:'assets/sidebar/domain-3-board.png', alt:'Domain III' },
+      IV:{ src:'assets/sidebar/domain-4-gear.png', alt:'Domain IV' },
+      V:{ src:'assets/sidebar/domain-5-document.png', alt:'Domain V' }
+    }[d.id] || { src:'assets/sidebar/domain-1-book.png', alt:'Domain' };
+    h += '<button class="dom-btn" type="button" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<span class="dom-ico">' + navAsset(domainIcon.src, domainIcon.alt) + '</span><span><span class="dn">Domain ' +
+      esc(d.num) + '</span><span class="dx">' + esc(d.name) + '</span></span>' + icon('chev','ch') + '</button>' +
+      '<div class="dom-body">';
+    if (!d.principles.length){
+      h += '<div class="sec-rail">';
+      (DOMAIN_I.sections || []).forEach(sec => {
+        h += '<a class="nav-sec" href="standards.html?domain=I#' + sec.id + '">' +
+          '<span class="dot" aria-hidden="true"></span><span>' + esc(sec.label) + '</span></a>';
+      });
+      h += '</div>';
+    }
+    d.principles.forEach(p => {
+      const pOpen = p.standards.some(s => s.ref === currentRef) || String(p.num) === hashPrinciple;
+      h += '<div class="pr' + (pOpen ? ' open' : '') + '" data-pr="' + p.num + '">' +
+        '<button class="pr-h" type="button">' +
+          '<span class="n">' + p.num + '</span>' +
+          '<span class="tx">' + esc(p.title) + '</span>' +
+          (p.standards.length ? icon('chev','ch') : '') +
+        '</button>';
+      if (p.standards.length){
+        h += '<div class="pr-body">';
+        p.standards.forEach(s => {
+          const has = !!standardRecord(s.ref);
+          h += '<a href="standard.html?ref=' + encodeURIComponent(s.ref) + '"' +
+            ' class="' + (s.ref === currentRef ? 'on' : '') + (has ? '' : ' empty') + '"' +
+            ' data-ref="' + esc(s.ref) + '" data-title="' + esc(s.title) + '">' +
+            '<span class="sr">' + esc(s.ref) + '</span>' +
+            '<span class="st">' + esc(s.title) + '</span></a>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div></div>';
+  });
+  h += '<div class="nav-guidance"><div class="nav-guidance-label">Additional Application Guidance</div>' +
+    '<a class="nav-all public-app' + (domainQ === 'public-sector' ? ' on' : '') + '" href="standards.html?domain=public-sector">' +
+    icon('building') + '<span>Public Sector Application</span></a>' +
+    '<a class="nav-all" href="standards.html">' + icon('back') + '<span>Back to All Standards</span></a></div>';
+  return h + '</div>';
+}
+
+function renderSide(opts){
+  let h = '<div class="nav-h"><div class="t">' + esc(opts.title) + '</div>' +
+    '<label class="nav-find">' + icon('search') +
+      '<input type="search" id="sideFind" placeholder="' + esc(opts.placeholder) + '" ' +
+      'aria-label="' + esc(opts.placeholder) + '">' +
+    '</label></div><div class="nav-body" id="sideBody">';
+  opts.items.forEach(it => {
+    h += '<a class="side-link' + (it.on ? ' on' : '') + '" href="' + it.href +
+      '" data-label="' + esc(it.label) + '">' +
+      (it.icon ? icon(it.icon) : '') + esc(it.label) + '</a>';
+  });
+  h += '</div>';
+  if (opts.note) h += '<div class="nav-note">' + esc(opts.note) + '</div>';
+  return h;
+}
+
+/* wire accordion + navigator filter */
+function wireNav(){
+  const body = document.getElementById('navBody');
+  if (!body) return;
+
+  body.addEventListener('click', e => {
+    const domBtn = e.target.closest('.dom-btn');
+    if (domBtn){
+      e.preventDefault();
+      const box = domBtn.closest('.dom');
+      const willOpen = !box.classList.contains('open');
+      box.classList.toggle('open', willOpen);
+      domBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      return;
+    }
+    const head = e.target.closest('.pr-h');
+    if (!head) return;
+    const pr = head.closest('.pr');
+    const dom = head.closest('.dom');
+    pr.classList.toggle('open');
+    if (!/standards\.html$/.test(location.pathname) || !dom || !pr) return;
+    const dest = 'standards.html?domain=' + encodeURIComponent(dom.dataset.dom) + '#principle-' + pr.dataset.pr;
+    if (qs('domain') === dom.dataset.dom && location.hash === '#principle-' + pr.dataset.pr) return;
+    location.href = dest;
+  });
+
+  const find = document.getElementById('navFind');
+  if (find){
+    find.addEventListener('input', () => {
+      const q = find.value.trim().toLowerCase();
+      body.querySelectorAll('.dom').forEach(dom => {
+        let shown = 0;
+        dom.querySelectorAll('.pr').forEach(pr => {
+          let n = 0;
+          pr.querySelectorAll('.pr-body a').forEach(a => {
+            const hit = !q ||
+              a.dataset.ref.toLowerCase().includes(q) ||
+              a.dataset.title.toLowerCase().includes(q);
+            a.style.display = hit ? '' : 'none';
+            if (hit) n++;
+          });
+          const titleHit = !q || pr.querySelector('.tx').textContent.toLowerCase().includes(q);
+          const visible = !q || n || titleHit;
+          pr.style.display = visible ? '' : 'none';
+          if (q && n) pr.classList.add('open');
+          if (visible) shown++;
+        });
+        const domHit = !q || dom.querySelector('.dx').textContent.toLowerCase().includes(q);
+        dom.querySelectorAll('.nav-sec').forEach(a => {
+          const hit = !q || a.textContent.toLowerCase().includes(q);
+          a.style.display = hit || domHit ? '' : 'none';
+          if (hit) shown++;
+        });
+        dom.style.display = (!q || shown || domHit) ? '' : 'none';
+        if (q && (shown || domHit)) dom.classList.add('open');
+      });
+    });
+  }
+
+  const tog = document.getElementById('navToggle');
+  if (tog) tog.addEventListener('click', () => {
+    const nav = document.querySelector('.nav');
+    if (nav) nav.classList.toggle('open');
+  });
+}
+
+function wireSide(){
+  const find = document.getElementById('sideFind');
+  const body = document.getElementById('sideBody');
+  if (find && body){
+    find.addEventListener('input', () => {
+      const q = find.value.trim().toLowerCase();
+      body.querySelectorAll('.side-link').forEach(a => {
+        a.style.display = !q || a.dataset.label.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+  const tog = document.getElementById('navToggle');
+  if (tog) tog.addEventListener('click', () => {
+    const nav = document.querySelector('.nav');
+    if (nav) nav.classList.toggle('open');
+  });
+}
+
+/* ---------- mount shared chrome ---------- */
+function mount(opts){
+  opts = opts || {};
+  const top = document.querySelector('.top');
+  const nav = document.querySelector('.nav');
+  const ft  = document.querySelector('footer');
+  if (!window.__aiValidated){
+    window.__aiValidated = true;
+    validatePlatformData();
+  }
+  if (top) top.innerHTML = renderTop(opts.active);
+  if (nav) nav.innerHTML = opts.side || renderNav(opts.ref);
+  if (ft)  ft.innerHTML  = renderFooter();
+  if (opts.side && opts.sideFilter !== false) wireSide();
+  else if (opts.side){
+    const tog = document.getElementById('navToggle');
+    if (tog) tog.addEventListener('click', () => nav.classList.toggle('open'));
+  }
+  else wireNav();
+  const on = document.querySelector('.pr-body a.on');
+  if (on) on.scrollIntoView({ block:'center' });
+}
+
+/* ============================================================
+   PLATFORM SEARCH
+   Searches the standards held in this platform. Matches on
+   standard number, title, and every content field, and reports
+   which section each hit came from so the result can link
+   straight to it.
+   ============================================================ */
+
+const SECTIONS = [
+  { key:'requirement',     label:'Requirements',        anchor:'requirements', w:9 },
+  { key:'implementation',  label:'Considerations for Implementation', anchor:'implementation', w:5 },
+  { key:'conformance',     label:'Examples of Evidence of Conformance', anchor:'conformance', w:5 },
+  { key:'focus',           label:'Audit Focus Areas',   anchor:'focus', w:7 },
+  { key:'risks',           label:'Risks',               anchor:'risks', w:7 },
+  { key:'controls',        label:'Controls',            anchor:'controls', w:7 },
+  { key:'procedureTable',  label:'Audit Procedures',    anchor:'procedures', w:7 },
+  { key:'procedures',      label:'Audit Procedures',    anchor:'procedures', w:7 },
+  { key:'testing',         label:'Testing Approach',    anchor:'procedures', w:5 },
+  { key:'evidence',        label:'Required Evidence',   anchor:'evidence', w:6 },
+  { key:'redFlags',        label:'Red Flags',           anchor:'redflags', w:7 },
+  { key:'findings',        label:'Common Findings',     anchor:'findings', w:6 },
+  { key:'causes',          label:'Root Causes',         anchor:'findings', w:4 },
+  { key:'impacts',         label:'Risk and Impact',     anchor:'findings', w:4 },
+  { key:'recommendations', label:'Recommendations',     anchor:'recommendations', w:5 },
+  { key:'biasTable',       label:'Examples of Bias',    anchor:'requirements', w:4 },
+  { key:'assignmentTable', label:'Engagement Assignments', anchor:'requirements', w:4 },
+  { key:'references',      label:'Professional References', anchor:'source', w:3 }
+];
+
+function flat(v){
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) return v.map(flat).join(' · ');
+  if (typeof v === 'object') return Object.values(v).map(flat).join(' ');
+  return String(v);
+}
+
+function suppliedBullets(text){
+  return String(text||'').split('\n').map(line=>line.trim()).filter(Boolean)
+    .reduce((items,line)=>{
+      if(/^[•●▪◦]\s*/.test(line))items.push(line.replace(/^[•●▪◦]\s*/,''));
+      else if(items.length)items[items.length-1]+=' '+line;
+      return items;
+    },[]);
+}
+
+/* Use the same imported cells the standard page displays. Never infer an
+   evidence/control pairing from the flattened PDF prose. */
+function standardSections(s, rec){
+  if (!rec) return [];
+  const sections = [
+    {label:'Requirements',anchor:'requirements',text:rec.requirement},
+    {label:'Considerations for Implementation',anchor:'implementation',text:flat(rec.implementation)},
+    {label:'Examples of Evidence of Conformance',anchor:'conformance',text:flat(rec.conformance)}
+  ];
+  if (rec.sourceSections){
+    const labels={2:['Audit Focus Areas','focus'],3:['Risks','risks'],
+      4:['Suggested Controls','controls'],5:['Suggested Audit Procedures and Evidence','procedures'],
+      6:['Red Flags','redflags'],7:['Illustrative Common Findings','findings'],
+      8:['Professional References','source']};
+    for(const section of rec.sourceSections.filter(x=>x.number>=2 && x.number<=8)){
+      const [label,anchor]=labels[section.number];
+      const structured=typeof SUPPLIED_TABLES!=='undefined' && SUPPLIED_TABLES[s.ref]?.[section.number];
+      sections.push({label,anchor,text:section.text,items:structured
+        ? structured.rows.map(row=>row.left+' — '+row.right)
+        : suppliedBullets(section.text).length?suppliedBullets(section.text):[section.text]});
+    }
+    if(rec.practicalApplication)sections.push({label:'Practical Application',anchor:'practical',text:rec.practicalApplication});
+  } else {
+    for(const sec of SECTIONS.slice(3)){
+      const value=flat(rec[sec.key]);
+      if(value)sections.push({label:sec.label,anchor:sec.anchor,text:value});
+    }
+  }
+  return sections.filter(section=>section.text);
+}
+
+function queryTerms(query){
+  return (String(query).toLowerCase().match(/\d{1,2}\.\d+|[\p{L}\p{N}]+/gu)||[])
+    .filter(word=>word.length>1 && !STOP.has(word));
+}
+function matchingSnippet(text,query){
+  const clean=String(text||'').replace(/\s+/g,' ').trim();
+  const terms=queryTerms(query).filter(t=>!/^\d+\.\d+$/.test(t));
+  const low=clean.toLowerCase();
+  const exact=String(query).toLowerCase().replace(/[?!.,;:]+$/,'').trim();
+  if(exact.length>8 && low.includes(exact)){
+    const at=low.indexOf(exact);
+    return {text:preview(clean,exact,220),match:clean.slice(at,at+exact.length)};
+  }
+  const phrase=terms.join(' ');
+  const at=phrase && low.indexOf(phrase)>=0 ? low.indexOf(phrase) :
+    terms.map(t=>low.indexOf(t)).filter(i=>i>=0).sort((a,b)=>a-b)[0];
+  if(at===undefined)return {text:clean.slice(0,220),match:''};
+  return {text:preview(clean,terms.join(' '),220),match:phrase && low.includes(phrase)?clean.slice(at,at+phrase.length):
+    clean.slice(at,at+terms.find(t=>low.indexOf(t)===at).length)};
+}
+
+const STOP = new Set(['the','a','an','is','are','was','were','be','of','for','to',
+  'in','on','at','by','and','or','not','what','which','who','whom','that','this',
+  'these','those','how','why','when','where','do','does','did','can','could',
+  'should','would','will','shall','may','might','must','i','you','we','it','its',
+  'about','with','from','into','my','me','our','us','if','then','than','as','but',
+  'require','requires','required','mean','means','tell','show','give','need']);
+
+function searchPlatform(query){
+  const terms=queryTerms(query);
+  if(!terms.length)return [];
+  return allStandards().flatMap(s=>{
+    const rec=standardRecord(s.ref);
+    const number=terms.includes(s.ref.toLowerCase());
+    const title=terms.some(t=>s.title.toLowerCase().includes(t));
+    const hits=[];
+    for(const section of standardSections(s,rec)){
+      if(number && section.anchor==='source')continue;
+      const candidates=section.items||[section.text];
+      for(const text of candidates){
+        const low=text.toLowerCase();
+        const found=terms.filter(t=>!/^\d+\.\d+$/.test(t) && low.includes(t));
+        if(!found.length)continue;
+        const snippet=matchingSnippet(text,query);
+        const weight=section.anchor==='source'?-22:
+          section.anchor==='requirements'?18:
+          section.anchor==='risks'||section.anchor==='controls'||section.anchor==='procedures'?12:0;
+        hits.push({label:section.label,anchor:section.anchor,text:snippet.text,
+          match:snippet.match,score:found.length*12+(found.length===terms.length?24:0)+
+            (low.includes(terms.join(' '))?40:0)+
+            (String(query).trim().length>8 && low.includes(String(query).toLowerCase().replace(/[?!.,;:]+$/,''))?100:0)+weight});
+      }
+      if(!number && terms.every(t=>section.label.toLowerCase().includes(t)) &&
+        !hits.some(hit=>hit.anchor===section.anchor)){
+        hits.push({label:section.label,anchor:section.anchor,
+          text:section.items?.[0]||section.text.replace(/\s+/g,' ').slice(0,220),match:'',score:60});
+      }
+    }
+    hits.sort((a,b)=>b.score-a.score);
+    if(!number && !title && (!hits.length || (terms.length>1 &&
+      !hits.some(h=>h.score>=Math.min(terms.length,2)*12+24))))return [];
+    const top=number && terms.length===1 ? null : hits[0];
+    return [{s,rec,hits:top?[top]:number?[{label:'Requirements',anchor:'requirements',text:rec?.requirement||s.title,match:''}]:[],
+      score:(number?200:0)+(title?35:0)+(top?.score||0)}];
+  }).sort((a,b)=>b.score-a.score);
+}
+
+function searchDomainI(query){
+  if (typeof DOMAIN_I === 'undefined') return [];
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return [];
+  const raw = q.split(/\s+/)
+    .map(t => t.replace(/[?!,;:()"'’]/g,'').replace(/\.$/,''))
+    .filter(Boolean);
+  const terms = raw.filter(t => !STOP.has(t) && t.length > 1);
+  if (!terms.length) return [];
+  if(!/\bdomain\s+i\b|\bpurpose\b|\bvalue\b|\bassurance\b|\bforesight\b|\binsight\b/i.test(q))return [];
+
+  const sections = [
+    { label:'Purpose of Internal Auditing', anchor:'domain-i-purpose', text:[DOMAIN_I.headline,DOMAIN_I.statement].join(' '), w:10 },
+    { label:'Forms of Contribution', anchor:'domain-i-value', text:flat(DOMAIN_I.howValueProvides.map(x=>[x.title,x.short||x.text])), w:8 },
+    { label:'What Internal Auditing Enhances', anchor:'domain-i-enhances', text:flat(DOMAIN_I.enhances), w:7 },
+    { label:'Conditions for Effectiveness', anchor:'domain-i-conditions', text:flat(DOMAIN_I.conditions.map(x=>[x.title,x.text])), w:7 },
+    { label:'Practical Application', anchor:'domain-i-practical', text:[DOMAIN_I.intro,DOMAIN_I.purposeDetail,
+      flat(DOMAIN_I.valueContributions),flat(DOMAIN_I.characteristics),flat(DOMAIN_I.practicalQuestions),
+      DOMAIN_I.practicalIllustration,flat(DOMAIN_I.howValueProvides),DOMAIN_I.payrollExample.intro,
+      flat(DOMAIN_I.payrollExample.contributions),DOMAIN_I.payrollExample.note].join(' '), w:6 },
+    { label:'Related Principles', anchor:'domain-i-related', text:flat(DOMAIN_I.relatedTopics), w:4 }
+  ];
+
+  let score = 0;
+  const hits = [];
+  sections.forEach(sec => {
+    const text = String(sec.text || '').toLowerCase();
+    let secScore = 0;
+    terms.forEach(t => {
+      if (text.includes(t)) secScore += sec.w;
+    });
+    if (secScore > 0){
+      score += secScore;
+      hits.push({ label:sec.label, anchor:sec.anchor, text:matchingSnippet(sec.text,query).text,score:secScore });
+    }
+  });
+
+  const hay = sections.map(s => s.text).join(' ').toLowerCase();
+  const matched = terms.filter(t => hay.includes(t));
+  const enough = terms.some(t => ['domain','purpose','internal','auditing','value','assurance','advice','insight','foresight'].includes(t)) ||
+    (terms.length === 1 ? matched.length === 1 : matched.length >= 2);
+  if (!score || !enough) return [];
+  return [{
+    kind:'domain',
+    id:'I',
+    title:DOMAIN_I.title,
+    summary:DOMAIN_I.summary,
+    score:score + (q.includes('domain i') ? 25 : 0),
+    hits:hits.sort((a,b)=>b.score-a.score)
+  }];
+}
+
+function searchPublicSector(query){
+  if(typeof PUBLIC_SECTOR==='undefined')return [];
+  const terms=queryTerms(query).filter(t=>!['public','sector','application','audit','standards'].includes(t));
+  const q=String(query).toLowerCase();
+  if(!/public\s+sector/.test(q))return [];
+  const areas=[
+    {label:'Overview',anchor:'ps-overview',text:flat(PUBLIC_SECTOR.overview)},
+    {label:'Laws & Regulations',anchor:'ps-laws',text:flat(PUBLIC_SECTOR.laws)},
+    {label:'Governance & Structure',anchor:'ps-governance',text:flat(PUBLIC_SECTOR.governance)},
+    {label:'Funding',anchor:'ps-funding',text:flat(PUBLIC_SECTOR.funding)},
+    {label:'Professional References',anchor:'ps-references',text:flat(PUBLIC_SECTOR.references)}
+  ];
+  const hits=areas.filter(area=>!terms.length||terms.some(t=>area.text.toLowerCase().includes(t) || area.label.toLowerCase().includes(t)));
+  const sorted=hits.sort((a,b)=>terms.filter(t=>b.label.toLowerCase().includes(t)).length-
+    terms.filter(t=>a.label.toLowerCase().includes(t)).length);
+  return sorted.slice(0,3).map(area=>({title:PUBLIC_SECTOR.title,anchor:area.anchor,
+    label:area.label,text:matchingSnippet(area.text,query).text}));
+}
+
+/* wrap matches for display; escape first so markup is never re-matched */
+function highlight(text, query){
+  const safe = esc(text);
+  if (!query) return safe;
+  const terms = query.trim().split(/\s+/).filter(Boolean)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+    .sort((a,b) => b.length - a.length);
+  if (!terms.length) return safe;
+  return safe.replace(new RegExp('(' + terms.join('|') + ')','gi'),
+    m => '<mark>' + m + '</mark>');
+}
+
+/* readable preview centred on the first match */
+function preview(text, query, max){
+  max = max || 180;
+  if (!text) return '';
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const low = text.toLowerCase();
+  const at = terms.map(t => low.indexOf(t)).filter(i => i >= 0).sort((a,b)=>a-b)[0];
+  if (at == null || at < 0) return text.slice(0, max) + (text.length > max ? '…' : '');
+  let start = Math.max(0, at - 70);
+  let cut = text.slice(start, start + max);
+  if (start > 0) cut = '…' + cut.replace(/^\S*\s/,'');
+  if (start + max < text.length) cut = cut.replace(/\s\S*$/,'') + '…';
+  return cut;
+}
+
+/* REF_PAGES and REFS are loaded from data/references.js.
+   Tool notes identify the official source; they do not reproduce it. */
+const TOOLS = [
+  {
+    id:'engagement', phase:'Planning', icon:'doc',
+    title:'Engagement Planning',
+    blurb:'Define objectives, scope and key audit activities.',
+    keywords:'planning objective scope engagement',
+    query:'engagement planning scope',
+    fields:[
+      { k:'name', label:'Engagement name' },
+      { k:'objective', label:'Objective', area:true, hint:'What the engagement will conclude on.' },
+      { k:'scope', label:'Scope', area:true, hint:'What is included, and what is explicitly out of scope.' },
+      { k:'activities', label:'Key audit activities', area:true }
+    ]
+  },
+  {
+    id:'matrix', phase:'Planning', icon:'hierarchy',
+    title:'Risk & Control Matrix',
+    blurb:'Map risks, controls and planned audit tests.',
+    keywords:'risk control matrix test',
+    query:'risk control',
+    fields:[
+      { k:'risk', label:'Risk', area:true },
+      { k:'control', label:'Expected control', area:true },
+      { k:'test', label:'Planned test', area:true },
+      { k:'evidence', label:'Evidence the test will produce', area:true }
+    ]
+  },
+  {
+    id:'program', phase:'Fieldwork', icon:'list',
+    title:'Audit Program',
+    blurb:'Organise procedures, testing steps and evidence.',
+    keywords:'audit program procedure testing fieldwork',
+    query:'audit procedure testing',
+    fields:[
+      { k:'procedure', label:'Procedure', area:true },
+      { k:'sample', label:'Sample or population' },
+      { k:'steps', label:'Testing steps', area:true },
+      { k:'evidence', label:'Evidence to retain', area:true }
+    ]
+  },
+  {
+    id:'evidence', phase:'Fieldwork', icon:'doccheck',
+    title:'Evidence Checklist',
+    blurb:'Track required documents and supporting evidence.',
+    keywords:'evidence document checklist',
+    query:'required evidence',
+    fields:[
+      { k:'item', label:'Evidence item' },
+      { k:'source', label:'Who will provide it' },
+      { k:'status', label:'Status', options:['Not requested','Requested','Received','Sufficient','Exception'] },
+      { k:'note', label:'Note', area:true }
+    ]
+  },
+  {
+    id:'finding', phase:'Reporting', icon:'doc',
+    title:'Finding Builder',
+    blurb:'Structure criteria, condition, cause, impact and recommendations.',
+    keywords:'finding observation criteria condition cause impact recommendation',
+    query:'findings recommendations',
+    fields:[
+      { k:'title', label:'Finding title' },
+      { k:'criteria', label:'Criteria', area:true, hint:'The standard, policy or expectation.' },
+      { k:'condition', label:'Condition', area:true, hint:'What was found.' },
+      { k:'cause', label:'Cause', area:true },
+      { k:'effect', label:'Risk and impact', area:true },
+      { k:'recommendation', label:'Recommendation', area:true }
+    ]
+  },
+  {
+    id:'followup', phase:'Follow-up', icon:'circlecheck',
+    title:'Action Follow-up',
+    blurb:'Monitor agreed actions and completion evidence.',
+    keywords:'follow up action recommendation closure overdue',
+    query:'recommendations follow',
+    fields:[
+      { k:'action', label:'Agreed action', area:true },
+      { k:'owner', label:'Responsible person' },
+      { k:'due', label:'Target date' },
+      { k:'status', label:'Status', options:['Open','In progress','Implemented','Overdue','Closed'] },
+      { k:'proof', label:'Implementation evidence', area:true }
+    ]
+  }
+];
+
+function catalogHay(item){
+  return [item.title, item.blurb, item.phase, item.group, item.keywords, item.lead,
+    ...(item.fields||[]).map(field=>field.label+' '+(field.hint||'')+' '+(field.options||[]).join(' '))]
+    .filter(Boolean).join(' ').toLowerCase();
+}
+function matchCatalog(list, q){
+  const terms = String(q||'').trim().toLowerCase().split(/\s+/).filter(t => t.length > 1);
+  if (!terms.length) return list.slice();
+  return list.filter(item => {
+    const hay = catalogHay(item);
+    return terms.filter(t => hay.includes(t)).length >= Math.min(2, terms.length) ||
+      terms.some(t => item.title.toLowerCase().includes(t));
+  });
+}

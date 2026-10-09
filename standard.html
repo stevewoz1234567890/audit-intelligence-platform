@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standard — Audit Intelligence</title>
+<link rel="stylesheet" href="assets/iia.css?v=18">
+</head>
+<body>
+
+<header class="top"></header>
+
+<div class="shell">
+  <aside class="nav"></aside>
+  <div class="main">
+    <div id="page"></div>
+    <footer></footer>
+  </div>
+</div>
+
+<script src="data/library.js"></script>
+<script src="data/supplied-standards.js"></script>
+<script src="data/supplied-tables.js"></script>
+<script src="data/supplied-appendix-tables.js"></script>
+<script src="data/iia.js?v=9"></script>
+<script src="data/references.js"></script>
+<script src="assets/iia.js?v=12"></script>
+<script src="assets/source-format.js?v=10"></script>
+<script>
+(function(){
+  const ref = qs('ref') || '1.1';
+  const all = allStandards();
+  const s   = all.find(x => x.ref === ref);
+  const page = document.getElementById('page');
+
+  if (!s){
+    page.innerHTML = '<div class="empty">' + icon('alert') +
+      '<b>Standard not found</b><p>No standard matches that reference. ' +
+      'Open the <a href="standards.html" style="color:var(--navy-3);font-weight:600">' +
+      'standards library</a> to browse all standards.</p></div>';
+    mount({ active:'library' });
+    return;
+  }
+
+  const rec = standardRecord(s.ref);
+  document.title = 'Standard ' + s.ref + ' — ' + s.title + ' — Audit Intelligence';
+
+  /* ---------- breadcrumb ---------- */
+  let h = '<div class="crumb">' +
+    '<a href="index.html">Home</a><span class="sep">/</span>' +
+    '<a href="standards.html">Standards Library</a><span class="sep">/</span>' +
+    '<span>Domain ' + esc(s.domainId) + '</span><span class="sep">/</span>' +
+    '<span>Principle ' + s.principleNum + '</span><span class="sep">/</span>' +
+    '<b>' + esc(s.ref) + '</b>' +
+    '<span class="sp"><a class="btn-o" style="padding:5px 12px;font-size:11.5px" ' +
+      'href="assistant.html?q=' + encodeURIComponent('Standard ' + s.ref) + '">' +
+      icon('spark') + 'Ask about this</a></span>' +
+    '</div>';
+
+  /* ---------- header ---------- */
+  h += '<div class="std-h">' +
+    '<div class="std-eyebrow">Standard ' + esc(s.ref) + ' · Principle ' + s.principleNum +
+      ' — ' + esc(s.principleTitle) + '</div>' +
+    '<h1>' + esc(s.title) + '</h1>' +
+    (rec ? '<p class="lede">' + esc(cleanSummary(rec.summary)) + '</p>' : '') +
+    '<div class="std-meta">' +
+      '<span class="mtag"><b>Domain</b> ' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</span>' +
+      (rec ? '<span class="mtag"><b>Version</b> ' + esc(rec.version) + '</span>' +
+             (rec.effective ? '<span class="mtag"><b>Effective</b> ' + fmtDate(rec.effective) + '</span>' : '') +
+             (rec.updated ? '<span class="mtag"><b>Updated</b> ' + fmtDate(rec.updated) + '</span>' : '')
+           : '') +
+    '</div>';
+
+  /* ---------- tabs ---------- */
+  const TABS = [];
+  const add = (anchor, label, ico, n) => TABS.push({ anchor, label, ico, n });
+  add('requirements','Standards & Guidance','doc');
+  add('implementation','Considerations for Implementation','check');
+  add('conformance','Examples of Evidence of Conformance','doc');
+  if (rec){
+    if (rec.sourceSections){
+      const nav = [null,null,['focus','Audit Focus Areas','target'],['risks','Risks','alert'],
+        ['controls','Suggested Controls','shield'],['procedures','Suggested Audit Procedures','check'],
+        ['redflags','Red Flags','flag'],['findings','Illustrative Common Findings','grid']];
+      rec.sourceSections.filter(x => x.number >= 2 && x.number <= 7).forEach(x => add(...nav[x.number]));
+      if (rec.practicalApplication) add('practical','Practical Application','list');
+    }
+    if (rec.focus && rec.focus.length) add('focus','Audit Focus Areas','target', rec.focus.length);
+    if (rec.risks && rec.risks.length) add('risks','Risks','alert', rec.risks.length);
+    if (rec.controls && rec.controls.length) add('controls','Controls','shield', rec.controls.length);
+    const np = (rec.procedureTable && rec.procedureTable.length) ||
+               (rec.procedures && rec.procedures.length);
+    if (np) add('procedures','Audit Procedures','check', np);
+    if (rec.evidence && rec.evidence.length) add('evidence','Required Evidence','doc', rec.evidence.length);
+    if (rec.redFlags && rec.redFlags.length) add('redflags','Red Flags','flag', rec.redFlags.length);
+    if (rec.findings && rec.findings.length) add('findings','Common Findings','grid', rec.findings.length);
+    if (rec.recommendations && rec.recommendations.length)
+      add('recommendations','Recommendations','star', rec.recommendations.length);
+    add('source','References','link');
+  }
+  if (TABS.length){
+    h += '<div class="tabs">' + TABS.map((t,i) =>
+      '<button class="tab' + (i===0?' on':'') + '" data-go="' + t.anchor + '">' +
+        icon(t.ico) + t.label +
+        (t.n ? '<span class="n">' + t.n + '</span>' : '') +
+      '</button>').join('') + '</div>';
+  }
+  h += '</div>';
+
+  /* ---------- body ---------- */
+  h += '<div class="body">';
+
+  const sect = (id, title, ico, inner, n) =>
+    '<section class="sect" id="' + id + '">' +
+      '<div class="sect-h">' + icon(ico) + '<h2>' + title + '</h2>' +
+      (n !== undefined ? '<span class="n">' + n + '</span>' : '') + '</div>' +
+      inner + '</section>';
+  const gap = (label) =>
+    '<div class="card"><p>' + esc(label) + ' has not been added for Standard ' +
+    esc(s.ref) + ' yet.</p></div>';
+
+  if (!rec){
+    h += sect('requirements','Standards &amp; Guidance','doc',
+      '<div class="empty">' + icon('doc') +
+      '<b>Content not yet added for this standard</b>' +
+      '<p>Standard ' + esc(s.ref) + ' — ' + esc(s.title) + ' is part of Principle ' +
+      s.principleNum + '. Its detailed content has not been added to the platform yet.</p></div>');
+    h += sect('implementation','Considerations for Implementation','check',
+      gap('Considerations for Implementation'));
+    h += sect('conformance','Examples of Evidence of Conformance','doc',
+      gap('Examples of Evidence of Conformance'));
+  } else {
+
+    const ul = (arr, cls) => '<div class="card"><ul class="rq ' + (cls||'') + '">' +
+      arr.map(x => '<li><span>' + esc(x) + '</span></li>').join('') + '</ul></div>';
+
+    const tbl = (rows, a, b, ka, kb) =>
+      '<div class="tbl-wrap"><table><thead><tr><th>' + a + '</th><th>' + b +
+      '</th></tr></thead><tbody>' + rows.map(r =>
+        '<tr><td><b>' + esc(r[ka]) + '</b></td><td class="ev">' + esc(r[kb]) +
+        '</td></tr>').join('') + '</tbody></table></div>';
+
+    /* --- requirements and guidance --- */
+    const appendices = typeof SUPPLIED_APPENDIX_TABLES !== 'undefined' && SUPPLIED_APPENDIX_TABLES[s.ref];
+    let g = rec.sourcePdf ? sourceFormat(rec.requirement,'Requirements',null,null,appendices) : '<div class="card"><p>' + esc(rec.requirement) + '</p></div>';
+    if (rec.sourcePdf) g = '<div class="scope">' + icon('doc') +
+      '<div><b>Source summary and practical guidance</b><span>The supplied PDF summarizes requirements and guidance. Audit Focus Areas through Illustrative Common Findings are suggested practical material, not additional IIA requirements. ' +
+      '<a href="' + esc(rec.sourcePdf) + '" target="_blank" rel="noopener noreferrer">View the supplied PDF ↗</a></span></div></div>' + g;
+    if (rec.assignmentTable && rec.assignmentTable.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('scale') +
+           '<h2 style="font-size:15px">Previous Responsibilities &amp; Engagement Assignments</h2></div>' +
+           tbl(rec.assignmentTable,'Situation','Requirement','s','r');
+    if (rec.biasTable && rec.biasTable.length)
+      g += '<div class="sect-h" style="margin-top:18px">' + icon('alert') +
+           '<h2 style="font-size:15px">Examples of Bias</h2></div>' +
+           tbl(rec.biasTable,'Bias','Description','b','d');
+    h += sect('requirements','Standards &amp; Guidance','doc', g);
+    h += sect('implementation','Considerations for Implementation','check',
+      (rec.implementation && rec.implementation.length)
+         ? (rec.sourcePdf ? sourceFormat(rec.implementation[0],'Considerations for Implementation',null,null,appendices) : ul(rec.implementation,'dot'))
+        : gap('Considerations for Implementation'),
+      !rec.sourcePdf && rec.implementation && rec.implementation.length || undefined);
+    h += sect('conformance','Examples of Evidence of Conformance','doc',
+      (rec.conformance && rec.conformance.length)
+         ? (rec.sourcePdf ? sourceFormat(rec.conformance[0],'Examples of Evidence of Conformance') : ul(rec.conformance,'tick'))
+        : gap('Examples of Evidence of Conformance'),
+      !rec.sourcePdf && rec.conformance && rec.conformance.length || undefined);
+
+    if (rec.sourceSections){
+      const sections = [null,null,'focus','risks','controls','procedures',
+        'redflags','findings','source'];
+      const titles = [null,null,'Audit Focus Areas','Risks','Suggested Controls',
+        'Suggested Audit Procedures','Red Flags','Illustrative Common Findings',
+        'Professional References'];
+      const icons = [null,null,'target','alert','shield','check','flag','grid','link'];
+      rec.sourceSections.filter(x => x.number >= 2 && x.number <= 7).forEach(x => {
+        h += sect(sections[x.number],titles[x.number],icons[x.number],
+          [3,4,5].includes(x.number) ? sourceFormat(x.text,x.title,'table',
+            SUPPLIED_TABLES[s.ref] && SUPPLIED_TABLES[s.ref][x.number]) : sourceFormat(x.text,x.title,'list'));
+      });
+    }
+    if (rec.focus && rec.focus.length)
+      h += sect('focus','Audit Focus Areas','target', ul(rec.focus,'dot'), rec.focus.length);
+
+    if (rec.risks && rec.risks.length)
+      h += sect('risks','Risks','alert','<div class="card">' + rec.risks.map(x =>
+        '<div class="row"><div class="tx"><b>' + esc(x.r) + '</b>' +
+        (x.d ? '<span>' + esc(x.d) + '</span>' : '') + '</div>' +
+        classificationBadges(x.i, 'risk') + '</div>').join('') +
+        '</div>', rec.risks.length);
+
+    if (rec.controls && rec.controls.length)
+      h += sect('controls','Controls','shield','<div class="card">' + rec.controls.map(x =>
+        '<div class="row"><div class="tx"><b>' + esc(x.c) + '</b></div>' +
+        classificationBadges(x.t, 'control') + '</div>').join('') +
+        '</div>', rec.controls.length);
+
+    if (rec.procedureTable && rec.procedureTable.length)
+      h += sect('procedures','Audit Procedures','check',
+        tbl(rec.procedureTable,'Procedure','Required Evidence','p','e') +
+        (rec.testing ? '<div class="card" style="margin-top:14px"><p><b>Testing approach.</b> ' +
+          esc(rec.testing) + '</p></div>' : ''),
+        rec.procedureTable.length);
+    else if (rec.procedures && rec.procedures.length)
+      h += sect('procedures','Audit Procedures','check', ul(rec.procedures) +
+        (rec.testing ? '<div class="card" style="margin-top:14px"><p><b>Testing approach.</b> ' +
+          esc(rec.testing) + '</p></div>' : ''),
+        rec.procedures.length);
+
+    if (rec.evidence && rec.evidence.length)
+      h += sect('evidence','Required Evidence','doc', ul(rec.evidence,'tick'), rec.evidence.length);
+
+    if (rec.redFlags && rec.redFlags.length)
+      h += sect('redflags','Red Flags','flag', ul(rec.redFlags,'flag') +
+        '<div class="scope" style="margin-top:12px;background:var(--warn-bg);' +
+        'border-color:var(--gold-line)">' + icon('alert') +
+        '<div><b style="color:var(--warn)">Red flags indicate matters for further examination.</b>' +
+        '<span>They do not, by themselves, establish fraud or misconduct.</span></div></div>',
+        rec.redFlags.length);
+
+    if (rec.findings && rec.findings.length){
+      let f = ul(rec.findings,'dot');
+      if (rec.causes && rec.causes.length)
+        f += '<div class="sect-h" style="margin-top:18px">' + icon('layer') +
+             '<h2 style="font-size:15px">Root Causes</h2></div>' + ul(rec.causes,'dot');
+      if (rec.impacts)
+        f += '<div class="sect-h" style="margin-top:18px">' + icon('alert') +
+             '<h2 style="font-size:15px">Risk &amp; Impact</h2></div>' +
+             '<div class="card"><p>' + esc(rec.impacts) + '</p></div>';
+      h += sect('findings','Common Findings','grid', f, rec.findings.length);
+    }
+
+    if (rec.recommendations && rec.recommendations.length)
+      h += sect('recommendations','Recommendations','star', ul(rec.recommendations),
+        rec.recommendations.length);
+
+    if (rec.practicalApplication)
+      h += sect('practical','Practical Application','list',
+        sourceFormat(rec.practicalApplication,'Practical Application','practical',null,appendices));
+
+    /* references and provenance */
+    const suppliedPdf=rec.sourcePdf || (+s.ref.split('.')[0]<=2 ?
+      'assets/standards/standard-'+s.ref.split('.')[0]+'.pdf' : '');
+    h += sect('source','Professional References','link',
+      (rec.sourceSections ? sourceFormat(rec.sourceSections.find(x => x.number === 8).text,'Professional References') : '') +
+      (rec.references && rec.references.length
+        ? professionalReferenceList(rec.references.map(x=>x.t).join('\n'),all) : ''));
+    h += sect('provenance','Source Details','doc',
+      '<div class="srcbox"><dl>' +
+        '<dt>Source</dt><dd>' + esc(rec.source) + '</dd>' +
+        '<dt>Standard</dt><dd>' + esc(rec.ref) + ' — ' + esc(s.title) + '</dd>' +
+        '<dt>Domain</dt><dd>' + esc(s.domainId) + ' — ' + esc(s.domainName) + '</dd>' +
+        '<dt>Principle</dt><dd>' + s.principleNum + ' — ' + esc(s.principleTitle) + '</dd>' +
+        '<dt>Version</dt><dd>' + esc(rec.version) + '</dd>' +
+        (rec.effective ? '<dt>Effective</dt><dd>' + fmtDate(rec.effective) + '</dd>' : '') +
+        (rec.updated ? '<dt>Last updated</dt><dd>' + fmtDate(rec.updated) + '</dd>' : '') +
+        (rec.url ? '<dt>Official</dt><dd><a href="' + esc(rec.url) + '" target="_blank" ' +
+          'rel="noopener noreferrer">' + esc(rec.url.replace(/^https?:\/\//,'')) + ' &#8599;</a></dd>' : '') +
+        (suppliedPdf ? '<dt>Supplied document</dt><dd><a href="' + esc(suppliedPdf) + '" target="_blank" rel="noopener noreferrer">View PDF &#8599;</a></dd>' : '') +
+      '</dl></div>');
+    /* assistant prompt */
+    h += '<div class="aibox" style="margin-top:24px">' +
+      '<div class="ai-i">' + icon('spark') + '</div>' +
+      '<div class="ai-t"><b>Ask the AI Assistant</b>' +
+      '<span>Find answers within the platform’s content for Standard ' + esc(s.ref) + '.</span></div>' +
+      '<a class="btn-gold" href="assistant.html?q=' +
+        encodeURIComponent('Standard ' + s.ref + ' ' + s.title) + '">' +
+        'Ask about Standard ' + esc(s.ref) + '</a></div>';
+  }
+
+  h += '</div>';
+
+  /* ---------- prev / next ---------- */
+  const i = all.findIndex(x => x.ref === s.ref);
+  const prev = i > 0 ? all[i-1] : null;
+  const next = i < all.length - 1 ? all[i+1] : null;
+  if (prev || next){
+    h += '<div class="pager">';
+    if (prev) h += '<a href="standard.html?ref=' + encodeURIComponent(prev.ref) + '">' +
+      icon('back') + '<span><span class="lb">Previous</span>' +
+      '<span class="tt">' + esc(prev.ref) + ' — ' + esc(prev.title) + '</span></span></a>';
+    if (next) h += '<a class="nx" href="standard.html?ref=' + encodeURIComponent(next.ref) + '">' +
+      '<span><span class="lb">Next</span>' +
+      '<span class="tt">' + esc(next.ref) + ' — ' + esc(next.title) + '</span></span>' +
+      icon('arrow') + '</a>';
+    h += '</div>';
+  }
+
+  page.innerHTML = h;
+  mount({ active:'library', ref:s.ref });
+
+  /* tab click scrolls to its section */
+  const tabs = [...document.querySelectorAll('.tab')];
+  const OFFSET = 80; /* sticky top bar */
+  tabs.forEach(t => t.addEventListener('click', () => {
+    const el = document.getElementById(t.dataset.go);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - OFFSET;
+    window.scrollTo({ top:y, behavior:'smooth' });
+  }));
+
+  /* tab follows scroll position */
+  const sects = tabs.map(t => document.getElementById(t.dataset.go)).filter(Boolean);
+  if (sects.length){
+    const spy = new IntersectionObserver(es => {
+      es.forEach(e => {
+        if (e.isIntersecting)
+          tabs.forEach(t => t.classList.toggle('on', t.dataset.go === e.target.id));
+      });
+    }, { rootMargin:'-130px 0px -65% 0px' });
+    sects.forEach(x => spy.observe(x));
+  }
+
+  /* deep link to a section: standard.html?ref=1.1#risks */
+  if (location.hash){
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) setTimeout(() => window.scrollTo({
+      top: el.getBoundingClientRect().top + window.scrollY - OFFSET
+    }), 80);
+  }
+  const match=qs('match');
+  if(match){
+    const section=document.getElementById(location.hash.slice(1)) || document.getElementById('requirements');
+    if(section){
+      const words=match.toLowerCase().match(/[\p{L}\p{N}]+/gu)||[];
+      const candidates=[...section.querySelectorAll('tbody tr,li,.row,p,dd')].filter(el=>
+        !el.closest('tbody tr,li,.row') || el.matches('tbody tr,li,.row'));
+      const target=candidates.map(el=>{
+        const text=el.textContent.toLowerCase().replace(/\s+/g,' ');
+        return {el,score:(text.includes(match.toLowerCase().replace(/\s+/g,' '))?1000:0)+
+          words.filter(word=>text.includes(word)).length};
+      }).sort((a,b)=>b.score-a.score)[0];
+      if(target && target.score){
+        target.el.classList.add('search-target');
+        setTimeout(()=>window.scrollTo({top:Math.max(0,target.el.getBoundingClientRect().top+
+          window.scrollY-120),behavior:'instant'}),130);
+      }
+    }
+  }
+})();
+</script>
+</body>
+</html>
